@@ -14,7 +14,9 @@ from PIL import Image
 N_PARTICIPANTS = 5
 T_INITIAL      = 4
 T_NEW          = 2
-P_PRIME = int("208351617316091241234326746312124448251235562226470460481")
+P_PRIME = int(
+    "208351617316091241234326746312124448251235562226470491514186331217050270460481"
+)
 Y0      = 123_456
 
 # -------------------------------------------------------
@@ -26,6 +28,8 @@ def generate_shares(secret: int,
                     t_prime: int = T_NEW,
                     y0: int = Y0,
                     p: int = P_PRIME):
+    if secret >= p:
+        raise ValueError("secret must be less than the prime modulus")
     a = {0: secret, **{k: random.randrange(0, p) for k in range(1, t_prime)}}
     b = {k: random.randrange(0, p) for k in range(t_prime, t)}
     shares = {}
