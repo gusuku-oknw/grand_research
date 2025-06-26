@@ -24,11 +24,12 @@ q = (p - 1) // 2  # 生成元gの群の位数
 # -------------------------------------------------------
 # 2) プロトコルパラメータ
 # -------------------------------------------------------
-N = 5        # 参加者の数
-T = 4        # 初期のしきい値
-T_NEW = 2    # 動的に下げられたしきい値
-Y0 = 123_456 # FlexShare定数
+N = 5  # 参加者の数
+T = 4  # 初期のしきい値
+T_NEW = 2  # 動的に下げられたしきい値
+Y0 = 123_456  # FlexShare定数
 rand = random.SystemRandom()
+
 
 # -------------------------------------------------------
 # 3) Feldman VSS関数
@@ -60,6 +61,7 @@ def feldman_verify(i: int, share: int, commit: list[int]) -> bool:
         rhs = (rhs * pow(Ck, pow(i, k), p)) % p
     return lhs == rhs
 
+
 # -------------------------------------------------------
 # 4) ディーラーフリーDKG (Joint-Feldmanシミュレーション)
 # -------------------------------------------------------
@@ -70,21 +72,22 @@ def dkg() -> dict[int, int]:
     最終的なシェアs_iは、すべてのラウンドからのシェアの合計（Z_q上）となる。
     Z_q上の最終的なシェアの辞書を返す。
     """
-    shares_q: dict[int, int] = {i: 0 for i in range(1, N+1)}
+    shares_q: dict[int, int] = {i: 0 for i in range(1, N + 1)}
     for _ in range(N):
         # 各参加者はZ_qからランダムな秘密s_iを選ぶ
-        poly = [rand.randrange(q) for _ in range(T)]       # 次数 T-1
+        poly = [rand.randrange(q) for _ in range(T)]  # 次数 T-1
         commit = feldman_commit(poly)
-        for j in range(1, N+1):
+        for j in range(1, N + 1):
             s_ij = eval_poly(poly, j, q)
             assert feldman_verify(j, s_ij, commit), "VSS検証失敗"
             shares_q[j] = (shares_q[j] + s_ij) % q
     return shares_q
 
+
 # -------------------------------------------------------
 # 5) FlexShare動的しきい値ヘルパー
 # -------------------------------------------------------
-def add_auxiliary(shares_q: dict[int,int]) -> dict[int, tuple[int,int]]:
+def add_auxiliary(shares_q: dict[int, int]) -> dict[int, tuple[int, int]]:
     """
     動的しきい値のために補助多項式のシェアを追加する。
     i -> (u_i, v_i) のマッピングを返す。
@@ -113,7 +116,7 @@ def lambda_lagrange(xs: list[int], ys: list[int], x0: int, mod: int) -> int:
     return total
 
 
-def reduce_threshold(uv: dict[int, tuple[int,int]], indices: list[int]) -> bytes:
+def reduce_threshold(uv: dict[int, tuple[int, int]], indices: list[int]) -> bytes:
     """
     シェア(u_i, v_i)を使い、s' = Σ Lagrange(u_i + Y0 * v_i)として
     Z_q上の新しい秘密を計算する。32バイトの鍵を返す。
@@ -122,8 +125,9 @@ def reduce_threshold(uv: dict[int, tuple[int,int]], indices: list[int]) -> bytes
     ys = [(uv[i][0] + Y0 * uv[i][1]) % q for i in indices]
     secret_q = lambda_lagrange(xs, ys, 0, q)
     # 32バイトのビッグエンディアンに変換
-    b = secret_q.to_bytes((secret_q.bit_length() + 7)//8, 'big')
+    b = secret_q.to_bytes((secret_q.bit_length() + 7) // 8, 'big')
     return b.rjust(32, b'\x00')
+
 
 # -------------------------------------------------------
 # 6) AES-GCMヘルパー
@@ -145,6 +149,7 @@ def aes_gcm_decrypt(blob: bytes, key: bytes) -> bytes:
     nonce, tag, ct = blob[:12], blob[12:28], blob[28:]
     cipher = AES.new(key, AES.MODE_GCM, nonce=nonce)
     return cipher.decrypt_and_verify(ct, tag)
+
 
 # -------------------------------------------------------
 # 7) メインデモ
@@ -175,7 +180,7 @@ if __name__ == "__main__":
         uv_pairs[i] = ((secret_int - Y0 * v) % q, v)
 
     # 7.5 しきい値をT_NEW=2に下げて鍵を復元
-    rec_key = reduce_threshold(uv_pairs, list(range(1, T_NEW+1)))
+    rec_key = reduce_threshold(uv_pairs, list(range(1, T_NEW + 1)))
     assert rec_key == key_bytes, "鍵の復元に失敗"
 
     # 7.6 復号して保存
