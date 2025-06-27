@@ -135,9 +135,9 @@ def decrypt_image_with_flexshare(bin_path: str,
 # -------------------------------------------------------
 if __name__ == "__main__":
     shares, key_bytes, img_size, img_mode = encrypt_image_with_flexshare(
-        "input.png",   # 元画像
+        "data/input.png",   # 元画像
         "cipher.bin",  # 生バイナリ暗号文
-        "meta.bin",    # nonce+tag
+        "data/meta.bin",    # nonce+tag
         "preview.bmp"  # ノイズ確認用
     )
     print("Secret(int) =", int.from_bytes(key_bytes, "big"))
@@ -150,9 +150,9 @@ if __name__ == "__main__":
 
     # 復号
     decrypt_image_with_flexshare(
-        "cipher.bin",
-        "meta.bin",
-        "decrypted.png",
+        "data/cipher.bin",
+        "data/meta.bin",
+        "data/decrypted.png",
         rec_key,
         img_size,
         img_mode

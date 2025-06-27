@@ -164,13 +164,13 @@ if __name__ == "__main__":
     print("(u_i, v_i)ペア:", uv_pairs)
 
     # 7.3 画像の暗号化
-    img = Image.open("input.png").convert("RGB")
+    img = Image.open("data/input.png").convert("RGB")
     raw = img.tobytes()
     key_bytes = secrets.token_bytes(32)
     blob = aes_gcm_encrypt(raw, key_bytes)
-    Path("cipher.bin").write_bytes(blob)
+    Path("data/cipher.bin").write_bytes(blob)
     # ノイズのプレビュー
-    Image.frombytes(img.mode, img.size, blob[28:]).save("preview.bmp")
+    Image.frombytes(img.mode, img.size, blob[28:]).save("data/preview.bmp")
     print("暗号化された画像のプレビューを保存しました。")
 
     # 7.4 u_iを実際の秘密のシェアに置き換える
@@ -185,5 +185,5 @@ if __name__ == "__main__":
 
     # 7.6 復号して保存
     plain = aes_gcm_decrypt(blob, rec_key)
-    Image.frombytes(img.mode, img.size, plain).save("decrypted.png")
+    Image.frombytes(img.mode, img.size, plain).save("data/decrypted.png")
     print("復号に成功しました！")
