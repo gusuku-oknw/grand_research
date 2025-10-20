@@ -28,11 +28,13 @@ class SearchableSISWithImageStore:
         seed: int = 2025,
         shares_dir: str = "img_shares",
         meta_dir: str = "img_meta",
+        secure_distance: bool = False,
     ):
         self.index = SearchableSISIndex(
             k=k, n=n, bands=bands, token_len=token_len, seed=seed
         )
         self.store = ShamirImageStore(k=k, n=n, shares_dir=shares_dir, meta_dir=meta_dir)
+        self.secure_distance = secure_distance
 
     def list_servers(self) -> List[int]:
         return self.index.list_servers()
@@ -51,6 +53,14 @@ class SearchableSISWithImageStore:
         topk: int,
         max_hamming: Optional[int],
     ) -> List[Tuple[str, int]]:
+        if self.secure_distance:
+            return self.index.rank_candidates_secure(
+                query_hash,
+                servers_for_query=servers_for_query,
+                candidates=candidates,
+                topk=topk,
+                max_hamming=max_hamming,
+            )
         return self.index.rank_candidates(
             query_hash,
             servers_for_query=servers_for_query,
@@ -78,7 +88,20 @@ class SearchableSISWithImageStore:
             max_hamming=max_hamming,
         )
         os.makedirs(recon_dir, exist_ok=True)
-        ranked: List[Tuple[str, int]] = result["ranked"]
+        query_hash = int(result["query_phash"], 16)
+        pre_ids = [img_id for img_id, _ in result["preselected"]]
+        if self.secure_distance:
+            ranked = self.rank_candidates(
+                query_hash,
+                servers_for_query=servers_for_query,
+                candidates=pre_ids,
+                topk=topk,
+                max_hamming=max_hamming,
+            )
+            result["ranked"] = ranked
+        else:
+            ranked = result["ranked"]
+        result["mode"] = "mpc" if self.secure_distance else "standard"
         reconstructions: List[ReconstructionResult] = []
         for image_id, _ in ranked[:reconstruct_top]:
             out_path = os.path.join(recon_dir, f"reconstructed_{image_id}.png")

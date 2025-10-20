@@ -9,6 +9,7 @@ import numpy as np
 
 from .phash import phash64, hash64_to_bytes, bytes_to_hash64, hamming64
 from .shamir import shamir_share_bytes, shamir_recover_bytes
+from .mpc import simulated_secure_hamming
 from .tokens import hmac_token, split_bands
 
 
@@ -103,6 +104,19 @@ class SearchableSISIndex:
         recovered = shamir_recover_bytes(subshares)
         return bytes_to_hash64(recovered)
 
+    def _collect_shares_for_servers(
+        self,
+        image_id: str,
+        servers: Iterable[int],
+    ) -> Optional[Dict[int, List[int]]]:
+        shares: Dict[int, List[int]] = {}
+        for server in servers:
+            stored = self.server_shares.get(server, {}).get(image_id)
+            if stored is None:
+                return None
+            shares[int(server)] = stored.share_bytes
+        return shares
+
     def preselect_candidates(
         self,
         query_hash: int,
@@ -146,6 +160,32 @@ class SearchableSISIndex:
             if recovered is None:
                 continue
             distance = hamming64(query_hash, recovered)
+            if max_hamming is not None and distance > max_hamming:
+                continue
+            results.append((image_id, distance))
+        results.sort(key=lambda item: (item[1], item[0]))
+        return results[:topk]
+
+    def rank_candidates_secure(
+        self,
+        query_hash: int,
+        servers_for_query: Iterable[int],
+        candidates: Iterable[str],
+        topk: int = 10,
+        max_hamming: Optional[int] = None,
+    ) -> List[Tuple[str, int]]:
+        """Rank candidates using疑似MPCハミング距離."""
+        xs = sorted(set(int(s) for s in servers_for_query))
+        if len(xs) < self.k:
+            raise ValueError(f"Need at least k={self.k} servers to reconstruct.")
+        query_shares_all = shamir_share_bytes(hash64_to_bytes(query_hash), self.k, self.n)
+        query_shares = {server: query_shares_all[server] for server in xs}
+        results: List[Tuple[str, int]] = []
+        for image_id in candidates:
+            candidate_shares = self._collect_shares_for_servers(image_id, xs)
+            if candidate_shares is None:
+                continue
+            distance = simulated_secure_hamming(query_shares, candidate_shares)
             if max_hamming is not None and distance > max_hamming:
                 continue
             results.append((image_id, distance))

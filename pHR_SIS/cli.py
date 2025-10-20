@@ -6,16 +6,28 @@ import argparse
 import glob
 import os
 import time
+from pathlib import Path
 from typing import Iterable, List
 
 from .image_store import ShamirImageStore
 from .index import SearchableSISIndex
 from .workflow import SearchableSISWithImageStore
 
+BASE_DIR = Path(__file__).resolve().parents[1]
 
-def _ensure_images(images_dir: str) -> List[str]:
-    os.makedirs(images_dir, exist_ok=True)
-    images = sorted(glob.glob(os.path.join(images_dir, "*")))
+
+def _resolve_under_base(path_str: str) -> Path:
+    path = Path(path_str)
+    if path.is_absolute():
+        return path
+    return (BASE_DIR / path).resolve()
+
+
+def _ensure_images(images_dir: Path) -> List[str]:
+    images_dir.mkdir(parents=True, exist_ok=True)
+    images = sorted(
+        str(p) for p in images_dir.iterdir() if p.is_file()
+    )
     if not images:
         raise SystemExit(f"Populate {images_dir} with images before running the demo.")
     return images
@@ -29,6 +41,8 @@ def _default_servers(index: SearchableSISIndex, k: int) -> List[int]:
 
 
 def run_selective_demo(args: argparse.Namespace) -> int:
+    images_dir = _resolve_under_base(args.images_dir)
+    args.images_dir = str(images_dir)
     index = SearchableSISIndex(
         k=args.k,
         n=args.n,
@@ -36,7 +50,7 @@ def run_selective_demo(args: argparse.Namespace) -> int:
         token_len=args.token_len,
         seed=args.seed,
     )
-    db_images = _ensure_images(args.images_dir)
+    db_images = _ensure_images(images_dir)
     print(f"[CONFIG] k={args.k}, n={args.n}, bands={args.bands}, "
           f"min_band_votes={args.min_band_votes}, topk={args.topk}, max_hamming={args.max_hamming}")
     print(f"[INFO]   images_dir={args.images_dir} (found {len(db_images)})")
@@ -51,7 +65,7 @@ def run_selective_demo(args: argparse.Namespace) -> int:
     print(f"[DONE] registered {len(db_images)} images in {dt:.3f}s")
     print("-" * 72)
 
-    query_path = args.query or db_images[0]
+    query_path = str(_resolve_under_base(args.query)) if args.query else db_images[0]
     servers = _default_servers(index, args.k)
     print(f"[QUERY] query={os.path.basename(query_path)} servers={servers}")
     result = index.query_selective(
@@ -92,16 +106,21 @@ def run_selective_demo(args: argparse.Namespace) -> int:
 
 
 def run_workflow_demo(args: argparse.Namespace) -> int:
+    images_dir = _resolve_under_base(args.images_dir)
+    shares_dir = str(_resolve_under_base(args.shares_dir))
+    meta_dir = str(_resolve_under_base(args.meta_dir))
+    recon_dir = str(_resolve_under_base(args.recon_dir))
+    args.images_dir = str(images_dir)
     workflow = SearchableSISWithImageStore(
         k=args.k,
         n=args.n,
         bands=args.bands,
         token_len=args.token_len,
         seed=args.seed,
-        shares_dir=args.shares_dir,
-        meta_dir=args.meta_dir,
+        shares_dir=shares_dir,
+        meta_dir=meta_dir,
     )
-    db_images = _ensure_images(args.images_dir)
+    db_images = _ensure_images(images_dir)
     print(f"[CONFIG] k={args.k}, n={args.n}, bands={args.bands}, "
           f"min_band_votes={args.min_band_votes}, topk={args.topk}, "
           f"max_hamming={args.max_hamming}, reconstruct_top={args.reconstruct_top}")
@@ -118,7 +137,7 @@ def run_workflow_demo(args: argparse.Namespace) -> int:
     print(f"[DONE] registered {len(ids)} images in {time.perf_counter() - t0:.3f}s")
     print("-" * 72)
 
-    query_path = args.query or db_images[0]
+    query_path = str(_resolve_under_base(args.query)) if args.query else db_images[0]
     servers = _default_servers(workflow.index, args.k)
     print(f"[QUERY] query={os.path.basename(query_path)} servers={servers}")
     result = workflow.query_and_optionally_reconstruct(
@@ -128,7 +147,7 @@ def run_workflow_demo(args: argparse.Namespace) -> int:
         topk=args.topk,
         max_hamming=args.max_hamming,
         reconstruct_top=args.reconstruct_top,
-        recon_dir=args.recon_dir,
+        recon_dir=recon_dir,
     )
 
     print(f"[P-HASH] query = {result['query_phash']}")
@@ -154,10 +173,14 @@ def run_workflow_demo(args: argparse.Namespace) -> int:
 
 
 def run_image_store_demo(args: argparse.Namespace) -> int:
-    store = ShamirImageStore(k=args.k, n=args.n, shares_dir=args.shares_dir, meta_dir=args.meta_dir)
-    db_images = _ensure_images(args.images_dir)
+    images_dir = _resolve_under_base(args.images_dir)
+    shares_dir = str(_resolve_under_base(args.shares_dir))
+    meta_dir = str(_resolve_under_base(args.meta_dir))
+    recon_dir = _resolve_under_base(args.recon_dir)
+    store = ShamirImageStore(k=args.k, n=args.n, shares_dir=shares_dir, meta_dir=meta_dir)
+    db_images = _ensure_images(images_dir)
     print(f"[CONFIG] k={args.k}, n={args.n}")
-    print(f"[INFO]   images_dir={args.images_dir} (found {len(db_images)})")
+    print(f"[INFO]   images_dir={images_dir} (found {len(db_images)})")
     print("-" * 72)
 
     t0 = time.perf_counter()
@@ -172,20 +195,21 @@ def run_image_store_demo(args: argparse.Namespace) -> int:
 
     target = ids[0]
     servers = list(range(1, args.k + 1))
-    out_path = os.path.join(args.recon_dir, f"reconstructed_{target}.png")
-    os.makedirs(args.recon_dir, exist_ok=True)
+    recon_dir.mkdir(parents=True, exist_ok=True)
+    out_path = recon_dir / f"reconstructed_{target}.png"
     ok = store.reconstruct(target, servers, out_path)
     print(f"[RECONSTRUCT] {target} with servers={servers} -> {'OK' if ok else 'FAIL'} ({out_path if ok else '-'})")
     try:
-        store.reconstruct(target, servers[:-1], out_path + ".tmp")
+        store.reconstruct(target, servers[:-1], str(out_path) + ".tmp")
     except ValueError:
         print(f"[RECONSTRUCT] {target} with servers={servers[:-1]} -> FAIL (expected)")
     return 0
 
 
 def run_secure_demo(args: argparse.Namespace) -> int:
+    images_dir = _resolve_under_base(args.images_dir)
     index = SearchableSISIndex(k=args.k, n=args.n, bands=args.bands, token_len=args.token_len, seed=args.seed)
-    db_images = _ensure_images(args.images_dir)
+    db_images = _ensure_images(images_dir)
     for i, path in enumerate(db_images):
         index.add_image(f"img_{i:04d}", path)
 
