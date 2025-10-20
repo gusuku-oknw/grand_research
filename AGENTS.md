@@ -1,16 +1,16 @@
 # Repository Guidelines
 
 ## Project Structure & Module Organization
-- `SIS_image/` contains the production-ready secret image sharing modules and demos; treat it as the primary source tree when adding reusable code or CLIs.
+- `pHR_SIS/` contains the production-ready secret image sharing modules and demos; treat it as the primary source tree when adding reusable code or CLIs.
 - `data/`, `image/`, and `out/` are input/output scratch spaces used by experiments—keep large artifacts out of version control and document reproducibility steps when updating them.
 - `.venv/` is the local Python environment and should remain untracked; introduce requirements in a manifest instead of editing this directory directly.
-- Store regenerated assets (e.g., `img_meta/`, `img_shares/`, `recon_out/`) under `SIS_image/` to keep checkpoints aligned with the code that produced them.
+- Store regenerated assets (e.g., `img_meta/`, `img_shares/`, `recon_out/`) under `pHR_SIS/` to keep checkpoints aligned with the code that produced them.
 
 ## Build, Test, and Development Commands
 - `python -m venv .venv` then `.\.venv\Scripts\activate` (Windows) or `source .venv/bin/activate` (Unix) to create and enter the project environment.
 - `pip install -r requirements.txt` to sync dependencies once the manifest is added or updated.
-- `python -m SIS_image.searchable_sis_phash_image_sis_demo --help` verifies the package entry point wiring without running a full demo.
-- `python SIS_image/searchable_sis_phash_image_sis_demo.py --images_dir images` remains the canonical smoke test until a CLI wrapper is published.
+- `python -m pHR_SIS.searchable_sis_phash_image_sis_demo --help` verifies the package entry point wiring without running a full demo.
+- `python pHR_SIS/searchable_sis_phash_image_sis_demo.py --images_dir images` remains the canonical smoke test until a CLI wrapper is published.
 
 ## Coding Style & Naming Conventions
 - Follow PEP 8 with 4-space indentation, lowercase_with_underscores for modules, and UpperCamelCase for classes; keep functions noun_verb for clarity (`add_image`, `preselect_candidates`).

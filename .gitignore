@@ -1,3 +1,7 @@
 .idea
 .venv
 __pycache__
+verify_artifacts/
+recon_out/
+data/
+images/

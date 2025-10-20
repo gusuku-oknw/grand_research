@@ -104,7 +104,7 @@ class SearchableSISIndex:
         recovered = shamir_recover_bytes(subshares)
         return bytes_to_hash64(recovered)
 
-    def _collect_shares_for_servers(
+    def get_shares(
         self,
         image_id: str,
         servers: Iterable[int],
@@ -182,7 +182,7 @@ class SearchableSISIndex:
         query_shares = {server: query_shares_all[server] for server in xs}
         results: List[Tuple[str, int]] = []
         for image_id in candidates:
-            candidate_shares = self._collect_shares_for_servers(image_id, xs)
+            candidate_shares = self.get_shares(image_id, xs)
             if candidate_shares is None:
                 continue
             distance = simulated_secure_hamming(query_shares, candidate_shares)
