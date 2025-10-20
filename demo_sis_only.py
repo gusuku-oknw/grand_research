@@ -10,10 +10,10 @@ from pHR_SIS.image_store import ShamirImageStore
 
 
 def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(description="Share and reconstruct images with Shamir SIS.")
+    parser = argparse.ArgumentParser(description="Share and reconstruct data with Shamir SIS.")
     parser.add_argument("--k", type=int, default=3)
     parser.add_argument("--n", type=int, default=5)
-    parser.add_argument("--images_dir", type=Path, default=Path("images"))
+    parser.add_argument("--images_dir", type=Path, default=Path("data"))
     parser.add_argument("--shares_dir", type=Path, default=Path("img_shares"))
     parser.add_argument("--meta_dir", type=Path, default=Path("img_meta"))
     parser.add_argument("--recon_dir", type=Path, default=Path("recon_out"))
@@ -25,7 +25,7 @@ def ensure_images(path: Path) -> list[Path]:
     path.mkdir(parents=True, exist_ok=True)
     images = sorted(p for p in path.iterdir() if p.is_file())
     if not images:
-        raise SystemExit(f"No images found in {path}. Add sample images and rerun.")
+        raise SystemExit(f"No data found in {path}. Add sample data and rerun.")
     return images
 
 
@@ -40,7 +40,7 @@ def main() -> int:
     )
 
     print(f"[CONFIG] k={args.k} n={args.n}")
-    print(f"[PATHS] images={args.images_dir} shares={args.shares_dir} meta={args.meta_dir}")
+    print(f"[PATHS] data={args.images_dir} shares={args.shares_dir} meta={args.meta_dir}")
     t0 = time.perf_counter()
     image_ids: list[str] = []
     for idx, path in enumerate(images):
@@ -48,7 +48,7 @@ def main() -> int:
         store.add_image(image_id, str(path), rng_seed=args.seed, skip_if_exists=False)
         image_ids.append(image_id)
         print(f"[SHARE] {image_id:<12} <- {path.name}")
-    print(f"[DONE] shared {len(image_ids)} images in {time.perf_counter() - t0:.3f}s")
+    print(f"[DONE] shared {len(image_ids)} data in {time.perf_counter() - t0:.3f}s")
 
     args.recon_dir.mkdir(parents=True, exist_ok=True)
     target = image_ids[0]

@@ -29,7 +29,7 @@ def _ensure_images(images_dir: Path) -> List[str]:
         str(p) for p in images_dir.iterdir() if p.is_file()
     )
     if not images:
-        raise SystemExit(f"Populate {images_dir} with images before running the demo.")
+        raise SystemExit(f"Populate {images_dir} with data before running the demo.")
     return images
 
 
@@ -62,7 +62,7 @@ def run_selective_demo(args: argparse.Namespace) -> int:
         phash = index.add_image(image_id, path)
         print(f"[ADD] {image_id:<12} file={os.path.basename(path):<36} pHash=0x{phash:016x}")
     dt = time.perf_counter() - t0
-    print(f"[DONE] registered {len(db_images)} images in {dt:.3f}s")
+    print(f"[DONE] registered {len(db_images)} data in {dt:.3f}s")
     print("-" * 72)
 
     query_path = str(_resolve_under_base(args.query)) if args.query else db_images[0]
@@ -134,7 +134,7 @@ def run_workflow_demo(args: argparse.Namespace) -> int:
         phash = workflow.add_image(image_id, path)
         ids.append(image_id)
         print(f"[ADD] {image_id:<12} file={os.path.basename(path):<36} pHash=0x{phash:016x}")
-    print(f"[DONE] registered {len(ids)} images in {time.perf_counter() - t0:.3f}s")
+    print(f"[DONE] registered {len(ids)} data in {time.perf_counter() - t0:.3f}s")
     print("-" * 72)
 
     query_path = str(_resolve_under_base(args.query)) if args.query else db_images[0]
@@ -190,7 +190,7 @@ def run_image_store_demo(args: argparse.Namespace) -> int:
         meta = store.add_image(image_id, path, rng_seed=args.seed, skip_if_exists=False)
         ids.append(image_id)
         print(f"[ADD] {image_id:<12} <- {meta.filename:<32} shape={meta.shape}")
-    print(f"[DONE] shared {len(ids)} images in {time.perf_counter() - t0:.3f}s")
+    print(f"[DONE] shared {len(ids)} data in {time.perf_counter() - t0:.3f}s")
     print("-" * 72)
 
     target = ids[0]
@@ -238,7 +238,7 @@ def build_parser() -> argparse.ArgumentParser:
         subparser.add_argument("--bands", type=int, default=8)
         subparser.add_argument("--token_len", type=int, default=8)
         subparser.add_argument("--seed", type=int, default=2025)
-        subparser.add_argument("--images_dir", type=str, default="images")
+        subparser.add_argument("--images_dir", type=str, default="data")
         subparser.add_argument("--topk", type=int, default=10)
         subparser.add_argument("--max_hamming", type=int, default=10)
 
@@ -258,11 +258,11 @@ def build_parser() -> argparse.ArgumentParser:
     workflow.add_argument("--query", type=str, default=None)
     workflow.set_defaults(func=run_workflow_demo)
 
-    store = sub.add_parser("image-store-demo", help="Share and reconstruct raw images.")
+    store = sub.add_parser("image-store-demo", help="Share and reconstruct raw data.")
     store.add_argument("--k", type=int, default=3)
     store.add_argument("--n", type=int, default=5)
     store.add_argument("--seed", type=int, default=2025)
-    store.add_argument("--images_dir", type=str, default="images")
+    store.add_argument("--images_dir", type=str, default="data")
     store.add_argument("--shares_dir", type=str, default="img_shares")
     store.add_argument("--meta_dir", type=str, default="img_meta")
     store.add_argument("--recon_dir", type=str, default="recon_out")

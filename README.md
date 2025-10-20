@@ -23,10 +23,10 @@ pip install -e .
 Once installed, run the CLI to access the demos:
 
 ```bash
-sis-image selective-demo --images_dir images/
-sis-image search-demo --images_dir images/ --reconstruct_top 2
-sis-image image-store-demo --images_dir images/
-sis-image secure-demo --images_dir images/
+sis-image selective-demo --images_dir data/
+sis-image search-demo --images_dir data/ --reconstruct_top 2
+sis-image image-store-demo --images_dir data/
+sis-image secure-demo --images_dir data/
 ```
 
 Each original script under `SIS_image/` now delegates to these entry points, keeping the legacy workflow intact while allowing production usage via the package.

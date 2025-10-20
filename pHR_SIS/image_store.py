@@ -32,7 +32,7 @@ class ImageMeta:
 
 
 class ShamirImageStore:
-    """Store that shards images into per-server Shamir shares."""
+    """Store that shards data into per-server Shamir shares."""
 
     def __init__(
         self,

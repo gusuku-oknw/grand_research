@@ -21,7 +21,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--topk", type=int, default=10)
     parser.add_argument("--max_hamming", type=int, default=10)
     parser.add_argument("--reconstruct_top", type=int, default=1)
-    parser.add_argument("--images_dir", type=Path, default=Path("images"))
+    parser.add_argument("--images_dir", type=Path, default=Path("data"))
     parser.add_argument("--shares_dir", type=Path, default=Path("img_shares"))
     parser.add_argument("--meta_dir", type=Path, default=Path("img_meta"))
     parser.add_argument("--recon_dir", type=Path, default=Path("recon_out"))
@@ -34,7 +34,7 @@ def ensure_images(path: Path) -> list[Path]:
     path.mkdir(parents=True, exist_ok=True)
     images = sorted(p for p in path.iterdir() if p.is_file())
     if not images:
-        raise SystemExit(f"No images found in {path}. Add sample images and rerun.")
+        raise SystemExit(f"No data found in {path}. Add sample data and rerun.")
     return images
 
 
@@ -55,14 +55,14 @@ def main() -> int:
     print(f"[MODE] {args.mode}")
     print(f"[CONFIG] k={args.k} n={args.n} bands={args.bands} min_band_votes={args.min_band_votes} "
           f"topk={args.topk} max_hamming={args.max_hamming} reconstruct_top={args.reconstruct_top}")
-    print(f"[PATHS] images={args.images_dir} shares={args.shares_dir} meta={args.meta_dir} recon={args.recon_dir}")
+    print(f"[PATHS] data={args.images_dir} shares={args.shares_dir} meta={args.meta_dir} recon={args.recon_dir}")
 
     t0 = time.perf_counter()
     for idx, path in enumerate(images):
         image_id = f"img_{idx:04d}"
         phash = workflow.add_image(image_id, str(path))
         print(f"[ADD] {image_id:<12} {path.name:<30} pHash=0x{phash:016x}")
-    print(f"[DONE] registered {len(images)} images in {time.perf_counter() - t0:.3f}s")
+    print(f"[DONE] registered {len(images)} data in {time.perf_counter() - t0:.3f}s")
 
     query_path = str(args.query) if args.query else str(images[0])
     servers = workflow.list_servers()[: args.k]
