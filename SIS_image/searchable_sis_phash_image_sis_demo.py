@@ -123,15 +123,15 @@ def shamir_recover_bytes(subshares: Dict[int, List[int]]) -> List[int]:
 def shamir_share_flat_bytes(flat_u8: np.ndarray, k: int, n: int, rng: np.random.Generator
                             ) -> Dict[int, np.ndarray]:
     L = flat_u8.size
-    s = flat_u8.astype(np.uint16)
-    coeffs = [rng.integers(0, P, size=L, dtype=np.uint16) for _ in range(k-1)]
+    s = flat_u8.astype(np.uint16)              # (L,)
+    # 係数行列 A: shape=(k-1, L)
+    A = rng.integers(0, P, size=(k-1, L), dtype=np.uint16).astype(np.uint32)
     shares: Dict[int, np.ndarray] = {}
     for x in range(1, n+1):
-        y = s.copy().astype(np.uint32)
-        t = np.ones(L, dtype=np.uint32)
-        for a in coeffs:
-            t = (t * x) % P
-            y = (y + (a.astype(np.uint32) * t)) % P
+        # x の冪ベクトル [x^1, x^2, ..., x^{k-1}] を一回で作る
+        x_pows = (np.power(x, np.arange(1, k, dtype=np.uint32), dtype=np.uint64) % P).astype(np.uint32)  # (k-1,)
+        # y = s + Σ_d A[d]*x^d
+        y = (s.astype(np.uint32) + (A * x_pows[:, None]).sum(axis=0)) % P
         shares[x] = y.astype(np.uint16)
     return shares
 
@@ -193,16 +193,22 @@ class ShamirImageStore:
     def _server_dir(self, x: int) -> str:
         return os.path.join(self.shares_dir, f"server_{x}")
 
-    def add_image(self, image_id: str, image_path: str, rng_seed: Optional[int] = None) -> ImageMeta:
+    def add_image(self, image_id: str, image_path: str, rng_seed=None, skip_if_exists: bool=True):
+        meta_path = os.path.join(self.meta_dir, f"{image_id}.npz")
+        share_paths = [os.path.join(self._server_dir(x), f"{image_id}.npz") for x in range(1, self.n+1)]
+        if skip_if_exists and os.path.exists(meta_path) and all(os.path.exists(p) for p in share_paths):
+            # すでに全サーバ分のシェアとメタがある → スキップ
+            meta = np.load(meta_path); shape = tuple(meta["shape"].tolist())
+            return ImageMeta(image_id=image_id, shape=shape, filename=os.path.basename(image_path))
+
+        # （なければ通常どおり作成・保存）
         arr, shape = load_image_u8(image_path)
         flat = arr.reshape(-1)
         rng = np.random.default_rng(rng_seed)
         shares = shamir_share_flat_bytes(flat, self.k, self.n, rng)
         for x, y in shares.items():
             np.savez_compressed(os.path.join(self._server_dir(x), f"{image_id}.npz"), share=y)
-        np.savez_compressed(os.path.join(self.meta_dir, f"{image_id}.npz"),
-                            shape=np.array(shape, dtype=np.int32),
-                            filename=os.path.basename(image_path))
+        np.savez_compressed(meta_path, shape=np.array(shape, dtype=np.int32), filename=os.path.basename(image_path))
         return ImageMeta(image_id=image_id, shape=shape, filename=os.path.basename(image_path))
 
     def reconstruct(self, image_id: str, servers: Iterable[int], out_path: str) -> bool:
