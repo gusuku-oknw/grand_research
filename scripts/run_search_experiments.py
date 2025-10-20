@@ -6,11 +6,16 @@ import argparse
 import csv
 import json
 import math
+import sys
 import time
 from collections import defaultdict
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
+
+ROOT_DIR = Path(__file__).resolve().parents[1]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.append(str(ROOT_DIR))
 
 import matplotlib.pyplot as plt
 import numpy as np
