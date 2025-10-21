@@ -70,9 +70,7 @@ class SearchableSISIndex:
                 )
                 bucket.add(image_id)
 
-    def add_image(self, image_id: str, image_path: str) -> int:
-        """Register an image and return its pHash."""
-        phash = phash64(image_path)
+    def _add_image_with_phash(self, image_id: str, image_path: str, phash: int) -> int:
         self._images[image_id] = image_path
         secret_bytes = hash64_to_bytes(phash)
         shares = shamir_share_bytes(secret_bytes, self.k, self.n)
@@ -82,6 +80,15 @@ class SearchableSISIndex:
             )
         self._index_band_tokens_for_image(image_id, phash)
         return phash
+
+    def add_image(self, image_id: str, image_path: str) -> int:
+        """Register an image and return its pHash."""
+        phash = phash64(image_path)
+        return self._add_image_with_phash(image_id, image_path, phash)
+
+    def add_image_with_phash(self, image_id: str, image_path: str, phash: int) -> int:
+        """Register an image using a precomputed pHash."""
+        return self._add_image_with_phash(image_id, image_path, phash)
 
     def list_servers(self) -> List[int]:
         """Return the configured server identifiers."""

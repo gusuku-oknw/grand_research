@@ -6,9 +6,11 @@ import argparse
 import csv
 import json
 import math
+import os
 import sys
 import time
 from collections import defaultdict
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
@@ -65,14 +67,77 @@ class QueryLog:
     bytes_c: int
 
 
-def compute_phashes(samples: List[Sample]) -> Tuple[Dict[str, int], float]:
-    phashes: Dict[str, int] = {}
-    total_time = 0.0
-    for sample in samples:
-        start = time.perf_counter()
-        phashes[sample.key] = phash64(str(sample.path))
-        total_time += (time.perf_counter() - start)
-    return phashes, (total_time / len(samples) * 1000.0 if samples else 0.0)
+def _load_phash_cache(cache_path: Path) -> Dict[str, int]:
+    if not cache_path.exists():
+        return {}
+    with cache_path.open("r", encoding="utf-8") as f:
+        data = json.load(f)
+    return {key: int(value, 16) for key, value in data.items()}
+
+
+def _save_phash_cache(cache_path: Path, phashes: Dict[str, int]) -> None:
+    serialisable = {key: f"{value:016x}" for key, value in phashes.items()}
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    with cache_path.open("w", encoding="utf-8") as f:
+        json.dump(serialisable, f)
+
+
+def _compute_phash(sample: Sample) -> Tuple[str, int, float]:
+    start = time.perf_counter()
+    value = phash64(str(sample.path))
+    elapsed = time.perf_counter() - start
+    return sample.key, value, elapsed
+
+
+def compute_phashes(
+    samples: List[Sample],
+    cache_path: Path,
+    *,
+    force_recompute: bool = False,
+    progress_interval: int = 1000,
+) -> Tuple[Dict[str, int], float]:
+    total = len(samples)
+    print(f"[pHash] Preparing hashes for {total} samples.")
+    cached: Dict[str, int] = {}
+    if cache_path.exists() and not force_recompute:
+        try:
+            cached = _load_phash_cache(cache_path)
+            print(f"[pHash] Loaded cache with {len(cached)} entries from {cache_path}.")
+        except Exception as exc:  # pragma: no cover - defensive
+            print(f"[pHash] Failed to load cache ({exc}); recomputing all hashes.")
+            cached = {}
+    phashes = {sample.key: cached[sample.key] for sample in samples if sample.key in cached}
+    missing_samples = [sample for sample in samples if sample.key not in phashes]
+    total_missing = len(missing_samples)
+    if total_missing == 0:
+        print("[pHash] Cache covers all samples; skipping recomputation.")
+        return phashes, 0.0
+
+    print(f"[pHash] Computing {total_missing} missing hashes (using up to {max(1, (os.cpu_count() or 1))} threads).")
+    start_all = time.perf_counter()
+    elapsed_sum = 0.0
+    processed = 0
+    workers = max(1, (os.cpu_count() or 1))
+    interval = max(1, progress_interval)
+
+    with ThreadPoolExecutor(max_workers=workers) as executor:
+        future_to_sample = {executor.submit(_compute_phash, sample): sample for sample in missing_samples}
+        for future in as_completed(future_to_sample):
+            key, value, elapsed = future.result()
+            phashes[key] = value
+            elapsed_sum += elapsed
+            processed += 1
+            if processed % interval == 0 or processed == total_missing:
+                percent = processed / total_missing * 100.0
+                total_elapsed = time.perf_counter() - start_all
+                print(f"[pHash] {processed}/{total_missing} computed ({percent:.1f}%) in {total_elapsed:.1f}s.")
+
+    if cache_path:
+        _save_phash_cache(cache_path, phashes)
+        print(f"[pHash] Cache written with {len(phashes)} entries to {cache_path}.")
+
+    avg_ms = (elapsed_sum / max(len(samples), 1)) * 1000.0
+    return phashes, avg_ms
 
 
 def stage_b_filter(
@@ -141,9 +206,20 @@ def compute_plain_distances(
     return distances
 
 
-def ensure_workflow(mode: str, base_dir: Path, k: int, n: int, bands: int, secure: bool, seed: int) -> SearchableSISWithImageStore:
-    shares_dir = base_dir / mode / "img_shares"
-    meta_dir = base_dir / mode / "img_meta"
+def ensure_workflow(
+    mode: str,
+    base_dir: Path,
+    k: int,
+    n: int,
+    bands: int,
+    secure: bool,
+    seed: int,
+    *,
+    shares_dir: Path,
+    meta_dir: Path,
+) -> SearchableSISWithImageStore:
+    shares_dir.mkdir(parents=True, exist_ok=True)
+    meta_dir.mkdir(parents=True, exist_ok=True)
     workflow = SearchableSISWithImageStore(
         k=k,
         n=n,
@@ -230,29 +306,62 @@ def main() -> None:
     positives_lookup = build_positive_lookup(samples)
     id_to_index = {sample.key: idx for idx, sample in enumerate(samples)}
 
-    phashes, phash_ms_avg = compute_phashes(samples)
+    phash_cache_path = work_dir / "phash_cache.json"
+    phashes, phash_ms_avg = compute_phashes(
+        samples,
+        phash_cache_path,
+        force_recompute=args.force,
+    )
 
     workflows: Dict[str, SearchableSISWithImageStore] = {}
     modes = args.modes
+    shared_store_dir = work_dir / "shared_store"
+    shared_shares_dir = shared_store_dir / "img_shares"
+    shared_meta_dir = shared_store_dir / "img_meta"
+    index_progress_interval = max(1, len(samples) // 20)
     for mode in modes:
         if mode == "plain":
             continue
         secure = mode == "sis_mpc"
         workflows[mode] = ensure_workflow(
             mode=mode,
-            base_dir=work_dir,
+            base_dir=work_dir / mode,
             k=args.k,
             n=args.n,
             bands=args.bands,
             secure=secure,
             seed=args.seed,
+            shares_dir=shared_shares_dir,
+            meta_dir=shared_meta_dir,
         )
-        for sample in samples:
-            workflows[mode].add_image(sample.key, str(sample.path))
+        start_mode = time.perf_counter()
+        print(f"[Index:{mode}] Adding {len(samples)} samples to index/store.")
+        for idx, sample in enumerate(samples, 1):
+            phash_value = phashes.get(sample.key)
+            if phash_value is None:
+                phash_value = phash64(str(sample.path))
+                phashes[sample.key] = phash_value
+            workflows[mode].add_image(sample.key, str(sample.path), phash=phash_value)
+            if idx % index_progress_interval == 0 or idx == len(samples):
+                elapsed = time.perf_counter() - start_mode
+                print(
+                    f"[Index:{mode}] {idx}/{len(samples)} ({idx / len(samples) * 100:.1f}%) processed in {elapsed:.1f}s."
+                )
 
     plain_index = SearchableSISIndex(k=args.k, n=args.n, bands=args.bands, token_len=8, seed=args.seed)
-    for sample in samples:
-        plain_index.add_image(sample.key, str(sample.path))
+    print(f"[Index:plain] Adding {len(samples)} samples to plain index.")
+    start_plain = time.perf_counter()
+    for idx, sample in enumerate(samples, 1):
+        phash_value = phashes.get(sample.key)
+        if phash_value is None:
+            phash_value = phash64(str(sample.path))
+            phashes[sample.key] = phash_value
+        plain_index.add_image_with_phash(sample.key, str(sample.path), phash_value)
+        if idx % index_progress_interval == 0 or idx == len(samples):
+            elapsed = time.perf_counter() - start_plain
+            print(
+                f"[Index:plain] {idx}/{len(samples)} ({idx / len(samples) * 100:.1f}%) processed in {elapsed:.1f}s."
+            )
 
     logs: List[QueryLog] = []
     roc_data: Dict[str, List[Tuple[List[float], List[float], List[float], List[float]]]] = defaultdict(list)

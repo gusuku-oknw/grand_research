@@ -39,9 +39,12 @@ class SearchableSISWithImageStore:
     def list_servers(self) -> List[int]:
         return self.index.list_servers()
 
-    def add_image(self, image_id: str, image_path: str) -> int:
+    def add_image(self, image_id: str, image_path: str, phash: int | None = None) -> int:
         """Register image shares for both hash search and full reconstruction."""
-        phash = self.index.add_image(image_id, image_path)
+        if phash is None:
+            phash = self.index.add_image(image_id, image_path)
+        else:
+            self.index.add_image_with_phash(image_id, image_path, phash)
         self.store.add_image(image_id, image_path)
         return phash
 
