@@ -58,7 +58,8 @@ Each original script under `SIS_image/` now delegates to these entry points, kee
        --mapping_json data/coco2017_derivatives/derivative_mapping.json \
        --max_images 5000
    ```
-   Adjust `--max_images` if you need a smaller subset (helpful when storage or runtime is limited).
+   - 既存の派生画像・マッピングがある場合は自動的に再利用されます。完全に作り直したいときは `--force` を付けてください。
+   - `--max_images` を下げると派生生成枚数を抑えられます（ Colab での試運転に有用）。
 
 4. **Run staged SIS experiments**
    ```
@@ -67,6 +68,7 @@ Each original script under `SIS_image/` now delegates to these entry points, kee
        --output_dir evaluation/results/coco_val2017_stageABC \
        --work_dir evaluation/artifacts/coco_val2017_stageABC
    ```
+   `metrics.csv` が既に存在する場合は自動でスキップされます。再計測したい場合は `--force` を追加してください。
 
 5. **Produce Matplotlib figures from the metrics**
    ```

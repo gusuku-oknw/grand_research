@@ -133,7 +133,12 @@ def main() -> None:
     parser.add_argument("--seed", type=int, default=2025)
     parser.add_argument("--output_json", type=Path, default=Path("reports/security_summary.json"))
     parser.add_argument("--leakage_trials", type=int, default=200)
+    parser.add_argument("--force", action="store_true", help="Regenerate summary even if output exists.")
     args = parser.parse_args()
+
+    if args.output_json.exists() and not args.force:
+        print(f"Security summary already exists at {args.output_json}. Use --force to regenerate.")
+        return
 
     mapping = load_derivative_mapping(args.mapping_json)
     samples = build_samples(mapping)

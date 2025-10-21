@@ -198,6 +198,7 @@ def main() -> None:
     parser.add_argument("--stage_b_bytes", type=int, default=2)
     parser.add_argument("--stage_b_margin", type=int, default=8)
     parser.add_argument("--modes", type=str, nargs="+", default=["plain", "sis_naive", "sis_selective", "sis_staged", "sis_mpc"])
+    parser.add_argument("--force", action="store_true", help="Regenerate outputs even if metrics already exist.")
     args = parser.parse_args()
 
     tau_values = sorted(set(args.tau_values))
@@ -209,6 +210,10 @@ def main() -> None:
     base_tau = tau_values[0]
 
     output_dir = args.output_dir
+    metrics_path = output_dir / "metrics.csv"
+    if metrics_path.exists() and not args.force:
+        print(f"Metrics already exist at {metrics_path}. Use --force to regenerate.")
+        return
     output_dir.mkdir(parents=True, exist_ok=True)
     work_dir = args.work_dir
     work_dir.mkdir(parents=True, exist_ok=True)

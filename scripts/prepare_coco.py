@@ -125,24 +125,58 @@ def prepare_derivatives(
     transforms: List[TransformSpec],
     max_images: int | None,
     seed: int,
-) -> Dict[str, Dict[str, str]]:
+    *,
+    skip_existing: bool,
+    existing_mapping: Dict[str, Dict[str, str]] | None = None,
+) -> tuple[Dict[str, Dict[str, str]], Dict[str, int]]:
     rng = np.random.default_rng(seed)
-    mapping: Dict[str, Dict[str, str]] = {}
+    mapping: Dict[str, Dict[str, str]] = dict(existing_mapping or {})
+    processed_images = 0
+    generated_variants = 0
+    skipped_variants = 0
+
     for idx, img_path in enumerate(iter_image_paths(source_dir)):
         if max_images is not None and idx >= max_images:
             break
         image_id = img_path.stem
-        base_img = load_image(img_path)
-        out_base = output_dir / image_id / "original"
-        save_image(base_img, out_base.with_suffix(".png"))
-        mapping.setdefault(image_id, {})["original"] = str(out_base.with_suffix(".png"))
+        image_mapping = mapping.setdefault(image_id, {})
+        base_img: Image.Image | None = None
+
+        def ensure_base() -> Image.Image:
+            nonlocal base_img
+            if base_img is None:
+                base_img = load_image(img_path)
+            return base_img
+
+        processed_images += 1
+
+        out_base = (output_dir / image_id / "original").with_suffix(".png")
+        if skip_existing and out_base.exists():
+            skipped_variants += 1
+        else:
+            img_obj = ensure_base()
+            save_image(img_obj, out_base)
+            generated_variants += 1
+        image_mapping["original"] = str(out_base)
+
         for spec in transforms:
-            out_path = output_dir / image_id / spec.name
-            transformed = apply_transform(base_img, spec, rng)
-            quality = spec.params.get("quality")
-            save_image(transformed, out_path.with_suffix(".png"), quality=None if quality is None else quality)
-            mapping[image_id][spec.name] = str(out_path.with_suffix(".png"))
-    return mapping
+            out_path = (output_dir / image_id / spec.name).with_suffix(".png")
+            if skip_existing and out_path.exists():
+                skipped_variants += 1
+            else:
+                img_obj = ensure_base()
+                transformed = apply_transform(img_obj, spec, rng)
+                quality = spec.params.get("quality")
+                save_image(transformed, out_path, quality=None if quality is None else quality)
+                generated_variants += 1
+            image_mapping[spec.name] = str(out_path)
+
+    stats = {
+        "processed_images": processed_images,
+        "generated_variants": generated_variants,
+        "skipped_variants": skipped_variants,
+    }
+    return mapping, stats
 
 
 def main() -> None:
@@ -153,6 +187,7 @@ def main() -> None:
     parser.add_argument("--max_images", type=int, default=None)
     parser.add_argument("--seed", type=int, default=2025)
     parser.add_argument("--mapping_json", type=Path, default=Path("data/coco/derivative_mapping.json"))
+    parser.add_argument("--force", action="store_true", help="Regenerate derivatives even if outputs exist.")
     args = parser.parse_args()
 
     if args.transforms == "default":
@@ -160,19 +195,33 @@ def main() -> None:
     else:
         raise NotImplementedError("Custom transforms not yet implemented.")
 
-    mapping = prepare_derivatives(
+    existing_mapping: Dict[str, Dict[str, str]] | None = None
+    if not args.force and args.mapping_json.exists():
+        with args.mapping_json.open("r", encoding="utf-8") as f:
+            existing_mapping = json.load(f)
+
+    mapping, stats = prepare_derivatives(
         source_dir=args.coco_dir,
         output_dir=args.output_dir,
         transforms=transforms,
         max_images=args.max_images,
         seed=args.seed,
+        skip_existing=not args.force,
+        existing_mapping=existing_mapping,
     )
 
     args.mapping_json.parent.mkdir(parents=True, exist_ok=True)
     with args.mapping_json.open("w", encoding="utf-8") as f:
         json.dump(mapping, f, ensure_ascii=False, indent=2)
 
-    print(f"Generated derivatives for {len(mapping)} images.")
+    print(
+        "Processed {processed} images "
+        "(generated {generated} variants, reused {skipped} existing).".format(
+            processed=stats["processed_images"],
+            generated=stats["generated_variants"],
+            skipped=stats["skipped_variants"],
+        )
+    )
 
 
 if __name__ == "__main__":
