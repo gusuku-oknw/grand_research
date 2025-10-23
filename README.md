@@ -37,6 +37,16 @@ sis-image secure-demo --images_dir data/
 
 Each original script under `SIS_image/` now delegates to these entry points, keeping the legacy workflow intact while allowing production usage via the package.
 
+## Stage-A/B/C Pipeline Overview
+
+The searchable SIS workflow narrows candidates in three stages before reconstructing images:
+
+- **Stage-A - Band Token Preselection**: During ingestion the index splits the 64-bit pHash into `bands` chunks, issues HMAC tokens per server, and stores image IDs per token bucket (`pHR_SIS/index.py`). At query time `preselect_candidates` tallies token matches and keeps IDs meeting `min_band_votes`, drastically shrinking the candidate set.
+- **Stage-B - Partial Share Filtering**: `stage_b_filter` (`scripts/run_search_experiments.py`) pulls only a few bytes from each server's Shamir share, reconstructs an approximate hash, and rejects candidates whose Hamming distance exceeds `max_hamming + margin`, tracking both latency and communication.
+- **Stage-C - Selective Reconstruction and Ranking**: Remaining IDs undergo full share recovery via `rank_candidates` (or MPC-based `rank_candidates_secure`) in `pHR_SIS/index.py`, with `SearchableSISWithImageStore` (`pHR_SIS/workflow.py`) optionally rebuilding the top `reconstruct_top` images to deliver final matches.
+
+`scripts/run_search_experiments.py` records timing, candidate counts, and byte usage for each stage so the generated figures (`candidate_reduction.png`, `time_breakdown.png`) and metrics feed directly into the reporting template under `reports/2025_selective_reconstruction_report_template.md`.
+
 ## Reproducible Experiments (Local or Colab)
 
 1. **Clone the repository**

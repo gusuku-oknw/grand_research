@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "sis-image"
+version = "0.1.0"
+description = "Secret Image Sharing utilities with searchable perceptual hashes"
+requires-python = ">=3.10"
+authors = [
+    { name = "Grand Research Contributors" },
+]
+readme = "README.md"
+dependencies = [
+    "numpy>=1.24",
+    "Pillow>=9.0",
+]
+
+[project.scripts]
+sis-image = "sis_image.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["sis_image*"]
