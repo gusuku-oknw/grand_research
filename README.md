@@ -1,32 +1,42 @@
 # SIS Image Sharing Package
 
-This repository packages the original SIS demos into an installable Python module named `sis_image`. It bundles reusable implementations of the following components:
+This repository packages the original **Searchable Image Sharing (SIS)** demos into an installable Python module named **`sis_image`**.
+It provides modular, reproducible research components for privacy-preserving image search and reconstruction, using perceptual hashing (`pHash`) and Shamir secret sharing.
 
-- 64-bit perceptual hashing helpers.
-- Shamir secret sharing for hash bytes and full RGB images.
-- Search indices that use banded HMAC tokens to preselect candidates before reconstructing secrets.
-- A persistent image store capable of reconstructing full-resolution assets from any `k` of `n` servers.
+---
 
-## Installation
+## 🔧 Features
 
-Create a virtual environment and install the package in editable mode:
+The `sis_image` package implements reusable building blocks:
+
+* **64-bit perceptual hashing (`pHash`)** — DCT-based perceptual similarity hashing.
+* **Shamir secret sharing** — secure split & recovery for hash bytes and RGB images.
+* **Searchable SIS index** — banded HMAC tokens for secure candidate preselection.
+* **Persistent image store** — reconstructs full images from any `k` of `n` servers.
+* **Modular experiment runners (`sis_modes/`)** — independently testable Stage-A/B/C pipelines.
+
+---
+
+## 🧩 Installation
 
 ```bash
 python -m venv .venv
-. .venv/bin/activate  # Windows: .\.venv\Scripts\activate
+. .venv/bin/activate      # Windows: .\.venv\Scripts\activate
 pip install --upgrade pip
 pip install -e .
 ```
 
-For lightweight usage (e.g. running the experiment scripts directly), the core dependencies are listed in `requirements.txt`:
+For quick experimentation:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-## Command Line Demos
+---
 
-Once installed, run the CLI to access the demos:
+## 🧪 Command-Line Demos
+
+Once installed, the package provides a unified CLI entry point:
 
 ```bash
 sis-image selective-demo --images_dir data/
@@ -35,70 +45,173 @@ sis-image image-store-demo --images_dir data/
 sis-image secure-demo --images_dir data/
 ```
 
-Each original script under `SIS_image/` now delegates to these entry points, keeping the legacy workflow intact while allowing production usage via the package.
+Each original demo under `SIS_image/` now delegates to these commands for reproducibility.
 
-## Stage-A/B/C Pipeline Overview
+---
 
-The searchable SIS workflow narrows candidates in three stages before reconstructing images:
+## ⚙️ Modular Experiment Architecture
 
-- **Stage-A - Band Token Preselection**: During ingestion the index splits the 64-bit pHash into `bands` chunks, issues HMAC tokens per server, and stores image IDs per token bucket (`pHR_SIS/index.py`). At query time `preselect_candidates` tallies token matches and keeps IDs meeting `min_band_votes`, drastically shrinking the candidate set.
-- **Stage-B - Partial Share Filtering**: `stage_b_filter` (`scripts/run_search_experiments.py`) pulls only a few bytes from each server's Shamir share, reconstructs an approximate hash, and rejects candidates whose Hamming distance exceeds `max_hamming + margin`, tracking both latency and communication.
-- **Stage-C - Selective Reconstruction and Ranking**: Remaining IDs undergo full share recovery via `rank_candidates` (or MPC-based `rank_candidates_secure`) in `pHR_SIS/index.py`, with `SearchableSISWithImageStore` (`pHR_SIS/workflow.py`) optionally rebuilding the top `reconstruct_top` images to deliver final matches.
+Experiment scripts under `scripts/` are now **mode-based** and follow a shared interface.
 
-`scripts/run_search_experiments.py` records timing, candidate counts, and byte usage for each stage so the generated figures (`candidate_reduction.png`, `time_breakdown.png`) and metrics feed directly into the reporting template under `reports/2025_selective_reconstruction_report_template.md`.
+```
+scripts/
+  run_search_experiments.py      # orchestrator (lightweight)
+sis_modes/
+  base.py                        # abstract ModeRunner, PhaseTimer, ByteMeter
+  plain.py                       # baseline pHash ranking
+  sis_naive.py                   # full reconstruction baseline
+  sis_selective.py               # Stage-B selective reconstruction
+  sis_staged.py                  # staged refinement pipeline
+  sis_mpc.py                     # MPC-style fully private variant
+  sis_common.py                  # shared helpers (filtering, ranking)
+```
 
-## Reproducible Experiments (Local or Colab)
+### 🧠 Stage-A/B/C Overview
 
-1. **Clone the repository**
+| Stage       | Description                                                                           | Module / Function                                  | Primary Metrics                                   |
+| :---------- | :------------------------------------------------------------------------------------ | :------------------------------------------------- | :------------------------------------------------ |
+| **Stage-A** | Band-token preselection via HMAC buckets per server. Filters 1-2 orders of magnitude. | `index.preselect_candidates`                       | Candidate count (`n_cand_f1`), bytes (`bytes_f1`) |
+| **Stage-B** | Partial share recovery for approximate Hamming filtering.                             | `sis_common.stage_b_filter`                        | Time, communication, candidate reduction          |
+| **Stage-C** | Final reconstruction & secure ranking (selective or MPC).                             | `index.rank_candidates` / `rank_candidates_secure` | Precision, recall, latency                        |
+
+All modes conform to the same `ModeRunner` interface in `sis_modes/base.py`, making experiments interchangeable and their results comparable.
+
+---
+
+## 🧬 Reproducible Experiments
+
+### 1. Clone and Setup
+
+```bash
+git clone https://github.com/<org>/Grand_Research.git
+cd Grand_Research
+pip install -r requirements.txt
+```
+
+### 2. Prepare COCO Derivatives
+
+```bash
+python scripts/prepare_coco.py \
+    --coco_dir data/coco2017/val2017 \
+    --output_dir data/coco2017_derivatives/val2017 \
+    --mapping_json data/coco2017_derivatives/derivative_mapping.json \
+    --profile medium \
+    --variant_scope all \
+    --max_images 5000
+```
+
+* Reuse existing derivatives automatically; add `--force` to rebuild.
+* Use `--profile light` or lower `--max_images` for Colab or limited machines.
+* `--list_transforms` shows available augmentations (JPEG noise, rotation, color shifts, etc.).
+
+### 3. Run Modular SIS Experiments
+
+```bash
+PYTHONPATH=. python scripts/run_search_experiments.py \
+    --mapping_json data/coco2017_derivatives/derivative_mapping.json \
+    --output_dir evaluation/results/coco_val2017_modular \
+    --work_dir evaluation/artifacts/coco_val2017_modular \
+    --modes plain sis_naive sis_selective sis_staged sis_mpc \
+    --max_queries 500 \
+    --bands 8 --k 3 --n 5 \
+    --force
+```
+
+* Each mode logs Stage-wise latency, bytes, and precision metrics.
+* Output:
+
+  * `metrics.csv` — consolidated per-query results
+  * `security_summary.json` — entropy & leakage analysis
+  * `evaluation/figures/*.png` — candidate reduction & latency graphs
+
+### 4. Generate Figures
+
+```bash
+python -m evaluation.plotting \
+    evaluation/results/coco_val2017_modular/metrics.csv \
+    --output_dir evaluation/figures/coco_val2017_modular
+```
+
+Produces:
+
+* `candidate_reduction.png`
+* `communication_breakdown.png`
+* `precision_latency.png`
+* `reconstruction_ratio.png`
+* `tau_sensitivity.png`
+
+---
+
+## ☁️ Running on Google Colab
+
+1. Mount or upload the COCO `val2017` images under `/content/data/coco2017/val2017`.
+
+2. Install dependencies:
+
+   ```python
+   !pip install -r requirements.txt
+   import sys, pathlib
+   sys.path.append(str(pathlib.Path('.').resolve()))
+   ```
+
+3. Run the same commands as above with smaller datasets:
+
    ```bash
-   git clone https://github.com/<org>/Grand_Research.git
-   cd Grand_Research
+   !python scripts/run_search_experiments.py \
+       --max_images 1000 --max_queries 100 \
+       --modes sis_selective sis_mpc
    ```
 
-2. **Install dependencies**
-   ```bash
-   pip install -r requirements.txt
-   ```
+4. Copy results to Google Drive before session ends.
 
-3. **Prepare COCO derivatives**
-   ```
-   python scripts/prepare_coco.py \
-       --coco_dir data/coco2017/val2017 \
-       --output_dir data/coco2017_derivatives/val2017 \
-       --mapping_json data/coco2017_derivatives/derivative_mapping.json \
-       --profile medium \
-       --variant_scope all \
-       --max_images 5000
-   ```
-   - Existing derivatives and mappings are reused automatically; add `--force` to rebuild from scratch.
-   - Switch difficulty with `--profile`, and use `--variant_scope original_only` or `--include_transforms watermark_timestamp` when you want a lighter validation set.
-   - Combine `--exclude_transforms rotate_plus30_black` and `--list_transforms` to prune or inspect the catalog quickly.
-   - Install `pillow-avif-plugin` for AVIF variants; pass `--no_progress` to silence logs, and lower `--max_images` on Colab to save runtime and storage.
+---
 
-4. **Run staged SIS experiments**
-   ```
-   PYTHONPATH=. python scripts/run_search_experiments.py \
-       --mapping_json data/coco2017_derivatives/derivative_mapping.json \
-       --output_dir evaluation/results/coco_val2017_stageABC \
-       --work_dir evaluation/artifacts/coco_val2017_stageABC
-   ```
-   - If `metrics.csv` already exists, rerun with `--force` to refresh the results.
+## 📊 Reporting
 
-5. **Produce Matplotlib figures from the metrics**
-   ```
-   python -m evaluation.plotting \
-       evaluation/results/coco_val2017_stageABC/metrics.csv \
-       --output_dir evaluation/figures/coco_val2017_stageABC
-   ```
+All experiment outputs feed into the Markdown report template:
 
-### Running on Google Colab
+```
+reports/
+  2025_selective_reconstruction_report_template.md
+```
 
-- Upload or mount the COCO `val2017` images and annotations under `/content/data/coco2017/val2017`.
-- Install dependencies:
-  ```python
-  !pip install -r requirements.txt
-  import sys, pathlib
-  sys.path.append(str(pathlib.Path('.').resolve()))
-  ```
-- Execute the same commands as above (use `!python ...`), optionally lowering `--max_images` / `--max_queries` to fit Colab’s storage and time limits.
-- Persist large outputs (e.g. `derivative_mapping.json`, figure PNGs) by copying them to Google Drive before ending the session.
+This includes automatic embedding of:
+
+* `metrics.csv` summaries
+* ROC/PR curves
+* Stage-wise communication/latency breakdowns
+
+---
+
+## 🧱 Package Internals
+
+```
+sis_image/
+  phash.py              # perceptual hashing (64-bit DCT)
+  shamir.py             # GF(257) secret sharing core
+  index.py              # banded HMAC token index
+  workflow.py           # SIS + image store orchestration
+  utils.py              # common math and I/O helpers
+evaluation/
+  dataset.py            # COCO derivative mapping
+  plotting.py           # report figure generator
+```
+
+---
+
+## 🧠 Related Papers / Concepts
+
+* **Shamir, Adi.** *How to share a secret.* Communications of the ACM, 1979.
+* **Zauner, C.** *Implementation and benchmarking of perceptual image hash functions.* 2010.
+* **VeilHash / Searchable SIS (2024)** — pHash × SIS framework enabling privacy-preserving perceptual search.
+
+---
+
+## 🧾 License
+
+MIT License © 2025 Grand Research Lab.
+You may reuse, modify, or cite this package for academic and research purposes with attribution.
+
+---
+
+Would you like me to also generate a **Japanese-translated version** of this updated README (技術要約を含む) for documentation or publication use?
