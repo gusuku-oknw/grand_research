@@ -1,4 +1,4 @@
-"""Run SIS+pHash search experiments on COCO derivatives."""
+"""Run SIS+pHash search experiments on COCO derivatives (patched)."""
 
 from __future__ import annotations
 
@@ -10,7 +10,6 @@ import os
 import sys
 import time
 from collections import defaultdict
-from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, asdict
 from pathlib import Path
 from typing import Dict, Iterable, List, Sequence, Tuple
@@ -53,9 +52,9 @@ class QueryLog:
     recall_at_10: float
     map: float
     phash_ms: float
-    stage_a_ms: float
-    stage_b_ms: float
-    stage_c_ms: float
+    stage_a_ms: float   # F1: Screen
+    stage_b_ms: float   # F2: Score (前処理側)
+    stage_c_ms: float   # F2: Score (最終評価側)
     total_ms: float
     n_dataset: int
     n_candidates_a: int
@@ -120,6 +119,7 @@ def compute_phashes(
     workers = max(1, (os.cpu_count() or 1))
     interval = max(1, progress_interval)
 
+    from concurrent.futures import ThreadPoolExecutor, as_completed
     with ThreadPoolExecutor(max_workers=workers) as executor:
         future_to_sample = {executor.submit(_compute_phash, sample): sample for sample in missing_samples}
         for future in as_completed(future_to_sample):
@@ -149,8 +149,7 @@ def stage_b_filter(
     bytes_per_candidate: int = 2,
     margin: int = 8,
 ) -> Tuple[List[str], float, int]:
-    from pHR_SIS.shamir import shamir_recover_bytes
-
+    # 粗選別後の「近い候補」を部分復元バイトのみでさらに絞る
     start = time.perf_counter()
     filtered: List[str] = []
     bytes_used = 0
@@ -175,9 +174,15 @@ def build_ranking_list(
     remaining_candidates: Sequence[str],
     plain_distances: Dict[str, int],
 ) -> List[str]:
+    """
+    ranked_subset: [(id, distance)] ・・・モードが実際に評価した上位群
+    remaining_candidates: そのモードが「評価対象」とみなすIDプール（非評価分）
+    plain_distances: plainのみ尻尾のソートに使用。非plainでは使わず順不同のまま後段に連結。
+    """
     ranked_ids = [image_id for image_id, _ in ranked_subset]
     remaining = [cid for cid in remaining_candidates if cid not in ranked_ids]
-    remaining.sort(key=lambda cid: plain_distances[cid])
+    if plain_distances:  # plainのみ尻尾を距離順ソート
+        remaining.sort(key=lambda cid: plain_distances.get(cid, 999))
     return ranked_ids + remaining
 
 
@@ -257,7 +262,7 @@ def aggregate_distance_histograms(
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="Run SIS+pHash experiments and collect metrics.")
+    parser = argparse.ArgumentParser(description="Run SIS+pHash experiments and collect metrics (patched).")
     parser.add_argument("--mapping_json", type=Path, default=Path("data/coco/derivative_mapping.json"))
     parser.add_argument("--output_dir", type=Path, default=Path("reports"))
     parser.add_argument("--work_dir", type=Path, default=Path("eval_artifacts"))
@@ -273,16 +278,11 @@ def main() -> None:
     parser.add_argument("--tau_values", type=int, nargs="+", default=[6, 8, 10, 12])
     parser.add_argument("--stage_b_bytes", type=int, default=2)
     parser.add_argument("--stage_b_margin", type=int, default=8)
-    parser.add_argument("--modes", type=str, nargs="+", default=["plain", "sis_naive", "sis_selective", "sis_staged", "sis_mpc"])
+    parser.add_argument("--sis_modes", type=str, nargs="+", default=["plain", "sis_naive", "sis_selective", "sis_staged", "sis_mpc"])
     parser.add_argument("--force", action="store_true", help="Regenerate outputs even if metrics already exist.")
     args = parser.parse_args()
 
-    tau_values = sorted(set(args.tau_values))
-    if not tau_values:
-        if args.max_hamming is not None:
-            tau_values = [args.max_hamming]
-        else:
-            tau_values = [10]
+    tau_values = sorted(set(args.tau_values)) or [args.max_hamming or 10]
     base_tau = tau_values[0]
 
     output_dir = args.output_dir
@@ -367,8 +367,8 @@ def main() -> None:
     roc_data: Dict[str, List[Tuple[List[float], List[float], List[float], List[float]]]] = defaultdict(list)
     distance_hist = aggregate_distance_histograms(mapping, phashes)
     candidate_reduction: Dict[str, List[Tuple[int, int, int]]] = defaultdict(list)
-    time_stack: Dict[str, List[Tuple[float, float, float, float]]] = defaultdict(list)
-    byte_stack: Dict[str, List[Tuple[int, int, int]]] = defaultdict(list)
+    time_stack: Dict[str, List[Tuple[float, float, float, float]]] = defaultdict(list)  # F0/F1/F2/F3
+    byte_stack: Dict[str, List[Tuple[int, int, int]]] = defaultdict(list)  # F1/F2/F3 のみ
     variant_metrics_raw: Dict[str, Dict[str, List[Dict[str, float]]]] = defaultdict(lambda: defaultdict(list))
     reconstruction_ratios: Dict[str, List[float]] = defaultdict(list)
     stage_ratio: Dict[str, List[Tuple[float, float, float]]] = defaultdict(list)
@@ -389,6 +389,8 @@ def main() -> None:
             start_total = time.perf_counter()
 
             if mode == "plain":
+                # F0: Feature (pHash)は事前計算の平均を使用
+                # F1/F2/F3は定義上ほぼ0。ここではF3に合算（結果出力）
                 sorted_items = sorted(plain_distances.items(), key=lambda kv: (kv[1], kv[0]))
                 final_ranking_ids = [item[0] for item in sorted_items]
                 n_dataset = len(sorted_items)
@@ -396,10 +398,12 @@ def main() -> None:
                 stage_c_ms = (time.perf_counter() - start_total) * 1000.0
                 bytes_a = bytes_b = bytes_c = 0
                 n_candidates_a = n_candidates_b = n_candidates_c = len(sorted_items)
-                n_reconstructed = len(sorted_items)
+                n_reconstructed = len(sorted_items)  # baseline=1.0
             else:
                 workflow = workflows[mode]
                 index = workflow.index
+
+                # ==== F1: Screen ====
                 if mode == "sis_naive":
                     stage_a_ms = 0.0
                     bytes_a = 0
@@ -414,54 +418,97 @@ def main() -> None:
                     candidates_a = index.preselect_candidates(query_hash, servers, min_band_votes=args.min_band_votes)
                     stage_a_ms = (time.perf_counter() - stage_a_start) * 1000.0
                     n_candidates_a = len(candidates_a)
+                    # トークン送信の概算：サーバ×バンド×トークン長
                     bytes_a = len(servers) * index.bands * index.token_len
-                    candidates_ids = [c[0] for c in candidates_a]
+
+                    candidate_ids_a = [c[0] for c in candidates_a]
                     stage_b_candidates, stage_b_ms, bytes_b = stage_b_filter(
                         index=index,
                         query_hash=query_hash,
                         servers=servers,
-                        candidates=candidates_ids,
+                        candidates=candidate_ids_a,
                         max_hamming=args.max_hamming,
                         bytes_per_candidate=args.stage_b_bytes,
                         margin=args.stage_b_margin,
                     )
                     candidates_b = stage_b_candidates
                     n_candidates_b = len(candidates_b)
+
+                # ==== F2: Score ====
                 stage_c_start = time.perf_counter()
+                # 評価対象トップK（staged/selectiveは限定、naiveは全件、mpcは候補全件を評価してもよいが計算量を考慮）
+                if mode in ("sis_selective", "sis_staged"):
+                    pool_size = len(candidates_b if mode != "sis_naive" else samples)
+                    topk_eval = min(args.topk, pool_size)
+                elif mode == "sis_naive":
+                    topk_eval = len(samples)
+                else:  # sis_mpc
+                    topk_eval = len(candidates_b)
+
+                eval_pool = (candidates_b if mode != "sis_naive" else [s.key for s in samples])
+
                 if mode == "sis_mpc":
                     ranked = index.rank_candidates_secure(
                         query_hash,
                         servers_for_query=servers,
-                        candidates=candidates_b if mode != "sis_naive" else [sample.key for sample in samples],
-                        topk=len(candidates_b if mode != "sis_naive" else samples),
+                        candidates=eval_pool,
+                        topk=topk_eval,
                         max_hamming=args.max_hamming,
                     )
                 else:
                     ranked = index.rank_candidates(
                         query_hash,
                         servers_for_query=servers,
-                        candidates=candidates_b if mode != "sis_naive" else [sample.key for sample in samples],
-                        topk=len(candidates_b if mode != "sis_naive" else samples),
+                        candidates=eval_pool,
+                        topk=topk_eval,
                         max_hamming=args.max_hamming,
                     )
                 stage_c_ms = (time.perf_counter() - stage_c_start) * 1000.0
+
+                # ==== ランキングをモードの世界観で構成 ====
+                # 非plainは尻尾をplain距離でソートしない（未評価は順不同で後ろへ）
+                tail_pool = eval_pool
                 final_ranking_ids = build_ranking_list(
                     ranked_subset=ranked,
-                    remaining_candidates=[sample.key for sample in samples],
-                    plain_distances=plain_distances,
+                    remaining_candidates=tail_pool,
+                    plain_distances=(plain_distances if mode == "plain" else {}),
                 )
                 n_candidates_c = len(ranked)
                 n_dataset = len(samples)
+
+                # ==== 通信・復元のカウント ====
                 if mode == "sis_naive":
                     n_candidates_a = n_dataset
                     n_candidates_b = n_dataset
-                bytes_c = len(servers) * 8 * len(ranked)
-                n_reconstructed = len(ranked)
+
+                if mode == "sis_mpc":
+                    bytes_c = 0  # 秘密演算は別カウンタを設けるまで0扱い
+                    n_reconstructed = 0  # 復元しない
+                else:
+                    bytes_c = len(servers) * 8 * len(ranked)
+                    n_reconstructed = len(ranked)  # 実際に評価・復元した件数（topk_eval相当）
 
             total_ms = (time.perf_counter() - start_total) * 1000.0
             metrics = compute_precision_metrics(final_ranking_ids, id_to_index, positives)
             map_value = compute_map(final_ranking_ids, id_to_index, positives)
 
+            # ==== ROC/PR 用：モード固有の距離ベクトル ====
+            # plain: 平文距離。非plain: 評価済みはStage-Cの距離、未評価は最大+1の距離として扱う
+            if mode == "plain":
+                mode_distances = [plain_distances[s.key] for s in samples]
+            else:
+                ranked_dists = dict(ranked)  # id -> distance
+                mode_distances = [ranked_dists.get(s.key, 65) for s in samples]  # 未評価=65(>64)
+
+            labels_vec = [1 if id_to_index[s.key] in positives else 0 for s in samples]
+            fpr, tpr, prec, rec = roc_pr_curves(
+                distances=mode_distances,
+                labels=labels_vec,
+                tau_values=tau_values,
+            )
+            roc_data[mode].append((fpr, tpr, prec, rec))
+
+            # ==== ログ出力 ====
             for tau in tau_values:
                 logs.append(
                     QueryLog(
@@ -478,19 +525,19 @@ def main() -> None:
                         recall_at_5=metrics.recall_at.get(5, 0.0),
                         recall_at_10=metrics.recall_at.get(10, 0.0),
                         map=map_value,
-                        phash_ms=phash_ms_avg,
-                        stage_a_ms=stage_a_ms,
-                        stage_b_ms=stage_b_ms,
-                        stage_c_ms=stage_c_ms,
+                        phash_ms=phash_ms_avg,     # F0
+                        stage_a_ms=stage_a_ms,     # F1
+                        stage_b_ms=stage_b_ms,     # F2(前段)
+                        stage_c_ms=stage_c_ms,     # F2(最終)
                         total_ms=total_ms,
                         n_dataset=n_dataset,
                         n_candidates_a=n_candidates_a,
                         n_candidates_b=n_candidates_b,
                         n_candidates_c=n_candidates_c,
                         n_reconstructed=n_reconstructed,
-                        bytes_a=bytes_a,
-                        bytes_b=bytes_b,
-                        bytes_c=bytes_c,
+                        bytes_a=bytes_a,           # F1
+                        bytes_b=bytes_b,           # F2(前段)
+                        bytes_c=bytes_c,           # F2(最終) ※MPCは0
                     )
                 )
                 if tau == base_tau and n_dataset > 0:
@@ -517,14 +564,6 @@ def main() -> None:
             time_stack[mode].append((phash_ms_avg, stage_a_ms, stage_b_ms, stage_c_ms))
             byte_stack[mode].append((bytes_a, bytes_b, bytes_c))
 
-            labels_plain = [1 if id_to_index[sample.key] in positives else 0 for sample in samples]
-            fpr, tpr, prec, rec = roc_pr_curves(
-                distances=[plain_distances[sample.key] for sample in samples],
-                labels=labels_plain,
-                tau_values=tau_values,
-            )
-            roc_data[mode].append((fpr, tpr, prec, rec))
-
     metrics_csv = output_dir / "metrics.csv"
     with metrics_csv.open("w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=list(asdict(logs[0]).keys()))
@@ -532,6 +571,7 @@ def main() -> None:
         for log in logs:
             writer.writerow(asdict(log))
 
+    # ===== Summary text =====
     summary_lines = []
     for mode in modes:
         mode_logs = [log for log in logs if log.mode == mode]
@@ -552,6 +592,7 @@ def main() -> None:
 
     analysis_payload: Dict[str, object] = {}
 
+    # ===== Variant recall summary & plot =====
     variant_summary: Dict[str, Dict[str, Dict[str, float]]] = {}
     if variant_metrics_raw:
         for mode, variant_map in variant_metrics_raw.items():
@@ -608,6 +649,7 @@ def main() -> None:
                 fig.savefig(output_dir / "variant_recall.png")
                 plt.close(fig)
 
+    # ===== Candidate reduction ratio (F1/F2/F3) =====
     stage_ratio_summary: Dict[str, Dict[str, float]] = {}
     if stage_ratio:
         for mode, ratios in stage_ratio.items():
@@ -627,19 +669,20 @@ def main() -> None:
                 if not stats:
                     continue
                 ax.plot(
-                    ["Stage-A", "Stage-B", "Stage-C"],
+                    ["F1", "F2", "F3"],
                     [stats["stage_a_ratio"], stats["stage_b_ratio"], stats["stage_c_ratio"]],
                     marker="o",
                     label=mode,
                 )
             ax.set_ylabel("Candidate Ratio vs Full Dataset")
             ax.set_ylim(0.0, 1.05)
-            ax.set_title("Normalized Candidate Reduction per Stage")
+            ax.set_title("Normalized Candidate Reduction by Phase")
             ax.legend()
             fig.tight_layout()
             fig.savefig(output_dir / "candidate_reduction_ratio.png")
             plt.close(fig)
 
+    # ===== Reconstruction ratio =====
     reconstruction_summary: Dict[str, float] = {}
     if reconstruction_ratios:
         for mode, values in reconstruction_ratios.items():
@@ -652,7 +695,7 @@ def main() -> None:
             values = [reconstruction_summary[mode] for mode in modes_rr]
             if modes_rr:
                 fig, ax = plt.subplots(figsize=(6, 4))
-                ax.bar(modes_rr, values, color="steelblue")
+                ax.bar(modes_rr, values)
                 ax.axhline(1.0, color="gray", linestyle="--", linewidth=1, label="Full Reconstruction")
                 ax.set_ylabel("Reconstructed / Total")
                 ax.set_ylim(0.0, max(1.05, max(values) * 1.05))
@@ -666,7 +709,7 @@ def main() -> None:
         analysis_path = output_dir / "analysis_extended.json"
         analysis_path.write_text(json.dumps(analysis_payload, indent=2), encoding="utf-8")
 
-    # Candidate reduction plot
+    # ===== Candidate reduction plot (F1/F2/F3) =====
     fig, ax = plt.subplots(figsize=(8, 5))
     modes_for_plot = [mode for mode in modes if mode != "plain"]
     for mode in modes_for_plot:
@@ -675,15 +718,15 @@ def main() -> None:
             continue
         arr = np.array(counts)
         mean_counts = arr.mean(axis=0)
-        ax.plot(["Stage-A", "Stage-B", "Stage-C"], mean_counts, marker="o", label=mode)
+        ax.plot(["F1", "F2", "F3"], mean_counts, marker="o", label=mode)
     ax.set_ylabel("Candidates")
-    ax.set_title("Candidate Reduction per Stage")
+    ax.set_title("Candidate Reduction by Phase")
     ax.legend()
     fig.tight_layout()
     fig.savefig(output_dir / "candidate_reduction.png")
     plt.close(fig)
 
-    # Time stack bar
+    # ===== Time stack bar (F0/F1/F2/F3) =====
     fig, ax = plt.subplots(figsize=(8, 5))
     modes_time = []
     stack_vals = []
@@ -696,18 +739,44 @@ def main() -> None:
     if stack_vals:
         stack_vals = np.array(stack_vals)
         bottoms = np.zeros(len(modes_time))
-        labels = ["pHash", "Stage-A", "Stage-B", "Stage-C"]
+        labels = ["F0: Feature", "F1: Screen", "F2: Score", "F3: Materialize"]
         for i in range(stack_vals.shape[1]):
             ax.bar(modes_time, stack_vals[:, i], bottom=bottoms, label=labels[i])
             bottoms += stack_vals[:, i]
         ax.set_ylabel("Time (ms)")
-        ax.set_title("Stage Timing Breakdown")
+        ax.set_title("Phase Timing Breakdown")
         ax.legend()
         fig.tight_layout()
         fig.savefig(output_dir / "time_breakdown.png")
         plt.close(fig)
 
-    # ROC / PR curves
+    # ===== Communication breakdown (F1/F2/F3) =====
+    # byte_stack: (bytes_a, bytes_b, bytes_c)
+    if byte_stack:
+        fig, ax = plt.subplots(figsize=(8, 5))
+        modes_comm = []
+        comm_vals = []
+        for mode in modes:
+            if mode not in byte_stack:
+                continue
+            arr = np.array(byte_stack[mode])
+            modes_comm.append(mode)
+            comm_vals.append(arr.mean(axis=0))
+        if comm_vals:
+            comm_vals = np.array(comm_vals)
+            bottoms = np.zeros(len(modes_comm))
+            labels = ["F1: Screen", "F2: Score(early)", "F2: Score(final)"]
+            for i in range(comm_vals.shape[1]):
+                ax.bar(modes_comm, comm_vals[:, i], bottom=bottoms, label=labels[i])
+                bottoms += comm_vals[:, i]
+            ax.set_ylabel("Bytes per Query")
+            ax.set_title("Phase Communication Breakdown")
+            ax.legend()
+            fig.tight_layout()
+            fig.savefig(output_dir / "communication_breakdown.png")
+            plt.close(fig)
+
+    # ===== ROC / PR curves =====
     roc_pr_summary_data: Dict[str, Dict[str, List[float]]] = {}
     for mode in modes:
         records = roc_data.get(mode)
@@ -768,7 +837,7 @@ def main() -> None:
         fig.savefig(output_dir / "tau_sensitivity.png")
         plt.close(fig)
 
-    # Distance histograms
+    # ===== Distance histograms =====
     bins = list(range(0, 65))
     for variant, distances in distance_hist.items():
         counts, edges = histogram(distances, bins=bins)
