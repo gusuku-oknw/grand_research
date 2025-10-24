@@ -3,6 +3,14 @@
 This note explains every figure emitted by `scripts/run_search_experiments.py` and `python -m evaluation.plotting`. Keep it nearby when you review `metrics.csv` or compile reports.  
 このドキュメントは `scripts/run_search_experiments.py` と `python -m evaluation.plotting` が生成する図表の内容と目的を整理したものです。`metrics.csv` の検証やレポート作成時に参照してください。
 
+### Metric Glossary / 指標の用語集
+- **P@k (Precision@k)**: 上位 k 件の候補のうち正解が含まれる割合。例として P@1 は「最上位が正解か」、P@10 は上位10件のうち正解率がどれだけあるかを示します。  
+  Share of relevant items within the top-k ranked results; P@1 captures whether the very first item is relevant, while P@10 averages relevance across the top ten.
+- **R@k (Recall@k)**: 上位 k 件までに正解が何件含まれているかを、正解の総数で割った値。正解を取り逃していないか、カバレッジを評価します。  
+  Fraction of all relevant items that appear within the top-k results; measures coverage and missed positives.
+- **mAP (mean Average Precision)**: 各クエリごとの Average Precision（正解を見つけるたびの精度を順位で平均した値）を、すべてのクエリで平均した指標。ランキング全体で早い段階に正解を提示できているほど高くなります。  
+  Dataset-wide mean of per-query average precision; rewards rankers that surface relevant items near the top.
+
 ## precision_summary.png
 - **Source / 出力元**: `python -m evaluation.plotting ...`
 - **Contents / 内容**: Bar chart of mean P@1, P@5, P@10, R@10, and mAP for each retrieval mode.  
@@ -79,4 +87,3 @@ This note explains every figure emitted by `scripts/run_search_experiments.py` a
   クエリとデータベースのハミング距離分布を変換別にヒストグラムで示します。
 - **Purpose / 目的**: Visualises distance distributions to justify threshold choices and detect overlap.  
   閾値設定の妥当性やクラス間の重なりを確認するための材料になります。
-

@@ -66,10 +66,14 @@ The searchable SIS workflow narrows candidates in three stages before reconstruc
        --coco_dir data/coco2017/val2017 \
        --output_dir data/coco2017_derivatives/val2017 \
        --mapping_json data/coco2017_derivatives/derivative_mapping.json \
+       --profile medium \
+       --variant_scope all \
        --max_images 5000
    ```
-   - 既存の派生画像・マッピングがある場合は自動的に再利用されます。完全に作り直したいときは `--force` を付けてください。
-   - `--max_images` を下げると派生生成枚数を抑えられます（ Colab での試運転に有用）。
+   - Existing derivatives and mappings are reused automatically; add `--force` to rebuild from scratch.
+   - Switch difficulty with `--profile`, and use `--variant_scope original_only` or `--include_transforms watermark_timestamp` when you want a lighter validation set.
+   - Combine `--exclude_transforms rotate_plus30_black` and `--list_transforms` to prune or inspect the catalog quickly.
+   - Install `pillow-avif-plugin` for AVIF variants; pass `--no_progress` to silence logs, and lower `--max_images` on Colab to save runtime and storage.
 
 4. **Run staged SIS experiments**
    ```
@@ -78,7 +82,7 @@ The searchable SIS workflow narrows candidates in three stages before reconstruc
        --output_dir evaluation/results/coco_val2017_stageABC \
        --work_dir evaluation/artifacts/coco_val2017_stageABC
    ```
-   `metrics.csv` が既に存在する場合は自動でスキップされます。再計測したい場合は `--force` を追加してください。
+   - If `metrics.csv` already exists, rerun with `--force` to refresh the results.
 
 5. **Produce Matplotlib figures from the metrics**
    ```
