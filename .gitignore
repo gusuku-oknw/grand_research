@@ -5,3 +5,6 @@ verify_artifacts/
 recon_out/
 data/
 images/
+evaluation/**/*.png
+evaluation/**/*.npz
+evaluation/**/*.csv

@@ -68,11 +68,34 @@ sis_modes/
 
 ### 🧠 Stage-A/B/C Overview
 
+**Full processing flow**
+
+1. **Preparation / Index construction**
+   1. Compute a 64-bit pHash for every image.
+   2. Split the hash into `bands` (例: 8 bits × 8 bands).
+   3. For each band, compute `HMAC(key_i, band_i)`.
+   4. Register tokens in the distributed index (only encrypted, searchable tokens exist at this point; Shamir shares are stored but never reconstructed yet).
+2. **Stage-A (token match prefilter)** – Run the same band/HMAC process for a query, ask servers for matching IDs, and keep only candidates that share tokens. No Shamir reconstruction occurs.
+3. **Stage-B (partial share inspection)** – Fetch a few bytes from each candidate’s Shamir shares to approximate the pHash and reject distant items. SIS is first exercised here.
+4. **Stage-C (full reconstruction / MPC)** – Gather `k` shares for the surviving candidates and fully reconstruct hashes/images (selective mode), or run MPC ranking without revealing plaintext (MPC mode).
+
 | Stage       | Description                                                                           | Module / Function                                  | Primary Metrics                                   |
 | :---------- | :------------------------------------------------------------------------------------ | :------------------------------------------------- | :------------------------------------------------ |
-| **Stage-A** | Band-token preselection via HMAC buckets per server. Filters 1-2 orders of magnitude. | `index.preselect_candidates`                       | Candidate count (`n_cand_f1`), bytes (`bytes_f1`) |
-| **Stage-B** | Partial share recovery for approximate Hamming filtering.                             | `sis_common.stage_b_filter`                        | Time, communication, candidate reduction          |
-| **Stage-C** | Final reconstruction & secure ranking (selective or MPC).                             | `index.rank_candidates` / `rank_candidates_secure` | Precision, recall, latency                        |
+| **Stage-A** | Secure band-token fan-out (HMAC buckets per pHash band) that tallies votes and eliminates >90% of the corpus before touching shares. | `index.preselect_candidates`                       | Candidate count (`n_cand_f1`), bytes (`bytes_f1`) |
+| **Stage-B** | Partial share sampling: reconstruct only a few bytes per server to approximate Hamming distance, logging the bandwidth/time used per rejection. | `sis_common.stage_b_filter`                        | Time, communication, candidate reduction          |
+| **Stage-C** | Full share recovery and ranking (selective or MPC) that rebuilds hashes/images for the top hits and emits the final ordering. | `index.rank_candidates` / `rank_candidates_secure` | Precision, recall, latency                        |
+
+#### Mode-specific Stage Usage
+
+| Mode | Stage-A | Stage-B | Stage-C |
+| :--- | :------ | :------ | :------ |
+| `plain` | ❌（全件 pHash 距離でスキャン） | ❌ | ✅ `compute_plain_distances` でハッシュランキングのみ |
+| `sis_naive` | ❌（候補絞り込みなしで全候補を再構成） | ❌ | ✅ `rank_candidates` で全件復号・比較 |
+| `sis_selective` | ✅ HMAC バンド得票で候補削減 | ✅ `stage_b_filter` による部分シェア検査 | ✅ Top-K のみ再構成・評価 |
+| `sis_staged` | ✅ （`sis_selective` と同一・別名） | ✅ | ✅ |
+| `sis_mpc` | ✅ HMAC バンド得票 | ❌（情報漏えい防止のためスキップ） | ✅ `rank_candidates_secure` による MPC ランキング（再構成は行わない） |
+
+> `sis_staged` は `sis_selective` の別名クラスで、Stage-A/B/C の挙動は同一です。
 
 All modes conform to the same `ModeRunner` interface in `sis_modes/base.py`, making experiments interchangeable and their results comparable.
 
@@ -118,6 +141,7 @@ PYTHONPATH=. python scripts/run_search_experiments.py \
 ```
 
 * Each mode logs Stage-wise latency, bytes, and precision metrics.
+* Install `tqdm` to see per-query progress bars: `pip install tqdm`.
 * Output:
 
   * `metrics.csv` — consolidated per-query results

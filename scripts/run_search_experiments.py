@@ -20,6 +20,12 @@ from sis_modes.sis_selective import SelectiveRunner
 from sis_modes.sis_staged import StagedRunner
 from sis_modes.sis_mpc import MPCRunner
 
+try:
+    from tqdm import tqdm
+except ImportError:  # pragma: no cover - optional dependency
+    tqdm = None
+
+# クエリ単位で Stage 計測値や精度をまとめるデータクラス
 @dataclass
 class QueryLog:
     dataset: str; mode: str; query_key: str; query_variant: str; transform: str; tau: int
@@ -29,6 +35,7 @@ class QueryLog:
     n_dataset: int; n_candidates_a: int; n_candidates_b: int; n_candidates_c: int
     n_reconstructed: int; bytes_a: int; bytes_b: int; bytes_c: int
 
+# 実行するモード名のリストから ModeRunner の辞書を生成
 def build_runners(names: List[str]) -> Dict[str, ModeRunner]:
     all_ = {
         "plain": PlainRunner(),
@@ -39,11 +46,13 @@ def build_runners(names: List[str]) -> Dict[str, ModeRunner]:
     }
     return {n: all_[n] for n in names}
 
+# SIS モードごとに共有ストアを初期化（必要なフォルダも作成）
 def ensure_workflow(mode: str, k:int,n:int,bands:int,seed:int, secure:bool, shares_dir:Path, meta_dir:Path) -> SearchableSISWithImageStore:
     shares_dir.mkdir(parents=True, exist_ok=True); meta_dir.mkdir(parents=True, exist_ok=True)
     return SearchableSISWithImageStore(k=k,n=n,bands=bands,token_len=8,seed=seed,shares_dir=str(shares_dir),
                                        meta_dir=str(meta_dir), secure_distance=secure)
 
+# すべてのサンプルについて pHash を計算し辞書と平均処理時間を返す
 def compute_phashes(samples: List[Sample]) -> Tuple[Dict[str,int], float]:
     t0 = time.perf_counter(); ph = {}
     for s in samples:
@@ -51,11 +60,20 @@ def compute_phashes(samples: List[Sample]) -> Tuple[Dict[str,int], float]:
     avg_ms = ((time.perf_counter() - t0) * 1000.0) / max(len(samples),1)
     return ph, avg_ms
 
+# モードのランキング結果から Precision/Recall と AP を算出
 def metrics_from_ranking(ranking_ids: List[str], id_to_index: Dict[str,int], positives: List[int]) -> Tuple[RankingMetrics, float]:
     ranked_indices = [id_to_index[r] for r in ranking_ids]
     metrics = precision_recall_at_k(ranked_indices, positives, k_values=[1,5,10])
     ap = average_precision_from_ranking(ranked_indices, set(positives))
     return metrics, ap
+
+
+# tqdm が利用可能な場合だけ進捗バーに差し替えるヘルパ
+def iter_progress(iterable, *, desc: str, total: int | None = None, leave: bool = False):
+    """Wrap iterable with tqdm when available."""
+    if tqdm is None:
+        return iterable
+    return tqdm(iterable, desc=desc, total=total, leave=leave)
 
 def main():
     ap = argparse.ArgumentParser()
@@ -81,29 +99,33 @@ def main():
     output_dir: Path = args.output_dir; output_dir.mkdir(parents=True, exist_ok=True)
     mapping = load_derivative_mapping(args.mapping_json)
     samples = build_samples(mapping, include_variants=None)
+    # クエリ数をサンプリングして高速化するオプション
     if args.max_queries and args.max_queries < len(samples):
         rng = np.random.default_rng(args.seed)
         idxs = rng.choice(len(samples), size=args.max_queries, replace=False)
         samples = [samples[i] for i in idxs]
 
+    # Ground truth（同一画像ID）と pHash 辞書を構築
     positives_lookup = build_positive_lookup(samples)
     id_to_index = {s.key:i for i,s in enumerate(samples)}
     phashes, phash_ms_avg = compute_phashes(samples)
 
     # indices
     plain_index = SearchableSISIndex(k=args.k, n=args.n, bands=args.bands, token_len=8, seed=args.seed)
-    for s in samples: plain_index.add_image_with_phash(s.key, str(s.path), phashes[s.key])
+    for s in iter_progress(samples, desc="Indexing (plain)", total=len(samples), leave=False):
+        plain_index.add_image_with_phash(s.key, str(s.path), phashes[s.key])
 
     workflows: Dict[str, SearchableSISWithImageStore] = {}
-    for m in args.modes:
+    for m in iter_progress(args.modes, desc="Preparing workflows", total=len(args.modes), leave=False):
         if m=="plain": continue
         wf = ensure_workflow(m, args.k,args.n,args.bands,args.seed, secure=(m=="sis_mpc"),
                              shares_dir=args.work_dir/ "shared_store"/"img_shares",
                              meta_dir  =args.work_dir/ "shared_store"/"img_meta")
-        for s in samples:
+        for s in iter_progress(samples, desc=f"Ingest {m}", total=len(samples), leave=False):
             wf.add_image(s.key, str(s.path), phash=phashes[s.key])
         workflows[m] = wf
 
+    # クエリごとに問い合わせるサーバー（k 台）を決定
     servers = plain_index.list_servers()[: args.k]
     ctx = ModeContext(samples=samples, id_to_index=id_to_index, phashes=phashes,
                       plain_index=plain_index, workflows=workflows, servers=servers, args=args)
@@ -111,9 +133,10 @@ def main():
     runners = build_runners(args.modes)
 
     logs: List[QueryLog] = []
+    # ROC / PR 曲線を後段で生成するための蓄積領域
     roc_data: Dict[str, List[Tuple[List[float], List[float], List[float], List[float]]]] = {m:[] for m in args.modes}
 
-    for q in samples:
+    for q in iter_progress(samples, desc="Running queries", total=len(samples)):
         positives = positives_lookup[q.image_id]
         qhash = phashes[q.key]
         for name, runner in runners.items():
@@ -121,7 +144,8 @@ def main():
             res: ModeResult = runner.run_query(q.key, qhash, ctx)
             total_ms = (time.perf_counter() - start_total) * 1000.0
             metrics, apv = metrics_from_ranking(res.final_ranking_ids, id_to_index, positives)
-            # ROC/PR: モード固有距離（未評価=65）
+            # ROC/PR 用に候補距離を配列化（伸びしろ=65で代用）
+
             ranked_d = dict(res.ranked_pairs)
             mode_d = [ (ranked_d.get(s.key, 65)) for s in samples ]
             labels = [1 if id_to_index[s.key] in positives else 0 for s in samples]
@@ -142,7 +166,7 @@ def main():
                     bytes_a=res.stats.bytes_f1, bytes_b=res.stats.bytes_f2_early, bytes_c=res.stats.bytes_f2_final
                 ))
 
-    # metrics.csv
+    # metrics.csv を書き出し（各クエリ x モードの行）
     metrics_csv = output_dir / "metrics.csv"
     with metrics_csv.open("w", newline="", encoding="utf-8") as f:
         import csv
