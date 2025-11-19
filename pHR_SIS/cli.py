@@ -7,7 +7,7 @@ import glob
 import os
 import time
 from pathlib import Path
-from typing import Iterable, List
+from typing import Iterable, List, Optional
 
 from .image_store import ShamirImageStore
 from .index import SearchableSISIndex
@@ -38,6 +38,24 @@ def _default_servers(index: SearchableSISIndex, k: int) -> List[int]:
     if len(servers) < k:
         raise SystemExit(f"Configured index exposes only {len(servers)} servers; need at least k={k}.")
     return servers[:k]
+
+
+def _select_query_servers(raw: str | None, available: List[int], default: List[int]) -> List[int]:
+    if raw:
+        requested: List[int] = []
+        for part in raw.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                requested.append(int(part))
+            except ValueError:
+                raise SystemExit(f"Invalid server ID '{part}' in --query_servers.")
+        matched = [s for s in requested if s in available]
+        if not matched:
+            raise SystemExit("No requested servers are available in the current index.")
+        return matched
+    return default
 
 
 def run_selective_demo(args: argparse.Namespace) -> int:
@@ -77,6 +95,7 @@ def run_selective_demo(args: argparse.Namespace) -> int:
     )
 
     print(f"[P-HASH] query = {result['query_phash']}")
+    print(f"[MODE INFO] share_mode={result.get('share_mode', args.share_strategy)}, fusion_mode={result.get('fusion_mode', False)}")
     print("[PRESELECT] (image_id, votes)")
     if result["preselected"]:
         for image_id, votes in result["preselected"]:
@@ -119,6 +138,9 @@ def run_workflow_demo(args: argparse.Namespace) -> int:
         seed=args.seed,
         shares_dir=shares_dir,
         meta_dir=meta_dir,
+        share_strategy=args.share_strategy,
+        fusion_grid=args.fusion_grid,
+        fusion_threshold=args.fusion_threshold,
     )
     db_images = _ensure_images(images_dir)
     print(f"[CONFIG] k={args.k}, n={args.n}, bands={args.bands}, "
@@ -138,8 +160,12 @@ def run_workflow_demo(args: argparse.Namespace) -> int:
     print("-" * 72)
 
     query_path = str(_resolve_under_base(args.query)) if args.query else db_images[0]
-    servers = _default_servers(workflow.index, args.k)
-    print(f"[QUERY] query={os.path.basename(query_path)} servers={servers}")
+    available_servers = workflow.list_servers()
+    default_servers = _default_servers(workflow.index, args.k)
+    servers = _select_query_servers(args.query_servers, available_servers, default_servers)
+    server_note = " (insufficient shares configured)" if len(servers) < args.k else ""
+    print(f"[STRATEGY] share_strategy={args.share_strategy}")
+    print(f"[QUERY] query={os.path.basename(query_path)} servers={servers}{server_note}")
     result = workflow.query_and_optionally_reconstruct(
         query_path,
         servers_for_query=servers,
@@ -169,6 +195,10 @@ def run_workflow_demo(args: argparse.Namespace) -> int:
             print(f"  - {image_id:<12} -> {path}")
     else:
         print("[RECONSTRUCTED] (none)")
+    if result.get("reconstruction_errors"):
+        print("[RECON ERRORS]")
+        for err in result["reconstruction_errors"]:
+            print(f"  - {err}")
     return 0
 
 
@@ -256,6 +286,15 @@ def build_parser() -> argparse.ArgumentParser:
     workflow.add_argument("--shares_dir", type=str, default="img_shares")
     workflow.add_argument("--meta_dir", type=str, default="img_meta")
     workflow.add_argument("--query", type=str, default=None)
+    workflow.add_argument("--share_strategy", choices=["shamir", "phash-fusion"], default="shamir")
+    workflow.add_argument("--fusion_grid", type=int, default=8)
+    workflow.add_argument("--fusion_threshold", type=int, default=None)
+    workflow.add_argument(
+        "--query_servers",
+        type=str,
+        default=None,
+        help="Comma-separated server IDs to use during the query (allows < k to trigger fusion fallback).",
+    )
     workflow.set_defaults(func=run_workflow_demo)
 
     store = sub.add_parser("image-store-demo", help="Share and reconstruct raw data.")

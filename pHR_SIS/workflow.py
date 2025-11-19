@@ -8,6 +8,7 @@ from typing import Dict, Iterable, List, Optional, Tuple
 
 from .image_store import ShamirImageStore
 from .index import SearchableSISIndex
+from .fusion_index import FusionAwareSearchableSISIndex
 
 
 @dataclass
@@ -29,10 +30,27 @@ class SearchableSISWithImageStore:
         shares_dir: str = "img_shares",
         meta_dir: str = "img_meta",
         secure_distance: bool = False,
+        share_strategy: str = "shamir",
+        fusion_grid: int = 8,
+        fusion_threshold: int | None = None,
     ):
-        self.index = SearchableSISIndex(
-            k=k, n=n, bands=bands, token_len=token_len, seed=seed
-        )
+        if share_strategy not in {"shamir", "phash-fusion"}:
+            raise ValueError(f"Unsupported share_strategy='{share_strategy}'")
+        self.share_strategy = share_strategy
+        if share_strategy == "phash-fusion":
+            self.index = FusionAwareSearchableSISIndex(
+                k=k,
+                n=n,
+                bands=bands,
+                token_len=token_len,
+                seed=seed,
+                fusion_grid=fusion_grid,
+                fusion_threshold=fusion_threshold,
+            )
+        else:
+            self.index = SearchableSISIndex(
+                k=k, n=n, bands=bands, token_len=token_len, seed=seed
+            )
         self.store = ShamirImageStore(k=k, n=n, shares_dir=shares_dir, meta_dir=meta_dir)
         self.secure_distance = secure_distance
 
@@ -90,6 +108,8 @@ class SearchableSISWithImageStore:
             topk=topk,
             max_hamming=max_hamming,
         )
+        result.setdefault("share_mode", self.share_strategy)
+        result.setdefault("fusion_mode", False)
         os.makedirs(recon_dir, exist_ok=True)
         query_hash = int(result["query_phash"], 16)
         pre_ids = [img_id for img_id, _ in result["preselected"]]
@@ -106,12 +126,20 @@ class SearchableSISWithImageStore:
             ranked = result["ranked"]
         result["mode"] = "mpc" if self.secure_distance else "standard"
         reconstructions: List[ReconstructionResult] = []
+        reconstruction_errors: List[str] = []
         for image_id, _ in ranked[:reconstruct_top]:
             out_path = os.path.join(recon_dir, f"reconstructed_{image_id}.png")
-            ok = self.store.reconstruct(image_id, servers_for_query, out_path)
+            try:
+                ok = self.store.reconstruct(image_id, servers_for_query, out_path)
+            except ValueError as exc:
+                ok = False
+                reconstruction_errors.append(str(exc))
             if ok:
                 reconstructions.append(ReconstructionResult(image_id=image_id, path=out_path))
         result["reconstructed"] = [(item.image_id, item.path) for item in reconstructions]
+        result["reconstruction_errors"] = reconstruction_errors
+        result["share_strategy"] = self.share_strategy
+        result["insufficient_shares"] = len(set(int(s) for s in servers_for_query)) < self.index.k
         return result
 
 

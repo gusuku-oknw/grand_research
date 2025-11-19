@@ -13,6 +13,8 @@ from .shamir import (
     shamir_recover_flat_bytes,
     FIELD_PRIME,
 )
+from .fusion import fusion_hash64
+from .fusion_index import FusionAwareSearchableSISIndex
 from .index import SearchableSISIndex, StoredShare
 from .image_store import ShamirImageStore, ImageMeta
 from .workflow import SearchableSISWithImageStore
@@ -27,6 +29,8 @@ __all__ = [
     "shamir_share_flat_bytes",
     "shamir_recover_flat_bytes",
     "FIELD_PRIME",
+    "fusion_hash64",
+    "FusionAwareSearchableSISIndex",
     "SearchableSISIndex",
     "StoredShare",
     "ShamirImageStore",

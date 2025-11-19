@@ -5,8 +5,27 @@ from __future__ import annotations
 import argparse
 import time
 from pathlib import Path
+from typing import List
 
 from pHR_SIS.workflow import SearchableSISWithImageStore
+
+
+def _resolve_query_servers(raw: str | None, available: List[int], default_count: int) -> List[int]:
+    if raw:
+        parts = []
+        for part in raw.split(","):
+            part = part.strip()
+            if not part:
+                continue
+            try:
+                parts.append(int(part))
+            except ValueError:
+                raise SystemExit(f"Invalid server ID '{part}' in --query_servers.")
+        selected = [s for s in parts if s in available]
+        if not selected:
+            raise SystemExit("No requested servers match the available cluster nodes.")
+        return selected
+    return available[:min(default_count, len(available))]
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -27,6 +46,15 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--recon_dir", type=Path, default=Path("recon_out"))
     parser.add_argument("--query", type=Path, default=None)
     parser.add_argument("--seed", type=int, default=2025)
+    parser.add_argument("--share_strategy", choices=["shamir", "phash-fusion"], default="shamir")
+    parser.add_argument("--fusion_grid", type=int, default=8)
+    parser.add_argument("--fusion_threshold", type=int, default=None)
+    parser.add_argument(
+        "--query_servers",
+        type=str,
+        default=None,
+        help="Comma-separated server IDs to use for the query (can be < k to exercise fusion fallback).",
+    )
     return parser
 
 
@@ -50,6 +78,9 @@ def main() -> int:
         shares_dir=str(args.shares_dir),
         meta_dir=str(args.meta_dir),
         secure_distance=args.mode == "mpc",
+        share_strategy=args.share_strategy,
+        fusion_grid=args.fusion_grid,
+        fusion_threshold=args.fusion_threshold,
     )
 
     print(f"[MODE] {args.mode}")
@@ -65,8 +96,10 @@ def main() -> int:
     print(f"[DONE] registered {len(images)} data in {time.perf_counter() - t0:.3f}s")
 
     query_path = str(args.query) if args.query else str(images[0])
-    servers = workflow.list_servers()[: args.k]
-    print(f"[QUERY] file={Path(query_path).name} servers={servers}")
+    all_servers = workflow.list_servers()
+    servers = _resolve_query_servers(args.query_servers, all_servers, args.k)
+    server_note = " (insufficient shares)" if len(servers) < args.k else ""
+    print(f"[QUERY] file={Path(query_path).name} servers={servers}{server_note}")
     result = workflow.query_and_optionally_reconstruct(
         query_path,
         servers_for_query=servers,
@@ -78,14 +111,20 @@ def main() -> int:
     )
 
     print(f"[P-HASH] {result['query_phash']}")
+    if result.get("query_fusion_phash"):
+        print(f"[FUSION] {result['query_fusion_phash']}")
     print(f"[PRESELECT] {result['preselected'] or '(empty)'}")
-    print(f"[RANKED/{result['mode']}] {result['ranked'] or '(empty)'}")
+    print(f"[RANKED/{result['mode']}/{result.get('share_mode', args.share_strategy)}] {result['ranked'] or '(empty)'}")
     if result["reconstructed"]:
         print("[RECONSTRUCTED]")
         for image_id, path in result["reconstructed"]:
             print(f"  - {image_id} -> {path}")
     else:
         print("[RECONSTRUCTED] (none)")
+    if result.get("reconstruction_errors"):
+        print("[RECON ERRORS]")
+        for err in result["reconstruction_errors"]:
+            print(f"  - {err}")
     return 0
 
 

@@ -47,10 +47,34 @@ def build_runners(names: List[str]) -> Dict[str, ModeRunner]:
     return {n: all_[n] for n in names}
 
 # SIS モードごとに共有ストアを初期化（必要なフォルダも作成）
-def ensure_workflow(mode: str, k:int,n:int,bands:int,seed:int, secure:bool, shares_dir:Path, meta_dir:Path) -> SearchableSISWithImageStore:
-    shares_dir.mkdir(parents=True, exist_ok=True); meta_dir.mkdir(parents=True, exist_ok=True)
-    return SearchableSISWithImageStore(k=k,n=n,bands=bands,token_len=8,seed=seed,shares_dir=str(shares_dir),
-                                       meta_dir=str(meta_dir), secure_distance=secure)
+def ensure_workflow(
+    mode: str,
+    k: int,
+    n: int,
+    bands: int,
+    seed: int,
+    secure: bool,
+    shares_dir: Path,
+    meta_dir: Path,
+    share_strategy: str,
+    fusion_grid: int,
+    fusion_threshold: int | None,
+) -> SearchableSISWithImageStore:
+    shares_dir.mkdir(parents=True, exist_ok=True)
+    meta_dir.mkdir(parents=True, exist_ok=True)
+    return SearchableSISWithImageStore(
+        k=k,
+        n=n,
+        bands=bands,
+        token_len=8,
+        seed=seed,
+        shares_dir=str(shares_dir),
+        meta_dir=str(meta_dir),
+        secure_distance=secure,
+        share_strategy=share_strategy,
+        fusion_grid=fusion_grid,
+        fusion_threshold=fusion_threshold,
+    )
 
 # すべてのサンプルについて pHash を計算し辞書と平均処理時間を返す
 def compute_phashes(samples: List[Sample]) -> Tuple[Dict[str,int], float]:
@@ -88,6 +112,9 @@ def main():
     ap.add_argument("--bands", type=int, default=8)
     ap.add_argument("--min_band_votes", type=int, default=3)
     ap.add_argument("--max_hamming", type=int, default=10)
+    ap.add_argument("--share_strategy", choices=["shamir", "phash-fusion"], default="shamir")
+    ap.add_argument("--fusion_grid", type=int, default=8)
+    ap.add_argument("--fusion_threshold", type=int, default=None)
     ap.add_argument("--topk", type=int, default=50)
     ap.add_argument("--tau_values", type=int, nargs="+", default=[6,8,10,12])
     ap.add_argument("--stage_b_bytes", type=int, default=2)
@@ -118,9 +145,19 @@ def main():
     workflows: Dict[str, SearchableSISWithImageStore] = {}
     for m in iter_progress(args.modes, desc="Preparing workflows", total=len(args.modes), leave=False):
         if m=="plain": continue
-        wf = ensure_workflow(m, args.k,args.n,args.bands,args.seed, secure=(m=="sis_mpc"),
-                             shares_dir=args.work_dir/ "shared_store"/"img_shares",
-                             meta_dir  =args.work_dir/ "shared_store"/"img_meta")
+        wf = ensure_workflow(
+            m,
+            args.k,
+            args.n,
+            args.bands,
+            args.seed,
+            secure=(m == "sis_mpc"),
+            shares_dir=args.work_dir / "shared_store" / "img_shares",
+            meta_dir=args.work_dir / "shared_store" / "img_meta",
+            share_strategy=args.share_strategy,
+            fusion_grid=args.fusion_grid,
+            fusion_threshold=args.fusion_threshold,
+        )
         for s in iter_progress(samples, desc=f"Ingest {m}", total=len(samples), leave=False):
             wf.add_image(s.key, str(s.path), phash=phashes[s.key])
         workflows[m] = wf

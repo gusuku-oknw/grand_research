@@ -47,6 +47,40 @@ sis-image secure-demo --images_dir data/
 
 Each original demo under `SIS_image/` now delegates to these commands for reproducibility.
 
+The repository also includes a visualization demo:
+
+```bash
+python demo_k_sweep.py --share_strategy phash-fusion --output figures/k_sweep.png
+```
+
+This script sweeps over the number of responding servers, plots the top-ranked Hamming distance, and highlights when the fusion fallback activates (k < required). The generated `k_sweep.png` makes it easy to see how rankings/reconstruction degrade as servers drop out.
+
+Another visual helper is `demo_k_vs_strategy.py`:
+
+```bash
+python demo_k_vs_strategy.py --share_strategy phash-fusion --output figures/k_strategy_compare.png
+```
+
+It runs both the pure Shamir pipeline and the fusion hash pipeline for every `k` from 1 to `n`, then draws the top-ranked Hamming distance and reconstruction counts per strategy so you can directly compare how the result “looks” as servers become available.
+
+To see the **actual images** the system would pick/reconstruct as `k` increases, use:
+
+```bash
+python demo_k_recovery_gallery.py --output figures/k_recovery_gallery.png
+```
+
+Fusion-mode cells blend the candidate with a progressively blurred version based on the Hamming distance, so you can see how pHash融合型 returns “fuzzy” approximations when `k` is short while Shamir simply waits until enough shares exist.
+
+It arranges the recovered/candidate image per `k` for both strategies so you can visually trace how Shamir waits until `k` is reached while the fusion variant continually surfaces the nearest perceptual match.
+
+If you don't have a curated dataset, generate synthetic noise images with:
+
+```bash
+python scripts/generate_noise_images.py --count 20 --size 128 128 --output_dir data/noise
+```
+
+These PNGs provide a quick visual workload for the demo scripts so you can inspect how noise versus real images behave as `k` changes.
+
 ---
 
 ## ⚙️ Modular Experiment Architecture
