@@ -8,3 +8,6 @@ images/
 evaluation/**/*.png
 evaluation/**/*.npz
 evaluation/**/*.csv
+img_meta/
+img_shares/
+figures/

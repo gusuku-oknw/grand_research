@@ -100,36 +100,50 @@ sis_modes/
   sis_common.py                  # shared helpers (filtering, ranking)
 ```
 
-### 🧠 Stage-A/B/C Overview
+### Design Philosophy and Architecture
 
-**Full processing flow**
+The core of this research is to **achieve both computational efficiency and confidentiality by first narrowing down candidates with pHash, and then calculating distances using MPC (Multi-Party Computation) while the data remains in its secret-shared (SIS) state.**
 
-1. **Preparation / Index construction**
-   1. Compute a 64-bit pHash for every image.
-   2. Split the hash into `bands` (例: 8 bits × 8 bands).
-   3. For each band, compute `HMAC(key_i, band_i)`.
-   4. Register tokens in the distributed index (only encrypted, searchable tokens exist at this point; Shamir shares are stored but never reconstructed yet).
-2. **Stage-A (token match prefilter)** – Run the same band/HMAC process for a query, ask servers for matching IDs, and keep only candidates that share tokens. No Shamir reconstruction occurs.
-3. **Stage-B (partial share inspection)** – Fetch a few bytes from each candidate’s Shamir shares to approximate the pHash and reject distant items. SIS is first exercised here.
-4. **Stage-C (full reconstruction / MPC)** – Gather `k` shares for the surviving candidates and fully reconstruct hashes/images (selective mode), or run MPC ranking without revealing plaintext (MPC mode).
+The conventional, naive approach of "reconstruct all images, then search in plaintext" is computationally expensive and carries privacy risks. This system completes the process within the framework of secret sharing and MPC, without ever converting the original images or their pHashes back to plaintext.
 
-| Stage       | Description                                                                           | Module / Function                                  | Primary Metrics                                   |
-| :---------- | :------------------------------------------------------------------------------------ | :------------------------------------------------- | :------------------------------------------------ |
-| **Stage-A** | Secure band-token fan-out (HMAC buckets per pHash band) that tallies votes and eliminates >90% of the corpus before touching shares. | `index.preselect_candidates`                       | Candidate count (`n_cand_f1`), bytes (`bytes_f1`) |
-| **Stage-B** | Partial share sampling: reconstruct only a few bytes per server to approximate Hamming distance, logging the bandwidth/time used per rejection. | `sis_common.stage_b_filter`                        | Time, communication, candidate reduction          |
-| **Stage-C** | Full share recovery and ranking (selective or MPC) that rebuilds hashes/images for the top hits and emits the final ordering. | `index.rank_candidates` / `rank_candidates_secure` | Precision, recall, latency                        |
+A note on terminology: Unlike cryptographic "decryption," SIS involves gathering shares to restore the original information. Therefore, this document uses the term "**reconstruction**."
 
-#### Mode-specific Stage Usage
+### Three-Stage Search Pipeline
+
+The search is executed as a three-stage pipeline, starting with the least computationally intensive operations to progressively filter candidates.
+
+- **Stage-A (Index-based Candidate Reduction)**
+  HMAC tokens generated from the query image's pHash are matched against the index on each server to select an initial set of candidates. This stage efficiently reduces the search space to a small percentage of the total corpus (≪N).
+
+- **Stage-B (On-Demand pHash Reconstruction)**
+  Only for candidates that pass Stage-A, pHash SIS shares are partially fetched and reconstructed on-demand. This is performed in modes like `sis_selective` when a more detailed comparison is needed.
+
+- **Stage-C (Secure Distance Calculation via MPC)**
+  For the final candidates (L items), the Hamming distance is calculated **using MPC on the SIS shares without reconstructing the plaintext pHash**. This allows servers to securely compare distances without ever learning the pHash values.
+
+The final image **reconstruction** is explicitly separate from the search process. It is performed only when the original image is truly needed, based on the K-of-N threshold scheme, and typically occurs on the client-side.
+
+### Why It's Fast and Secure
+
+- **Reduced Computational Complexity**: The workload is significantly reduced by limiting comparisons from O(N) for the entire dataset to O(|candidates|) for a small subset.
+- **No Plaintext Exposure**: High confidentiality is maintained because neither the original images nor their pHashes are reconstructed into plaintext during the search process.
+- **Scalability**: The most computationally expensive operation, MPC, is reserved for the small number of final candidates, ensuring the system remains scalable.
+
+### Considerations and Future Work
+
+- **Access Pattern Leakage**: Information about which HMAC tokens matched the index (the access pattern) can be leaked. This could be mitigated by introducing dummy queries or by batching queries to anonymize them.
+- **Key Management**: It is recommended to use separate HMAC keys for each band and to rotate them periodically. The future use of an OPRF (Oblivious Pseudorandom Function) is desirable.
+- **MPC Implementation**: The current implementation is a simulated MPC that performs "reconstruction -> distance calculation" for demonstration purposes. For practical applications, this should be replaced with a true MPC protocol or a TEE (Trusted Execution Environment).
+
+### Mode-specific Stage Usage
 
 | Mode | Stage-A | Stage-B | Stage-C |
 | :--- | :------ | :------ | :------ |
-| `plain` | ❌（全件 pHash 距離でスキャン） | ❌ | ✅ `compute_plain_distances` でハッシュランキングのみ |
-| `sis_naive` | ❌（候補絞り込みなしで全候補を再構成） | ❌ | ✅ `rank_candidates` で全件復号・比較 |
-| `sis_selective` | ✅ HMAC バンド得票で候補削減 | ✅ `stage_b_filter` による部分シェア検査 | ✅ Top-K のみ再構成・評価 |
-| `sis_staged` | ✅ （`sis_selective` と同一・別名） | ✅ | ✅ |
-| `sis_mpc` | ✅ HMAC バンド得票 | ❌（情報漏えい防止のためスキップ） | ✅ `rank_candidates_secure` による MPC ランキング（再構成は行わない） |
-
-> `sis_staged` は `sis_selective` の別名クラスで、Stage-A/B/C の挙動は同一です。
+| `plain` | ❌ (Scans all with pHash distance) | ❌ | ✅ Sorts by distance with `compute_plain_distances` |
+| `sis_naive` | ❌ (No candidate reduction) | ❌ | ✅ Reconstructs and evaluates all candidates with `rank_candidates` |
+| `sis_selective` | ✅ Reduces candidates with HMAC voting | ✅ Inspects partial shares with `stage_b_filter` | ✅ Reconstructs and evaluates only Top-K |
+| `sis_staged` | ✅ (Same as `sis_selective`) | ✅ | ✅ |
+| `sis_mpc` | ✅ HMAC voting | ❌ (Skipped to prevent leakage) | ✅ MPC ranking with `rank_candidates_secure` (no reconstruction) |
 
 All modes conform to the same `ModeRunner` interface in `sis_modes/base.py`, making experiments interchangeable and their results comparable.
 
