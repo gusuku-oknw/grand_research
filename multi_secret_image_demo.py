@@ -1,12 +1,12 @@
 """
 multi_secret_image_demo.py
 
-Multi-secret�E�階層秘寁E�E散�E�を使って
-- 低品質ぼかし画僁E
-- 高品質允E��僁E
-を異なる閾値 k で守るチE��スクリプト、E
+Multi-secret（階層秘密分散）を使って
+- 低品質ぼかし画像
+- 高品質元画像
+を異なる閾値 k で守るデモスクリプト。
 
-依孁E
+依存:
   pip install pillow cryptography
 """
 
@@ -23,24 +23,24 @@ from cryptography.hazmat.primitives.ciphers.aead import AESGCM
 # 1. Shamir Secret Sharing 基本
 # ==============================
 
-# 秘寁E��EES鍵など�E�を整数にして収める有限佁EGF(p)
-# 256bit鍵をそのまま入れたぁE�Eで 2^256 より大きい素数を使用
-P = 2**521 - 1  # 既知のメルセンヌ素数�E�十刁E��きい�E�E
+# 秘密（AES鍵など）を整数にして収める有限体 GF(p)
+# 256bit 鍵をそのまま入れたいので 2^256 より大きい素数を使用
+P = 2**521 - 1  # 既知のメルセンヌ素数。十分大きい。
 
 
 def shamir_split(secret: int, k: int, n: int, p: int = P) -> List[Tuple[int, int]]:
     """
-    Shamir k-of-n 秘寁E�E散
+    Shamir k-of-n 秘密分散
     secret : 0 <= secret < p の整数
-    k      : 復允E��忁E��なシェア数�E�閾値�E�E
+    k      : 復元に必要なシェア数（閾値）
     n      : 総シェア数
     戻り値 : [(x_i, y_i), ...]  i=1..n
     """
     assert 0 <= secret < p
     assert 1 < k <= n
 
-    # 多頁E��Ef(z) = a0 + a1 z + ... + a_{k-1} z^{k-1} (mod p)
-    # a0 = secret, 他�Eランダム
+    # 多項式 f(z) = a0 + a1 z + ... + a_{k-1} z^{k-1} (mod p)
+    # a0 = secret, 他はランダム
     coeffs = [secret] + [secrets.randbelow(p) for _ in range(k - 1)]
 
     shares = []
@@ -55,9 +55,9 @@ def shamir_split(secret: int, k: int, n: int, p: int = P) -> List[Tuple[int, int
 
 def shamir_reconstruct(shares: List[Tuple[int, int]], p: int = P) -> int:
     """
-    Shamir 復允E��Eagrange 補間�E�E
-    shares : [(x_i, y_i), ...] ちめE��ど k 個（それ以上あっても�E頭 k 個を使ぁE��定！E
-    戻り値 : secret�E�整数�E�E
+    Shamir 復元（Lagrange 補間）
+    shares : [(x_i, y_i), ...] ちょうど k 個（それ以上あっても先頭 k 個を使う想定）
+    戻り値 : secret（整数）
     """
     if len(shares) == 0:
         raise ValueError("shares is empty")
@@ -72,23 +72,23 @@ def shamir_reconstruct(shares: List[Tuple[int, int]], p: int = P) -> int:
                 continue
             num = (num * (-xm)) % p
             den = (den * (xj - xm)) % p
-        inv_den = pow(den, -1, p)  # 送E�E
+        inv_den = pow(den, -1, p)  # 逆元
         lj = num * inv_den % p
         secret = (secret + yj * lj) % p
     return secret
 
 
 # =====================================
-# 2. Multi-secret�E�階層秘寁E�E散�E�ラチE��
+# 2. Multi-secret（階層秘密分散）ラッパ
 # =====================================
 
 @dataclass
 class HierarchicalShare:
     """
-    1人の参加老E��持つ階層シェア:
-    - x: 評価点
-    - y_low : ぼけ画像用鍵 K_low の Shamir シェア
-    - y_high: 高品質画像用鍵 K_high の Shamir シェア
+    1人の参加者が持つ階層シェア:
+    - x      : 評価点
+    - y_low  : ぼけ画像用鍵 K_low の Shamir シェア
+    - y_high : 高品質画像用鍵 K_high の Shamir シェア
     """
     x: int
     y_low: int
@@ -104,11 +104,11 @@ def multisecret_split_int(
     p: int = P,
 ) -> List[HierarchicalShare]:
     """
-    整数 secret_low, secret_high めEmulti-secret�E�階層�E�で刁E��、E
-    - k_low  シェアで secret_low を復允E��
-    - k_high シェアで secret_high を復允E���E�E_high > k_low�E�E
+    整数 secret_low, secret_high を Multi-secret（階層方式）で分散する。
+    - k_low  シェアで secret_low を復元可能
+    - k_high シェアで secret_high を復元可能（k_high > k_low）
 
-    戻り値: HierarchicalShare のリスト（長ぁEn�E�E
+    戻り値: HierarchicalShare のリスト（長さ n）
     """
     assert 1 < k_low <= k_high <= n
 
@@ -124,8 +124,8 @@ def multisecret_split_int(
 
 def reconstruct_low_key(shares: List[HierarchicalShare], k_low: int, p: int = P) -> int:
     """
-    ぼかし画像用鍵 K_low を復允E��E
-    shares  : HierarchicalShare めEk_low 個以上渡ぁE
+    ぼかし画像用鍵 K_low を復元する。
+    shares  : HierarchicalShare を k_low 個以上渡す
     戻り値  : K_low を表す整数
     """
     if len(shares) < k_low:
@@ -136,8 +136,8 @@ def reconstruct_low_key(shares: List[HierarchicalShare], k_low: int, p: int = P)
 
 def reconstruct_high_key(shares: List[HierarchicalShare], k_high: int, p: int = P) -> int:
     """
-    高品質画像用鍵 K_high を復允E��E
-    shares  : HierarchicalShare めEk_high 個以上渡ぁE
+    高品質画像用鍵 K_high を復元する。
+    shares  : HierarchicalShare を k_high 個以上渡す
     戻り値  : K_high を表す整数
     """
     if len(shares) < k_high:
@@ -147,19 +147,19 @@ def reconstruct_high_key(shares: List[HierarchicalShare], k_high: int, p: int = 
 
 
 # ============================
-# 3. AES-GCM 暗号化�Eルパ�E
+# 3. AES-GCM 暗号化ヘルパ
 # ============================
 
 def generate_aes_key(num_bytes: int = 32) -> bytes:
     """
-    AES-GCM 用鍵を生成（デフォルチE256bit�E�E
+    AES-GCM 用鍵を生成（デフォルト 256bit）
     """
     return secrets.token_bytes(num_bytes)
 
 
 def aes_gcm_encrypt(key: bytes, plaintext: bytes, aad: bytes | None = None) -> Tuple[bytes, bytes]:
     """
-    AES-GCMで暗号匁E
+    AES-GCM で暗号化
     戻り値: (nonce, ciphertext_with_tag)
     """
     aesgcm = AESGCM(key)
@@ -170,14 +170,14 @@ def aes_gcm_encrypt(key: bytes, plaintext: bytes, aad: bytes | None = None) -> T
 
 def aes_gcm_decrypt(key: bytes, nonce: bytes, ciphertext: bytes, aad: bytes | None = None) -> bytes:
     """
-    AES-GCMで復号
+    AES-GCM で復号
     """
     aesgcm = AESGCM(key)
     return aesgcm.decrypt(nonce, ciphertext, aad)
 
 
 # ============================
-# 4. 画像�E琁E�Eルパ�E
+# 4. 画像処理ヘルパ
 # ============================
 
 def load_image(path: str) -> Image.Image:
@@ -186,17 +186,17 @@ def load_image(path: str) -> Image.Image:
 
 def make_low_res_blur(
     img: Image.Image,
-    scale: float = 0.01,      # もともと 0.25 ↁEもっと小さぁE
-    blur_radius: float = 8.0, # もともと 2.0 ↁEもっと強ぁE
+    scale: float = 0.01,      # かなり小さく（情報を強く落とす）
+    blur_radius: float = 8.0, # 強めのぼかし
 ) -> Image.Image:
     """
-    かなり情報を落とした低解像度�E�ぼかし画像を生�E
+    かなり情報を落とした低解像度＋ぼかし画像を生成
     """
     w, h = img.size
     new_w = max(1, int(w * scale))
     new_h = max(1, int(h * scale))
 
-    # 縮小�E再拡大→強め�Eぼかし
+    # 縮小 → 再拡大 → 強めのぼかし
     small = img.resize((new_w, new_h), Image.Resampling.LANCZOS)
     back = small.resize((w, h), Image.Resampling.BILINEAR)
     blurred = back.filter(ImageFilter.GaussianBlur(radius=blur_radius))
@@ -205,7 +205,7 @@ def make_low_res_blur(
 
 def image_to_bytes(img: Image.Image, fmt: str = "PNG") -> bytes:
     """
-    Pillow Image -> バイト�E
+    Pillow Image -> バイト列
     """
     buf = io.BytesIO()
     img.save(buf, format=fmt)
@@ -214,14 +214,14 @@ def image_to_bytes(img: Image.Image, fmt: str = "PNG") -> bytes:
 
 def bytes_to_image(data: bytes) -> Image.Image:
     """
-    バイト�E -> Pillow Image
+    バイト列 -> Pillow Image
     """
     buf = io.BytesIO(data)
     return Image.open(buf).convert("RGB")
 
 
 # ============================
-# 5. トップレベルのチE��処琁E
+# 5. トップレベルのデモ処理
 # ============================
 
 def demo_multi_secret_image(
@@ -233,37 +233,37 @@ def demo_multi_secret_image(
 ) -> None:
     """
     Multi-secret を使って
-    - 低品質ぼかし画僁E
-    - 高品質允E��僁E
-    を階層秘寁E�E散するチE��、E
+    - 低品質ぼかし画像
+    - 高品質元画像
+    を階層秘密分散するデモ。
 
-    out_dir 冁E��暗号化画僁E& 復允E��像を保存する、E
+    out_dir 内に暗号化画像 & 復号画像を保存する。
     """
 
     os.makedirs(out_dir, exist_ok=True)
 
-    # 1) 画像読み込み & ぼかし版生戁E
+    # 1) 画像読み込み & ぼかし版生成
     img = load_image(input_path)
     low_img = make_low_res_blur(img)
 
-    # 2) 画像をバイト�Eに
+    # 2) 画像をバイト列に
     high_bytes = image_to_bytes(img, fmt="PNG")
     low_bytes = image_to_bytes(low_img, fmt="PNG")
 
-    # 3) それぞれ AES-GCM で暗号匁E
+    # 3) それぞれ AES-GCM で暗号化
     key_low = generate_aes_key(32)   # 256bit
     key_high = generate_aes_key(32)  # 256bit
 
     nonce_low, ct_low = aes_gcm_encrypt(key_low, low_bytes, aad=b"low_image")
     nonce_high, ct_high = aes_gcm_encrypt(key_high, high_bytes, aad=b"high_image")
 
-    # �E�実運用なめEct_* と nonce_* はストレージに保存する想定！E
+    # 実運用なら ct_* と nonce_* はストレージに保存する想定
     with open(os.path.join(out_dir, "enc_low.bin"), "wb") as f:
         f.write(nonce_low + ct_low)
     with open(os.path.join(out_dir, "enc_high.bin"), "wb") as f:
         f.write(nonce_high + ct_high)
 
-    # 4) 鍵を整数秘寁E��して Multi-secret で刁E��
+    # 4) 鍵を整数秘密として Multi-secret で分散
     key_low_int = int.from_bytes(key_low, "big")
     key_high_int = int.from_bytes(key_high, "big")
 
@@ -276,13 +276,13 @@ def demo_multi_secret_image(
         p=P,
     )
 
-    # ---- ここから復允E��モ ----
-    # A) k_low 個だけ持ってぁE��場吁EↁEぼけ画像だけ復允E��きる
+    # ---- ここから復元デモ ----
+    # A) k_low 個だけ持っている場合 → ぼけ画像だけ復元できる
     subset_for_low = shares[:k_low]
     rec_low_int = reconstruct_low_key(subset_for_low, k_low, p=P)
     rec_key_low = rec_low_int.to_bytes(32, "big")
 
-    # enc_low.bin から読み戻ぁE
+    # enc_low.bin から読み戻し
     with open(os.path.join(out_dir, "enc_low.bin"), "rb") as f:
         enc_data = f.read()
     nonce_l = enc_data[:12]
@@ -292,9 +292,7 @@ def demo_multi_secret_image(
     dec_low_img = bytes_to_image(dec_low_bytes)
     dec_low_img.save(os.path.join(out_dir, "decoded_low_from_k_low.png"))
 
-    # 高品質側はまだ復允E��きなぁE��鍵がわからなぁE���Eで、ここではあえて試さなぁE
-
-    # B) k_high 個を雁E��た場吁EↁEぼけ画僁E+ 高品質画像どちら�E鍵も復允E��きる
+    # B) k_high 個を集めた場合 → ぼけ画像 + 高品質画像どちらの鍵も復元できる
     subset_for_high = shares[:k_high]
 
     rec_high_int = reconstruct_high_key(subset_for_high, k_high, p=P)
@@ -311,7 +309,7 @@ def demo_multi_secret_image(
     dec_high_img.save(os.path.join(out_dir, "decoded_high_from_k_high.png"))
 
     print("=== Demo finished ===")
-    print(f"Shares (first few):")
+    print("Shares (first few):")
     for s in shares:
         print(f"x={s.x}, y_low={s.y_low}, y_high={s.y_high}")
     print(f"Decoded images are saved under: {out_dir}")
