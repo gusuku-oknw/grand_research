@@ -2,6 +2,9 @@
 
 from __future__ import annotations
 
+import json
+import os
+import secrets
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Optional, Set, Tuple
 
@@ -29,6 +32,7 @@ class SearchableSISIndex:
         bands: int = 8,
         token_len: int = 8,
         seed: int = 1234,
+        key_store_path: Optional[str] = None,
     ):
         if not (2 <= k <= n <= 20):
             raise ValueError("Require 2 <= k <= n <= 20.")
@@ -45,15 +49,40 @@ class SearchableSISIndex:
         self.server_band_buckets: Dict[int, List[Dict[bytes, Set[str]]]] = {
             x: [dict() for _ in range(bands)] for x in range(1, n + 1)
         }
-        rng = np.random.default_rng(seed)
-        self.hmac_keys: Dict[int, List[bytes]] = {
-            x: [
-                rng.integers(0, 256, size=32, dtype=np.uint8).tobytes()
-                for _ in range(bands)
-            ]
-            for x in range(1, n + 1)
-        }
+        self.seed = seed  # kept for API compatibility; not used for keying now
+        self.hmac_keys: Dict[int, List[bytes]] = self._load_or_create_keys(
+            key_store_path=key_store_path
+        )
         self._images: Dict[str, str] = {}
+
+    def _load_or_create_keys(self, key_store_path: Optional[str]) -> Dict[int, List[bytes]]:
+        """Load band HMAC keys from disk or create them with a CSPRNG."""
+        if key_store_path and os.path.exists(key_store_path):
+            with open(key_store_path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+            loaded: Dict[int, List[bytes]] = {}
+            for server_str, band_hex in data.items():
+                loaded[int(server_str)] = [bytes.fromhex(h) for h in band_hex]
+            # validate shape
+            expected_servers = set(range(1, self.n + 1))
+            if set(loaded.keys()) != expected_servers or any(
+                len(bands) != self.bands for bands in loaded.values()
+            ):
+                raise ValueError(
+                    "Loaded HMAC key file is incompatible with current k/n/bands."
+                )
+            return loaded
+
+        keys = {
+            x: [secrets.token_bytes(32) for _ in range(self.bands)]
+            for x in range(1, self.n + 1)
+        }
+        if key_store_path:
+            os.makedirs(os.path.dirname(key_store_path) or ".", exist_ok=True)
+            to_dump = {str(server): [k.hex() for k in band_keys] for server, band_keys in keys.items()}
+            with open(key_store_path, "w", encoding="utf-8") as f:
+                json.dump(to_dump, f, indent=2)
+        return keys
 
     def _index_band_tokens_for_image(self, image_id: str, phash64: int) -> None:
         band_values = split_bands(phash64, bands=self.bands)

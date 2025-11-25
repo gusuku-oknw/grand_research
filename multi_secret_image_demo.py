@@ -186,8 +186,8 @@ def load_image(path: str) -> Image.Image:
 
 def make_low_res_blur(
     img: Image.Image,
-    scale: float = 0.01,      # かなり小さく（情報を強く落とす）
-    blur_radius: float = 8.0, # 強めのぼかし
+    scale: float = 0.005,     # さらに小さく（情報をより強く落とす）
+    blur_radius: float = 12.0,# ぼかしも強めに
 ) -> Image.Image:
     """
     かなり情報を落とした低解像度＋ぼかし画像を生成
@@ -230,6 +230,7 @@ def demo_multi_secret_image(
     n: int = 5,
     k_low: int = 2,
     k_high: int = 3,
+    share_counts: List[int] | None = None,
 ) -> None:
     """
     Multi-secret を使って
@@ -308,6 +309,77 @@ def demo_multi_secret_image(
     dec_high_img = bytes_to_image(dec_high_bytes)
     dec_high_img.save(os.path.join(out_dir, "decoded_high_from_k_high.png"))
 
+    # 5) Matplotlib で「足りない→十分なシェア数」の進行を 1 枚にまとめる
+    #    - k_high 未満では低品質ぼかしを並べる
+    #    - k_high 以上になったタイミングで高品質復元に切り替わる
+    def _plot_progression():
+        try:
+            import matplotlib
+
+            matplotlib.use("Agg")  # GUI なし環境でも保存できるようにする
+            import matplotlib.pyplot as plt  # type: ignore
+        except Exception as exc:  # pragma: no cover - optional dependency
+            print(f"matplotlib が見つからないため進行図をスキップします: {exc}")
+            return
+
+        # デフォルト: k_high 付近を中心に段階的なシェア数を並べる
+        if share_counts is None:
+            near_threshold = [k_high - 30, k_high - 20, k_high - 10, k_high - 5, k_high - 2, k_high - 1]
+            candidate_counts = [c for c in near_threshold if c > 0]
+            candidate_counts.extend([k_high, n])
+            counts = sorted({max(0, min(n, c)) for c in candidate_counts})
+        else:
+            counts = []
+            for c in share_counts:
+                # 0 以下は 0 として扱い、n を上限にする
+                counts.append(max(0, min(n, int(c))))
+            # 表示順は指定順を尊重するが重複は除去する
+            seen = set()
+            counts = [c for c in counts if not (c in seen or seen.add(c))]
+
+        imgs: List[Image.Image] = []
+        titles: List[str] = []
+
+        # enc_high の nonce / ct を使い回しつつ、必要なら都度鍵を復元
+        enc_nonce = nonce_h
+        enc_ct = ct_h
+        key_len = len(key_high)
+
+        for c in counts:
+            if c >= k_high:
+                rec_int = reconstruct_high_key(shares[:c], k_high, p=P)
+                rec_bytes = rec_int.to_bytes(key_len, "big")
+                dec_bytes = aes_gcm_decrypt(rec_bytes, enc_nonce, enc_ct, aad=b"high_image")
+                img_stage = bytes_to_image(dec_bytes)
+                title = f"{c} shares (>= {k_high})"
+            else:
+                img_stage = low_img
+                title = f"{c} shares (< {k_high})"
+            imgs.append(img_stage)
+            titles.append(title)
+
+        if not imgs:
+            print("進行図を描くためのシェア数がありませんでした。")
+            return
+
+        fig_w = max(10, 2 * len(imgs))
+        fig, axes = plt.subplots(1, len(imgs), figsize=(fig_w, 3))
+        if len(imgs) == 1:
+            axes = [axes]  # type: ignore
+
+        for ax, im, ttl in zip(axes, imgs, titles):
+            ax.imshow(im)
+            ax.set_title(ttl, fontsize=10)
+            ax.axis("off")
+
+        plt.tight_layout()
+        progress_path = os.path.join(out_dir, "reconstruction_progress.png")
+        fig.savefig(progress_path, dpi=200)
+        plt.close(fig)
+        print(f"Reconstruction progress figure saved to: {progress_path}")
+
+    _plot_progression()
+
     print("=== Demo finished ===")
     print("Shares (first few):")
     for s in shares:
@@ -330,10 +402,17 @@ if __name__ == "__main__":
     k_high = int(sys.argv[4]) if len(sys.argv) >= 5 else 3
     n = int(sys.argv[5]) if len(sys.argv) >= 6 else 5
 
+    # 7 番目の引数にカンマ区切りのシェア数リストを渡せる（例: 60,80,85,89,90,100）
+    share_counts_arg = sys.argv[6] if len(sys.argv) >= 7 else None
+    share_counts_list = None
+    if share_counts_arg:
+        share_counts_list = [int(v.strip()) for v in share_counts_arg.split(",") if v.strip()]
+
     demo_multi_secret_image(
         input_path=input_img_path,
         out_dir=output_dir,
         n=n,
         k_low=k_low,
         k_high=k_high,
+        share_counts=share_counts_list,
     )

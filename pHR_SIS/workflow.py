@@ -33,10 +33,12 @@ class SearchableSISWithImageStore:
         share_strategy: str = "shamir",
         fusion_grid: int = 8,
         fusion_threshold: int | None = None,
+        hmac_key_path: str | None = None,
     ):
         if share_strategy not in {"shamir", "phash-fusion"}:
             raise ValueError(f"Unsupported share_strategy='{share_strategy}'")
         self.share_strategy = share_strategy
+        self.hmac_key_path = hmac_key_path or os.path.join(meta_dir, "hmac_keys.json")
         if share_strategy == "phash-fusion":
             self.index = FusionAwareSearchableSISIndex(
                 k=k,
@@ -46,10 +48,16 @@ class SearchableSISWithImageStore:
                 seed=seed,
                 fusion_grid=fusion_grid,
                 fusion_threshold=fusion_threshold,
+                key_store_path=self.hmac_key_path,
             )
         else:
             self.index = SearchableSISIndex(
-                k=k, n=n, bands=bands, token_len=token_len, seed=seed
+                k=k,
+                n=n,
+                bands=bands,
+                token_len=token_len,
+                seed=seed,
+                key_store_path=self.hmac_key_path,
             )
         self.store = ShamirImageStore(k=k, n=n, shares_dir=shares_dir, meta_dir=meta_dir)
         self.secure_distance = secure_distance
@@ -113,6 +121,21 @@ class SearchableSISWithImageStore:
         os.makedirs(recon_dir, exist_ok=True)
         query_hash = int(result["query_phash"], 16)
         pre_ids = [img_id for img_id, _ in result["preselected"]]
+        servers_list = sorted(set(int(s) for s in servers_for_query))
+        can_reconstruct = len(servers_list) >= self.index.k
+        fusion_mode = bool(result.get("fusion_mode"))
+
+        if not fusion_mode and not can_reconstruct:
+            # シェア不足を明示し、距離計算/復元はスキップ
+            result["ranked"] = []
+            result["reconstructed"] = []
+            result["reconstruction_errors"] = [
+                f"Need at least k={self.index.k} shares; got {len(servers_list)}."
+            ]
+            result["insufficient_shares"] = True
+            result["mode"] = "mpc" if self.secure_distance else "standard"
+            return result
+
         if self.secure_distance:
             ranked = self.rank_candidates(
                 query_hash,

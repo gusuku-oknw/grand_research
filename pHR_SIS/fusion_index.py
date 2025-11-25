@@ -21,8 +21,16 @@ class FusionAwareSearchableSISIndex(SearchableSISIndex):
         seed: int = 1234,
         fusion_grid: int = 8,
         fusion_threshold: int | None = None,
+        key_store_path: str | None = None,
     ) -> None:
-        super().__init__(k=k, n=n, bands=bands, token_len=token_len, seed=seed)
+        super().__init__(
+            k=k,
+            n=n,
+            bands=bands,
+            token_len=token_len,
+            seed=seed,
+            key_store_path=key_store_path,
+        )
         self.fusion_grid = fusion_grid
         self.fusion_threshold = fusion_threshold if fusion_threshold is not None else k
         self._fusion_hashes: Dict[str, int] = {}
