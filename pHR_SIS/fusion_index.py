@@ -22,6 +22,8 @@ class FusionAwareSearchableSISIndex(SearchableSISIndex):
         fusion_grid: int = 8,
         fusion_threshold: int | None = None,
         key_store_path: str | None = None,
+        key_env_var: str | None = None,
+        key_encrypt_env_var: str | None = None,
     ) -> None:
         super().__init__(
             k=k,
@@ -30,6 +32,8 @@ class FusionAwareSearchableSISIndex(SearchableSISIndex):
             token_len=token_len,
             seed=seed,
             key_store_path=key_store_path,
+            key_env_var=key_env_var,
+            key_encrypt_env_var=key_encrypt_env_var,
         )
         self.fusion_grid = fusion_grid
         self.fusion_threshold = fusion_threshold if fusion_threshold is not None else k
@@ -67,11 +71,19 @@ class FusionAwareSearchableSISIndex(SearchableSISIndex):
         min_band_votes: int = 3,
         topk: int = 5,
         max_hamming: Optional[int] = 10,
+        dummy_band_queries: int = 0,
+        pad_band_queries: Optional[int] = None,
+        fixed_band_queries: Optional[int] = None,
     ) -> Dict[str, object]:
         query_hash = phash64(query_image_path)
         query_fusion = fusion_hash64(query_image_path, grid=self.fusion_grid)
         preselected = self.preselect_candidates(
-            query_hash, servers_for_query, min_band_votes=min_band_votes
+            query_hash,
+            servers_for_query,
+            min_band_votes=min_band_votes,
+            dummy_band_queries=dummy_band_queries,
+            pad_band_queries=pad_band_queries,
+            fixed_band_queries=fixed_band_queries,
         )
         candidate_ids = [image_id for image_id, _ in preselected]
         xs = sorted(set(int(s) for s in servers_for_query))

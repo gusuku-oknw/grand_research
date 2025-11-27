@@ -34,11 +34,29 @@ class SearchableSISWithImageStore:
         fusion_grid: int = 8,
         fusion_threshold: int | None = None,
         hmac_key_path: str | None = None,
+        hmac_key_env_var: str | None = None,
+        hmac_key_encrypt_env_var: str | None = None,
+        dummy_band_queries: int = 0,
+        pad_band_queries: int | None = None,
+        fixed_band_queries: int | None = None,
+        use_oprf: bool = False,
+        oprf_key_path: str | None = None,
+        oprf_key_env_var: str | None = None,
+        oprf_key_encrypt_env_var: str | None = None,
     ):
         if share_strategy not in {"shamir", "phash-fusion"}:
             raise ValueError(f"Unsupported share_strategy='{share_strategy}'")
         self.share_strategy = share_strategy
         self.hmac_key_path = hmac_key_path or os.path.join(meta_dir, "hmac_keys.json")
+        self.hmac_key_env_var = hmac_key_env_var
+        self.hmac_key_encrypt_env_var = hmac_key_encrypt_env_var
+        self.default_dummy_band_queries = dummy_band_queries
+        self.default_pad_band_queries = pad_band_queries
+        self.default_fixed_band_queries = fixed_band_queries
+        self.use_oprf = use_oprf
+        self.oprf_key_path = oprf_key_path or os.path.join(meta_dir, "oprf_keys.json")
+        self.oprf_key_env_var = oprf_key_env_var
+        self.oprf_key_encrypt_env_var = oprf_key_encrypt_env_var
         if share_strategy == "phash-fusion":
             self.index = FusionAwareSearchableSISIndex(
                 k=k,
@@ -49,6 +67,12 @@ class SearchableSISWithImageStore:
                 fusion_grid=fusion_grid,
                 fusion_threshold=fusion_threshold,
                 key_store_path=self.hmac_key_path,
+                key_env_var=self.hmac_key_env_var,
+                key_encrypt_env_var=self.hmac_key_encrypt_env_var,
+                use_oprf=self.use_oprf,
+                oprf_key_path=self.oprf_key_path,
+                oprf_key_env_var=self.oprf_key_env_var,
+                oprf_key_encrypt_env_var=self.oprf_key_encrypt_env_var,
             )
         else:
             self.index = SearchableSISIndex(
@@ -58,6 +82,12 @@ class SearchableSISWithImageStore:
                 token_len=token_len,
                 seed=seed,
                 key_store_path=self.hmac_key_path,
+                key_env_var=self.hmac_key_env_var,
+                key_encrypt_env_var=self.hmac_key_encrypt_env_var,
+                use_oprf=self.use_oprf,
+                oprf_key_path=self.oprf_key_path,
+                oprf_key_env_var=self.oprf_key_env_var,
+                oprf_key_encrypt_env_var=self.oprf_key_encrypt_env_var,
             )
         self.store = ShamirImageStore(k=k, n=n, shares_dir=shares_dir, meta_dir=meta_dir)
         self.secure_distance = secure_distance
@@ -107,14 +137,23 @@ class SearchableSISWithImageStore:
         max_hamming: Optional[int],
         reconstruct_top: int,
         recon_dir: str,
+        dummy_band_queries: Optional[int] = None,
+        pad_band_queries: Optional[int] = None,
+        fixed_band_queries: Optional[int] = None,
     ) -> Dict[str, object]:
         """Execute a search and reconstruct top matches if requested."""
+        dummy_q = self.default_dummy_band_queries if dummy_band_queries is None else dummy_band_queries
+        pad_q = self.default_pad_band_queries if pad_band_queries is None else pad_band_queries
+        fixed_q = self.default_fixed_band_queries if fixed_band_queries is None else fixed_band_queries
         result = self.index.query_selective(
             query_image_path,
             servers_for_query=servers_for_query,
             min_band_votes=min_band_votes,
             topk=topk,
             max_hamming=max_hamming,
+            dummy_band_queries=dummy_q,
+            pad_band_queries=pad_q,
+            fixed_band_queries=fixed_q,
         )
         result.setdefault("share_mode", self.share_strategy)
         result.setdefault("fusion_mode", False)

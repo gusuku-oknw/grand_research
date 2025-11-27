@@ -55,6 +55,41 @@ def build_parser() -> argparse.ArgumentParser:
         default=None,
         help="Comma-separated server IDs to use for the query (can be < k to exercise fusion fallback).",
     )
+    parser.add_argument(
+        "--dummy_band_queries",
+        type=int,
+        default=0,
+        help="Number of dummy band-token lookups per band/server to pad access patterns.",
+    )
+    parser.add_argument(
+        "--pad_band_queries",
+        type=int,
+        default=None,
+        help="Optional fixed number of total band lookups (real+dummy) per band/server; overrides dummy_band_queries.",
+    )
+    parser.add_argument(
+        "--fixed_band_queries",
+        type=int,
+        default=None,
+        help="Hard cap on total band lookups (real+dummy) per band/server; takes precedence over pad_band_queries if set.",
+    )
+    parser.add_argument(
+        "--hmac_key_encrypt_env",
+        type=str,
+        default=None,
+        help="Env var name holding AES-GCM key (hex or base64) to encrypt hmac_keys.json on disk.",
+    )
+    parser.add_argument(
+        "--use_oprf",
+        action="store_true",
+        help="Use simulated OPRF for Stage-A token generation (demonstration; not real blinding).",
+    )
+    parser.add_argument(
+        "--oprf_key_encrypt_env",
+        type=str,
+        default=None,
+        help="Env var name holding AES-GCM key (hex or base64) to encrypt oprf_keys.json on disk.",
+    )
     return parser
 
 
@@ -81,6 +116,12 @@ def main() -> int:
         share_strategy=args.share_strategy,
         fusion_grid=args.fusion_grid,
         fusion_threshold=args.fusion_threshold,
+        dummy_band_queries=args.dummy_band_queries,
+        pad_band_queries=args.pad_band_queries,
+        fixed_band_queries=args.fixed_band_queries,
+        hmac_key_encrypt_env_var=args.hmac_key_encrypt_env,
+        use_oprf=args.use_oprf,
+        oprf_key_encrypt_env_var=args.oprf_key_encrypt_env,
     )
 
     print(f"[MODE] {args.mode}")
@@ -108,6 +149,10 @@ def main() -> int:
         max_hamming=args.max_hamming,
         reconstruct_top=args.reconstruct_top,
         recon_dir=str(args.recon_dir),
+        dummy_band_queries=args.dummy_band_queries,
+        pad_band_queries=args.pad_band_queries,
+        fixed_band_queries=args.fixed_band_queries,
+        use_oprf=args.use_oprf,
     )
 
     print(f"[P-HASH] {result['query_phash']}")
