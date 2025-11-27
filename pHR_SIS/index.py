@@ -70,7 +70,6 @@ class SearchableSISIndex:
         if self.use_oprf:
             oprf_keys = load_or_create_oprf_keys(
                 n=self.n,
-                bands=self.bands,
                 key_store_path=oprf_key_path,
                 key_env_var=oprf_key_env_var,
                 key_encrypt_env_var=oprf_key_encrypt_env_var,
