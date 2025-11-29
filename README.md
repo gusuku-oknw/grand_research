@@ -13,7 +13,7 @@ The `sis_image` package implements reusable building blocks:
 * **Shamir secret sharing** — secure split & recovery for hash bytes and RGB images.
 * **Searchable SIS index** — banded HMAC tokens for secure candidate preselection.
 * **Persistent image store** — reconstructs full images from any `k` of `n` servers.
-* **Modular experiment runners (`sis_modes/`)** — independently testable Stage-A/B/C pipelines.
+* **Modular experiment runners (`sis_modes/`)** — independently testable Stage-1/Stage-2 pipelines.
 
 ---
 
@@ -94,7 +94,7 @@ experiments/modes/
   base_runner.py                 # abstract ModeRunner and helpers
   plain.py                       # baseline pHash ranking
   sis_naive.py                   # full reconstruction baseline
-  sis_selective.py               # Stage-B selective reconstruction
+  sis_selective.py               # Stage-2 selective reconstruction
   sis_staged.py                  # staged refinement pipeline
   sis_mpc.py                     # MPC-style fully private variant
 ```
@@ -107,20 +107,17 @@ The conventional, naive approach of "reconstruct all images, then search in plai
 
 A note on terminology: Unlike cryptographic "decryption," SIS involves gathering shares to restore the original information. Therefore, this document uses the term "**reconstruction**."
 
-### Three-Stage Search Pipeline
+### Two-Stage Search Pipeline
 
-The search is executed as a three-stage pipeline, starting with the least computationally intensive operations to progressively filter candidates.
+The search is executed in a two-stage pipeline to keep the flow aligned with the new reporting terminology.
 
-- **Stage-A (Index-based Candidate Reduction)**
-  HMAC tokens generated from the query image's pHash are matched against the index on each server to select an initial set of candidates. This stage efficiently reduces the search space to a small percentage of the total corpus (≪N).
+- **Stage-1 (Index-based Candidate Reduction)**  
+  HMAC tokens derived from the query pHash are matched against each server's index to emit an initial candidate set. This stage limits the search space to a very small fraction of the dataset.
 
-- **Stage-B (On-Demand pHash Reconstruction)**
-  Only for candidates that pass Stage-A, pHash SIS shares are partially fetched and reconstructed on-demand. This is performed in modes like `sis_selective` when a more detailed comparison is needed.
+- **Stage-2 (Reconstruction + Secure Distance)**  
+  Candidates that survive Stage-1 are moved into Stage-2, where their SIS shares may be partially reconstructed (e.g., in `sis_selective`) and their distances are evaluated securely, typically via MPC without fully exposing the pHash values. Stage-2 therefore encompasses the previous reconstruction and distance evaluation phases (formerly Stage-B and Stage-C).
 
-- **Stage-C (Secure Distance Calculation via MPC)**
-  For the final candidates (L items), the Hamming distance is calculated **using MPC on the SIS shares without reconstructing the plaintext pHash**. This allows servers to securely compare distances without ever learning the pHash values.
-
-The final image **reconstruction** is explicitly separate from the search process. It is performed only when the original image is truly needed, based on the K-of-N threshold scheme, and typically occurs on the client-side.
+The final image **reconstruction** remains separate from the search pipeline and is executed only when the original image is actually needed, using the K-of-N threshold reconstruction strategy, usually at the client-side.
 
 ### Why It's Fast and Secure
 
@@ -136,13 +133,13 @@ The final image **reconstruction** is explicitly separate from the search proces
 
 ### Mode-specific Stage Usage
 
-| Mode | Stage-A | Stage-B | Stage-C |
-| :--- | :------ | :------ | :------ |
-| `plain` | ❌ (Scans all with pHash distance) | ❌ | ✅ Sorts by distance with `compute_plain_distances` |
-| `sis_naive` | ❌ (No candidate reduction) | ❌ | ✅ Reconstructs and evaluates all candidates with `rank_candidates` |
-| `sis_selective` | ✅ Reduces candidates with HMAC voting | ✅ Inspects partial shares with `stage_b_filter` | ✅ Reconstructs and evaluates only Top-K |
-| `sis_staged` | ✅ (Same as `sis_selective`) | ✅ | ✅ |
-| `sis_mpc` | ✅ HMAC voting | ❌ (Skipped to prevent leakage) | ✅ MPC ranking with `rank_candidates_secure` (no reconstruction) |
+| Mode | Stage-1 | Stage-2 |
+| :--- | :------ | :------ |
+| `plain` | ❌ (Scans all with pHash distance) | ✅ Sorts by distance with `compute_plain_distances` |
+| `sis_naive` | ❌ (No candidate reduction) | ✅ Reconstructs and evaluates all candidates with `rank_candidates` |
+| `sis_selective` | ✅ Reduces candidates with HMAC voting | ✅ `stage_b_filter` + reconstruction for Top-K |
+| `sis_staged` | ✅ | ✅ |
+| `sis_mpc` | ✅ HMAC voting | ✅ MPC ranking with `rank_candidates_secure` (no reconstruction) |
 
 All modes conform to the same `ModeRunner` interface in `sis_modes/base.py`, making experiments interchangeable and their results comparable.
 

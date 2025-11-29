@@ -70,9 +70,14 @@ def main() -> None:
     ax.set_ylim(-1.5, 5)
 
     # Stage boxes
-    add_box(ax, (0.5, 2.6), "Stage-A\nBand tokens via VOPRF\n+ fixed batch + dummies\n(Output: candidates)", width=3.4, height=2.0)
-    add_box(ax, (4.0, 2.6), "Stage-B\nPartial pHash recon\nfor candidates\n(Output: filtered Top-L)", width=3.4, height=2.0)
-    add_box(ax, (7.5, 2.6), "Stage-C\nHamming distance\nMPC / TEE / plain\n(Output: ranked Top-L)", width=3.4, height=2.0)
+    add_box(ax, (0.5, 2.6), "Stage-1\nBand tokens via VOPRF\n+ fixed batch + dummies\n(Output: candidates)", width=3.4, height=2.0)
+    add_box(
+        ax,
+        (4.0, 2.6),
+        "Stage-2\nPartial reconstruction,\nsecure MPC distance\n(Output: ranked Top-L)",
+        width=3.4,
+        height=2.0,
+    )
     add_box(ax, (7.5, 0.4), "Reconstruction\nk-of-n image restore\nTop-K only (access-controlled)", color="#0FB879", width=3.4, height=1.8)
 
     # Arrows between stages
@@ -92,9 +97,8 @@ def main() -> None:
         0.5,
         -0.8,
         "Notes:\n"
-        "• Stage-A: VOPRF hides band value; fixed-length batches + dummies soften access-pattern leakage\n"
-        "• Stage-B: partial pHash recon only for candidates; skip when MPC/TEE to avoid extra leakage\n"
-        "• Stage-C: Hamming distance via MPC/TEE/plain; only Top-L candidates enter\n"
+        "• Stage-1: VOPRF hides band value; fixed-length padded batches soften access-pattern leakage\n"
+        "• Stage-2: reconstruction + MPC/TEE distance; skip reconstruction when MPC is enforced\n"
         "• Reconstruction: only Top-K that meet k-of-n; output is access-controlled\n"
         "• Keys: HMAC/OPRF keys can be encrypted at rest; TEE/attestation gates key delivery",
         fontsize=8.5,

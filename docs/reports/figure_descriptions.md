@@ -12,29 +12,29 @@ This note explains every figure emitted by `experiments/scripts/run_search_exper
   Dataset-wide mean of per-query average precision; rewards rankers that surface relevant items near the top.
 
 ## precision_summary.png
-- **Source / 出力元**: `python -m evaluation.plotting ...`
+- **Source / 出力元**: `python -m experiments.common.plotting ...`
 - **Contents / 内容**: Bar chart of mean P@1, P@5, P@10, R@10, and mAP for each retrieval mode.  
   各検索モードの平均 P@1・P@5・P@10・R@10・mAP を棒グラフで比較します。
-- **Purpose / 目的**: Demonstrates that the Stage-A/B/C pipeline retains accuracy relative to plain pHash.  
-  Stage-A/B/C を導入しても pHash 単体と同等の精度・再現率を維持できているか確認します。
+- **Purpose / 目的**: Demonstrates that the Stage-1/Stage-2 pipeline retains accuracy relative to plain pHash.  
+  Stage-1/Stage-2 を導入しても pHash 単体と同等の精度・再現率を維持できているか確認します。
 
 ## candidate_reduction.png
 - **Source / 出力元**: `experiments/scripts/run_search_experiments.py` と `evaluation.plotting` の双方
-- **Contents / 内容**: Line plot of average candidate counts after Stage-A, Stage-B, Stage-C (per mode).  
+- **Contents / 内容**: Line plot of average candidate counts after Stage-1 and Stage-2 (per mode).  
   各ステージ通過後の平均候補数をモード別に線グラフ化します。
 - **Purpose / 目的**: Visualises how aggressively each stage prunes the search space.  
   段階的フィルタが候補集合をどの程度削減できているか示します。
 
 ## time_breakdown.png
 - **Source / 出力元**: `experiments/scripts/run_search_experiments.py` と `evaluation.plotting`
-- **Contents / 内容**: Stacked bar chart of mean per-query latency split into pHash, Stage-A, Stage-B, Stage-C.  
+- **Contents / 内容**: Stacked bar chart of mean per-query latency split into pHash, Stage-1, and Stage-2.  
   クエリ処理時間を pHash 計算と各 Stage の内訳ごとに積み上げ棒グラフで表示します。
-- **Purpose / 目的**: Highlights latency hotspots and verifies Stage-A/B/C is faster than full reconstruction.  
+- **Purpose / 目的**: Highlights latency hotspots and verifies Stage-1/Stage-2 is faster than full reconstruction.
   遅延のボトルネックを特定し、段階的復元がフル復元より高速か確認します。
 
 ## communication_breakdown.png
 - **Source / 出力元**: `python -m evaluation.plotting ...`
-- **Contents / 内容**: Stacked bar chart of average bytes transferred during Stage-A/B/C per query.  
+- **Contents / 内容**: Stacked bar chart of average bytes transferred during Stage-1/Stage-2 per query.  
   クエリごとに各ステージで消費した通信バイト数を積み上げ棒グラフで表示します。
 - **Purpose / 目的**: Quantifies bandwidth savings versus reconstructing every candidate.  
   全候補を復元する場合との通信量削減効果を数値化します。
@@ -55,7 +55,7 @@ This note explains every figure emitted by `experiments/scripts/run_search_exper
 
 ## candidate_reduction_ratio.png
 - **Source / 出力元**: `experiments/scripts/run_search_experiments.py` と `evaluation.plotting`
-- **Contents / 内容**: Line plot of candidate ratios (Stage-A/B/C counts ÷ dataset size).  
+- **Contents / 内容**: Line plot of candidate ratios (Stage-1/Stage-2 counts ÷ dataset size).  
   各ステージの候補数をデータセット総数で割り正規化した値を線グラフ化します。
 - **Purpose / 目的**: Enables cross-dataset comparison of pruning efficiency.  
   データセット間で削減率を比較できる指標として利用します。

@@ -16,9 +16,8 @@
 ## 2. System Configuration
 - **Shamir Parameters**: `(k, n)` = (__, __); field `p = 2^64 - 59`.  
 - **Stage Pipeline**:  
-  - Stage-A: band tokens (`bands = 8`, `token_len = 8`, `epoch_seed = 2025`).  
-  - Stage-B: parity lower bound (`stage_b_limit = __`, bytes-per-share = __).  
-  - Stage-C: selective reconstruction (`reconstruct_top = __`, `secure_distance = True/False`, `τ` sweep = {6,8,10,12}).  
+ - Stage-1: band tokens (`bands = 8`, `token_len = 8`, `epoch_seed = 2025`).  
+ - Stage-2: reconstruction + secure distance (`stage_b_limit = __`, bytes-per-share = __, `reconstruct_top = __`, `secure_distance = True/False`, `τ` sweep = {6,8,10,12}).  
 - **Infrastructure**: single host vs simulated LAN (0.5 ms) / WAN (25 ms). Document simulator or throttling tool if used.
 
 ## 3. Search Quality
@@ -26,23 +25,23 @@
 |------|-----|-----|------|------|-----|
 | Plain pHash |  |  |  |  |  |
 | SIS + Full Reconstruction |  |  |  |  |  |
-| SIS + Selective (Stage-A→C) |  |  |  |  |  |
-| SIS + Stage-A→B→C |  |  |  |  |  |
-| SIS + Stage-A→B→C + Secure Distance |  |  |  |  |  |
+| SIS + Selective (Stage-1→Stage-2) |  |  |  |  |  |
+| SIS + Stage-1→Stage-2 |  |  |  |  |  |
+| SIS + Stage-1→Stage-2 + Secure Distance |  |  |  |  |  |
 
 - **Figure (Precision Summary)**: `output/figures/<tag>/precision_summary.png`.
 - **Figure (ROC / PR)**: Attach ROC / PR curves from `output/figures/<tag>/roc_<mode>.png`, `pr_<mode>.png` (when generated).  
 - **Observation Notes**: Highlight τ ranges that keep Recall@10 within ±2% of plain pHash baseline.
 
 ## 4. Efficiency
-- **Timing (ms/query)**: Reference stacked bar `time_breakdown.png`. Summarize Stage-A/B/C contributions and phash cost.  
+- **Timing (ms/query)**: Reference stacked bar `time_breakdown.png`. Summarize Stage-1/Stage-2 contributions and phash cost.  
 - **Communication (bytes/query)**: Reference `communication_breakdown.png`. Compare to full reconstruction baseline.  
-- **Candidate Reduction**: Use `candidate_reduction.png` to report ⟨N_A, N_B, N_C⟩, compute reduction ratios vs total DB.  
+- **Candidate Reduction**: Use `candidate_reduction.png` to report ⟨N_A, N_B+C⟩, compute reduction ratios vs total DB.  
 - **Latency vs Precision**: Cite `precision_latency.png` for trade-offs.
 
 ## 5. Security Checks
 - **k-Share Leakage**: Describe experiment verifying entropy / Top-1 re-ID ≈ random (share subset).  
-- **Stage-A Token Rotation**: Document token collision rate when epoch seed changes (link to raw counts).  
+- **Stage-1 Token Rotation**: Document token collision rate when epoch seed changes (link to raw counts).  
 - **Adversarial Simulation**: Summaries of any tampering / cheating attempts (if executed).
 
 ## 6. Robustness
@@ -53,7 +52,7 @@
 ## 7. Scaling & Ablations (Optional)
 - **DB Size Sweep**: {1k, 10k, 100k}; summarize time / communication scaling.  
 - **(k, n) Sweep**: Highlight trade-offs for {3,2}, {5,3}, {7,4}.  
-- **Alternative Filters**: Report performance when adding pre-filters (aHash/dHash) or disabling Stage-B.
+- **Alternative Filters**: Report performance when adding pre-filters (aHash/dHash) or disabling Stage-2.
 
 ## 8. Reproducibility Checklist
 - Python version, dependency manifest (`pip freeze` or `requirements.txt`).  
@@ -63,7 +62,7 @@
 - Output artifacts: `metrics.csv`, `summary.txt`, `figures/`, `reports/`.
 
 ## 9. Takeaways
-- Does Stage-A→B→C achieve ≥10× reconstruction reduction and ≥3× total latency reduction at 10k+ scale?  
+- Does Stage-1→Stage-2 achieve ≥10× reconstruction reduction and ≥3× total latency reduction at 10k+ scale?  
 - Any degradation in precision vs plain pHash exceeding tolerable threshold?  
 - Security implications or operational caveats surfaced?
 

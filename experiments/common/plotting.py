@@ -169,9 +169,8 @@ def summarize_stage_ratios(groups: Mapping[str, Sequence[MetricRecord]]) -> Dict
         if not len(arr):
             continue
         summary[mode] = {
-            "stage_a_ratio": float(arr[:, 0].mean()),
-            "stage_b_ratio": float(arr[:, 1].mean()),
-            "stage_c_ratio": float(arr[:, 2].mean()),
+            "stage1_ratio": float(arr[:, 0].mean()),
+            "stage2_ratio": float(arr[:, 1].mean()),
         }
     return summary
 
@@ -245,7 +244,7 @@ def plot_precision_bars(groups: Mapping[str, Sequence[MetricRecord]], output_pat
 
 def plot_candidate_reduction(groups: Mapping[str, Sequence[MetricRecord]], output_path: Path) -> None:
     fig, ax = plt.subplots(figsize=(8, 5))
-    stages = ["Stage-A", "Stage-B", "Stage-C"]
+    stages = ["Stage-1", "Stage-2"]
     for mode, records in groups.items():
         if not records:
             continue
@@ -253,8 +252,7 @@ def plot_candidate_reduction(groups: Mapping[str, Sequence[MetricRecord]], outpu
             [
                 [
                     rec.n_candidates_a,
-                    rec.n_candidates_b,
-                    rec.n_candidates_c,
+                    rec.n_candidates_b + rec.n_candidates_c,
                 ]
                 for rec in records
             ]
@@ -281,8 +279,7 @@ def plot_time_breakdown(groups: Mapping[str, Sequence[MetricRecord]], output_pat
                 [
                     rec.phash_ms,
                     rec.stage_a_ms,
-                    rec.stage_b_ms,
-                    rec.stage_c_ms,
+                    rec.stage_b_ms + rec.stage_c_ms,
                 ]
                 for rec in records
             ]
@@ -292,7 +289,7 @@ def plot_time_breakdown(groups: Mapping[str, Sequence[MetricRecord]], output_pat
     if not stacks:
         return
     stacks_arr = np.vstack(stacks)
-    labels = ["pHash", "Stage-A", "Stage-B", "Stage-C"]
+    labels = ["pHash", "Stage-1", "Stage-2"]
     fig, ax = plt.subplots(figsize=(8, 5))
     bottoms = np.zeros(len(modes))
     for idx in range(stacks_arr.shape[1]):
@@ -317,8 +314,7 @@ def plot_bytes_breakdown(groups: Mapping[str, Sequence[MetricRecord]], output_pa
             [
                 [
                     rec.bytes_a,
-                    rec.bytes_b,
-                    rec.bytes_c,
+                    rec.bytes_b + rec.bytes_c,
                 ]
                 for rec in records
             ]
@@ -328,7 +324,7 @@ def plot_bytes_breakdown(groups: Mapping[str, Sequence[MetricRecord]], output_pa
     if not stacks:
         return
     stacks_arr = np.vstack(stacks)
-    labels = ["Stage-A", "Stage-B", "Stage-C"]
+    labels = ["Stage-1", "Stage-2"]
     fig, ax = plt.subplots(figsize=(8, 5))
     bottoms = np.zeros(len(modes))
     for idx in range(stacks_arr.shape[1]):
@@ -393,11 +389,10 @@ def plot_stage_ratio(groups: Mapping[str, Sequence[MetricRecord]], output_path: 
     if not summary:
         return
     fig, ax = plt.subplots(figsize=(8, 5))
-    stages = ["Stage-A", "Stage-B", "Stage-C"]
     for mode, stats in summary.items():
         ax.plot(
-            stages,
-            [stats["stage_a_ratio"], stats["stage_b_ratio"], stats["stage_c_ratio"]],
+            ["Stage-1", "Stage-2"],
+            [stats["stage1_ratio"], stats["stage2_ratio"]],
             marker="o",
             label=mode,
         )

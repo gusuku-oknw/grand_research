@@ -41,7 +41,7 @@ def summarize(df: pd.DataFrame) -> Dict[str, float]:
 
 
 def plot_latency(baseline: Dict[str, float], oprf: Dict[str, float], out: Path) -> None:
-    labels = ["Stage-A", "Stage-B", "Stage-C", "Total"]
+    labels = ["Stage-1", "Stage-2", "Total"]
     base_vals = [
         baseline["stage_a_ms"],
         baseline["stage_b_ms"],

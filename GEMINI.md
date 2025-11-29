@@ -7,7 +7,7 @@ This repository, named "SIS Image Sharing Package," is a Python module designed 
 *   **Search Indices:** Incorporates search indices that use banded HMAC tokens to preselect candidates efficiently before reconstructing secrets.
 *   **Persistent Image Store:** Features a persistent image store capable of reconstructing full-resolution assets from a specified number of servers (`k` of `n`).
 
-The core functionality revolves around a three-stage (Stage-A/B/C) pipeline for searchable SIS workflow, which narrows down image candidates before full reconstruction.
+The core functionality revolves around a two-stage pipeline (Stage-1 → Stage-2) for searchable SIS workflow, which narrows down image candidates before full reconstruction.
 
 # Building and Running
 

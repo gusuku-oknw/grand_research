@@ -35,17 +35,17 @@ def _plot_results(df: pd.DataFrame, out_path: Path) -> None:
     axes[0, 0].set_xticks(list(x))
     axes[0, 0].set_xticklabels(image_ids, rotation=45, ha="right")
     axes[0, 0].set_ylabel("Bytes")
-    axes[0, 0].set_title("Stage-A Registration Bytes")
+    axes[0, 0].set_title("Stage-1 Registration Bytes")
     axes[0, 0].legend()
 
     stage_b_mean = df[["stage_b_baseline", "stage_b_distributed"]].mean()
     axes[0, 1].bar(["Baseline", "Dealer-free"], stage_b_mean, color=["#1f77b4", "#ff7f0e"])
     axes[0, 1].set_ylabel("Bytes")
-    axes[0, 1].set_title("Stage-B Query Tokens")
+    axes[0, 1].set_title("Stage-2 Query Tokens")
 
     axes[1, 0].plot(image_ids, df["stage_c"], marker="o")
     axes[1, 0].set_ylabel("Bytes")
-    axes[1, 0].set_title("Stage-C Reconstruction Bytes")
+    axes[1, 0].set_title("Stage-2 Reconstruction Bytes")
     axes[1, 0].tick_params(axis="x", labelrotation=45)
 
     ratio = df["stage_a_distributed"] / df["stage_a_baseline"]

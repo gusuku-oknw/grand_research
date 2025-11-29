@@ -10,20 +10,17 @@
 
 用語の整理： 暗号学的な「復号」とは異なり、SISではシェア（断片）を集めて元の情報を復元するため、本稿では「**再構成 (reconstruction)**」と呼びます。
 
-### 3段階の検索パイプライン
+### 2段階の検索パイプライン
 
-検索は、計算量の軽い処理から順に行う3段階のパイプラインで実行され、段階的に候補を絞り込みます。
+検索は 2 段階に整理され、Stage-1 → Stage-2 の流れに統合することで構造をシンプルにしています。
 
-- **Stage-A（索引による候補削減）**
-  クエリ画像のpHashから生成したHMACトークンを各サーバーの索引と照合し、一致した候補のみを選出します。この段階で、検索対象を全体の数パーセント（≪N）まで効率的に圧縮します。
+- **Stage-1（索引による候補削減）**  
+  クエリの pHash から HMAC トークンを生成し、各サーバーのインデックスと照合することで候補集合を絞り込みます。この段階で検索対象を数パーセントまで圧縮します。
 
-- **Stage-B（pHashのオンデマンド再構成）**
-  Stage-Aを通過した候補に限り、pHashのSISシェアをオンデマンドで部分的に取得・再構成します。これは`sis_selective`モードなどで、より詳細な比較が必要な場合にのみ実行されます。
+- **Stage-2（再構成 + セキュア距離計算）**  
+  Stage-1 で残った候補に対して、SIS シェアの部分的な再構成（`sis_selective` 等）や、再構成せずに MPC で距離を算出する処理を実行します。Stage-2 は従来の Stage-B 〜 Stage-C を合わせたもので、再構成と距離計算をまとめて扱います。
 
-- **Stage-C（MPCによるセキュアな距離計算）**
-  最終候補（L件）に対し、pHashの平文を再構成することなく、**SIS状態のままMPCを用いてハミング距離を計算**します。これにより、サーバーはpHashの情報を知ることなく、安全に距離の比較が可能です。
-
-最終的な画像の**再構成**は、検索プロセスとは明確に分離されており、本当に原本が必要な場合にのみ、利用者の手元でK-of-Nのしきい値分散法に基づき実行されます。
+最終的な画像の**再構成**は検索とは切り離されており、実際に原本が必要な場合のみ K-of-N によってクライアント側で行われます。
 
 ### 高速かつ安全な理由
 
@@ -39,13 +36,13 @@
 
 ### モード別の Stage 利用
 
-| モード | Stage-A | Stage-B | Stage-C |
-| :--- | :------ | :------ | :------ |
-| `plain` | ❌（全件 pHash 距離で走査） | ❌ | ✅ `compute_plain_distances` で距離ソートのみ |
-| `sis_naive` | ❌（候補削減なし） | ❌ | ✅ `rank_candidates` で全候補を復号・評価 |
-| `sis_selective` | ✅ HMAC 投票で候補削減 | ✅ `stage_b_filter` による部分シェア検査 | ✅ Top-K のみ復号・評価 |
-| `sis_staged` | ✅（`sis_selective` と同一） | ✅ | ✅ |
-| `sis_mpc` | ✅ HMAC 投票 | ❌（漏えい防止のためスキップ） | ✅ `rank_candidates_secure` でMPCランキング（再構成なし） |
+| モード | Stage-1 | Stage-2 |
+| :--- | :------ | :------ |
+| `plain` | ❌（全件 pHash 距離で走査） | ✅ `compute_plain_distances` で距離ソートのみ |
+| `sis_naive` | ❌（候補削減なし） | ✅ `rank_candidates` で全候補を復号・評価 |
+| `sis_selective` | ✅ HMAC 投票で候補削減 | ✅ `stage_b_filter` + 再構成で Top-K だけ評価 |
+| `sis_staged` | ✅ | ✅ |
+| `sis_mpc` | ✅ HMAC 投票 | ✅ `rank_candidates_secure` で MPC ランキング（再構成なし） |
 
 ## セットアップ
 
@@ -74,7 +71,7 @@ python experiments/scripts/prepare_coco.py \
 - `--profile` で全体の強度を切り替え、`--variant_scope original_only` や `--include_transforms watermark_timestamp` で検証用サブセットだけを生成できます。
 - AVIF 派生を使う場合は `pip install pillow-avif-plugin` が必要です。ログを減らしたい場合は `--no_progress` で per-image の進捗表示を抑制できます。
 
-## 検索実験（Stage-A/B/C）
+## 検索実験（Stage-1 → Stage-2）
 
 ```bash
 PYTHONPATH=. python experiments/scripts/run_search_experiments.py \
@@ -87,7 +84,7 @@ PYTHONPATH=. python experiments/scripts/run_search_experiments.py \
     --force
 ```
 
-- 各モードの Stage-A/B/C で時間・通信量・精度が `metrics.csv` に記録されます。`pip install tqdm` 済みであれば `Indexing / Preparing workflows / Running queries` の進捗バーが表示されます。
+- 各モードの Stage-1 / Stage-2 で時間・通信量・精度が `metrics.csv` に記録されます。`pip install tqdm` 済みであれば `Indexing / Preparing workflows / Running queries` の進捗バーが表示されます。
 - Colab など計算資源が限られる環境では `--max_images`, `--max_queries` を下げてください。
 
 ## 図表の生成

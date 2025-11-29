@@ -7,16 +7,13 @@
 - **環境変数での供給**: Base64 化した JSON (`{server: [hex,...]}`) を環境変数に渡す `key_env_var` をサポートし、ファイル保存を回避可能。
 - **注意**: 鍵は平文で保存されるため、KMS/秘密管理・ファイル暗号化・権限分離は別途必要。ローテーション手順も要検討。
 
-### 2. Stage-A アクセスパターン緩和
-- **ダミー照会**: `dummy_band_queries` で各バンド/サーバごとのダミートークン照会回数を追加し、アクセスパターンの揺らぎを抑制。
-- **固定回数パディング**: `pad_band_queries` を指定すると、各バンドでの総照会回数（実トークン + ダミー）を固定化。
-- **固定長バッチ（疑似）**: `fixed_band_queries` で照会回数を強制的に固定化（実トークン1＋残りダミー）。`pad_band_queries` より優先。
-- **VOPRF (Ristretto) 対応**: Stage-A トークン生成に VOPRF（blind/evaluate/unblind）を追加 (`--use_oprf`)。バンド値を平文で見せずにトークン化できる。
-- **ダミー照会**: `dummy_band_queries` で各バンド/サーバごとのダミートークン照会回数を追加し、アクセスパターンの揺らぎを抑制。
-- **固定回数パディング**: `pad_band_queries` を指定すると、各バンドでの総照会回数（実トークン + ダミー）を固定化。
-- **固定長バッチ**: `fixed_band_queries` で照会回数を強制的に固定化（実トークン1＋残りダミー）。`pad_band_queries` より優先。
-- **鍵暗号化保存**: HMAC鍵・OPRF鍵を AES-GCM で暗号化して保存可能（env で鍵供給）。
-- **限界**: VOPRF は同一プロセス内実行で、真のクライアント/サーバ分離や TEE ではない。アクセスパターン秘匿は改善するが、運用上は別プロセス・固定長バッチ化が前提。
+### 2. Stage-1 アクセスパターン緩和
+- **ダミー照会**: `dummy_band_queries` で各バンド/サーバごとの追加照会回数を挟み、トークンの照会頻度を均一化します。
+- **固定回数パディング**: `pad_band_queries` を使うと、実トークン＋ダミーの合計を固定し、照会回数のバラつきを抑えます。
+- **固定長バッチ**: `fixed_band_queries` でさらに厳密に本番クエリと完全同数のバッチを送信し、タイミングやサイズの差分を消します。
+- **VOPRF (Ristretto) 対応**: `--use_oprf` で Stage-1 トークンを VOPRF で生成することで、バンド値を復号せずに候補一致を行えます。
+- **鍵暗号化保存**: 上記設定を保存する HMAC/OPRF 鍵は AES-GCM で暗号化しておき、本番環境では KMS や env 変数から復号します。
+- **限界**: VOPRF とパディングはアクセスパターンを緩和するだけで、実際の匿名化には TEE/TEE+シークレットチャネルが必要になる場合があります。
 
 ### 3. シェア不足の扱い
 - fusion 以外のモードで `servers < k` の場合、距離計算/復元をスキップして明示メッセージを返し、例外クラッシュを防止。
@@ -30,18 +27,18 @@
 - 出力: `output/demo_tests/summary.json` に設定・pHash・所要時間・検索/復元結果を記録。`output/demo_tests/recon/` に復元画像を保存。
 
 ### 5. 未解決の課題（要追加設計）
-- **アクセスパターン秘匿**: OPRF 化（VOPRF 等）、固定長バッチ/ダミーをプロトコル化、サーバ集合を固定化、TEE/SGX 内で Stage-A 実行。現状は固定長パディングのみ。
+- **アクセスパターン秘匿**: OPRF 化（VOPRF 等）、固定長バッチ/ダミーをプロトコル化、サーバ集合を固定化、TEE/SGX 内で Stage-1 実行。現状は固定長パディングのみ。
 - **鍵保護/ローテーション**: KMS 連携、鍵ファイル暗号化と ACL、鍵バージョン管理と再インデックス手順の整備。現状は AES-GCM での保存と env 供給止まり。
 - **改ざん検知の強化**: 現状は MAC 検証を追加済みだが、署名や監査ログ、ハッシュチェーン等でより強い検知を検討。
 
 ### 6. 今後の具体的改善案
-- **Stage-A の根本対策**: OPRF ベースのトークン生成、固定長バッチ照会（全クエリ同数・同順序・ダミー混入必須）、サーバ集合の固定化、TEE/SGX での照合。
+- **Stage-1 の根本対策**: OPRF ベースのトークン生成、固定長バッチ照会（全クエリ同数・同順序・ダミー混入必須）、サーバ集合の固定化、TEE/SGX での照合。
 - **鍵管理の実運用化**: KMS 取得レイヤーを追加し、鍵バージョンをメタに記録。ローテーション用の自動化スクリプトと手順書を整備。アクセスを監査ログに記録。
 - **完全性/改ざん検知**: シェア/メタへの署名または MAC に加え、検証結果のログ化と、破損検出時のリカバリ手順を用意。
 
 ### 7. TEE (SGX/TrustZone) 導入に向けたメモ
-- 目的: Stage-A（トークン生成・照合）を enclave 内で実行し、アクセスパターンや鍵をホスト OS から隔離する。
-- 想定フロー: クライアントが固定長バッチでトークンを送付 → enclave 内で鍵を用いて照合 → 閾値判定結果のみをホストに返す。距離計算は従来どおり Stage-C 側の MPC/TEE に委譲。
+- 目的: Stage-1（トークン生成・照合）を enclave 内で実行し、アクセスパターンや鍵をホスト OS から隔離する。
+- 想定フロー: クライアントが固定長バッチでトークンを送付 → enclave 内で鍵を用いて照合 → 閾値判定結果のみをホストに返す。距離計算は従来どおり Stage-2 側の MPC/TEE に委譲。
 - 移行手順（案）:
   1) SGX/TrustZone のサンプル enclave で AES/HMAC/VOPRF を動作確認する。
   2) バンド照合ロジックを enclave に移植し、gRPC/Unix ドメインソケットで呼び出す薄いプロキシを挟む。
@@ -53,10 +50,10 @@
 - **Assets**: Query pHash bands, HMAC/OPRF keys, image shares, reconstruction outputs.
 - **Adversary**: Honest-but-curious servers observing access patterns and stored tokens/shares; host OS compromise (no TEE); network observer.
 - **Leakage points**:
-  - Stage-A access pattern (which band tokens hit): mitigated by VOPRF (hides band value) + fixed-length batches + dummies; still observable traffic size/shape if not padded uniformly.
+  - Stage-1 access pattern (which band tokens hit): mitigated by VOPRF (hides band value) + fixed-length batches + dummies; still observable traffic size/shape if not padded uniformly.
   - Token/key exposure: mitigated by AES-GCM–encrypted key files or env/KMS; full protection requires TEE or strict ACL.
-  - Stage-B partial reconstruction: leaks pHash to the party doing reconstruction; skip in MPC mode to avoid.
-  - Stage-C distance: in MPC mode avoids plaintext pHash; in standard mode pHash is reconstructed.
+  - Stage-2 partial reconstruction: leaks pHash to the party doing reconstruction; skip in MPC mode to avoid.
+  - Stage-2 distance: in MPC mode avoids plaintext pHash; in standard mode pHash is reconstructed.
   - Reconstruction outputs: only top results, k-of-n; still plaintext images—must be access-controlled.
 - **Trust assumptions**:
   - Without TEE: servers can see traffic pattern; VOPRF hides values but not access pattern length if unpadded.
@@ -64,13 +61,13 @@
 - **Residual risks**: Traffic analysis if padding not enforced; key theft if key storage/ACL is weak; integrity loss if MAC/签名 not enforced everywhere; replay unless request IDs/timestamps are checked (not yet implemented).
 
 ### 9. Protocol Draft (Fixed-Length + VOPRF + Key Management)
-- **Stage-A (client/server split)**:
+- **Stage-1 (client/server split)**:
   1) Client computes pHash, splits into bands.
   2) For each band, client blinds with VOPRF and sends **fixed-length batch** of tokens (1 real + dummies) to a fixed server set.
   3) Server (or TEE) evaluates blinded tokens; client unblinds and filters candidates by vote threshold.
   4) Batch size, ordering, and server set are constant across queries to hide access pattern length.
-- **Stage-B**: Optional partial pHash reconstruction for candidates only; in MPC mode skip to avoid leakage.
-- **Stage-C**: Distance via MPC/TEE/plain (configurable). Reconstruction only for Top-K that satisfy k-of-n.
+- **Stage-2**: Optional partial pHash reconstruction for candidates only; in MPC mode skip to avoid leakage.
+- **Stage-2**: Distance via MPC/TEE/plain (configurable). Reconstruction only for Top-K that satisfy k-of-n.
 - **Key management**:
   - HMAC/OPRF keys fetched from KMS (preferred) or env; on-disk keys are AES-GCM encrypted with short-lived KMS token.
   - Keys carry a **version**; rotation requires reindex or dual-read period. Versions stored in metadata.
@@ -80,7 +77,7 @@
   - All queries use the same server subset to avoid server-selection leakage.
 
 ### 10. TEE PoC Plan (Draft)
-- **Scope**: Move Stage-A token evaluation into an enclave; keep Stage-C optional (MPC/TEE/plain); Stage-B optional/skip for MPC.
+- **Scope**: Move Stage-1 token evaluation into an enclave; keep Stage-2 optional (MPC/TEE/plain); Stage-2 optional/skip for MPC.
 - **Steps**:
   1) Build SGX/TrustZone enclave with AES/HMAC/VOPRF primitives; validate with unit tests inside enclave.
   2) Expose a minimal API (e.g., gRPC/UDS) for fixed-length token batches; enforce padding and dummy generation inside enclave.
