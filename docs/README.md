@@ -187,7 +187,7 @@ pHash × SIS による検索可能化がどの程度有効かを、
 - Stage1（インデックス検索時間）  
 - Stage2（距離計算時間）  
 - **標準偏差/信頼区間**  
-  `experiments/scripts/metrics_stats.py` は各モードの `stage1_ms`/`stage2_ms`/`total_ms` に対して平均・標準偏差・95% CI を書き出すため、スライドや表で「ばらつき」を示したい場合に活用できます（`python experiments/scripts/metrics_stats.py output/results/.../metrics.csv`）。
+  `experiments/scripts/metrics_stats.py` で `output/results/metrics_summary.csv` を出力し、`experiments/scripts/plot_metrics_with_ci.py output/results/metrics_summary.csv` を実行すると、`total_ms`/`stage2_ms`/`stage2_bytes` のmean±95%CI を error bar 付き PNG にできます。
 
 ### 通信量
 - 登録時（シェア + トークンサイズ）  
