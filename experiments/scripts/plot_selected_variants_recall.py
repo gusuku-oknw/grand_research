@@ -6,14 +6,16 @@ from __future__ import annotations
 
 import argparse
 from pathlib import Path
-from typing import Sequence
+from typing import Sequence, Union
 
 import matplotlib.pyplot as plt
 import pandas as pd
 
 
-def load_filtered_metrics(metrics_csv: Path, transforms: Sequence[str], tau: int = 10) -> pd.DataFrame:
-    df = pd.read_csv(metrics_csv)
+def load_filtered_metrics(
+    metrics_source: Union[Path, pd.DataFrame], transforms: Sequence[str], tau: int = 10
+) -> pd.DataFrame:
+    df = pd.read_csv(metrics_source) if isinstance(metrics_source, Path) else metrics_source
     base_tau = df["tau"].min()
     filtered = df[
         (df["transform"].isin(transforms)) &
@@ -66,9 +68,19 @@ def main() -> None:
         default=["original", "jpeg70", "crop5%", "rotate10%"],
         help="Transform names to include",
     )
+    parser.add_argument(
+        "--exclude-mode",
+        type=str,
+        nargs="+",
+        default=[],
+        help="Mode names to omit",
+    )
     args = parser.parse_args()
 
-    filtered = load_filtered_metrics(args.metrics_csv, args.transforms)
+    filtered_df = pd.read_csv(args.metrics_csv)
+    if args.exclude_mode:
+        filtered_df = filtered_df[~filtered_df["mode"].isin(args.exclude_mode)]
+    filtered = load_filtered_metrics(filtered_df, args.transforms)
     summary = summarize(filtered)
     plot_recall(summary, args.transforms, args.output)
     print("Saved selected transforms recall plot to", args.output)
