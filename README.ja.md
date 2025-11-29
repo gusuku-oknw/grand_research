@@ -61,7 +61,7 @@ pip install -e .
 ## COCO 派生データの準備
 
 ```bash
-python scripts/prepare_coco.py \
+python experiments/scripts/prepare_coco.py \
     --coco_dir data/coco2017/val2017 \
     --output_dir data/coco2017_derivatives/val2017 \
     --mapping_json data/coco2017_derivatives/derivative_mapping.json \
@@ -77,10 +77,10 @@ python scripts/prepare_coco.py \
 ## 検索実験（Stage-A/B/C）
 
 ```bash
-PYTHONPATH=. python scripts/run_search_experiments.py \
+PYTHONPATH=. python experiments/scripts/run_search_experiments.py \
     --mapping_json data/coco2017_derivatives/derivative_mapping.json \
-    --output_dir evaluation/results/coco_val2017_modular \
-    --work_dir evaluation/artifacts/coco_val2017_modular \
+    --output_dir output/results/coco_val2017_modular \
+    --work_dir output/artifacts/coco_val2017_modular \
     --modes plain sis_naive sis_selective sis_staged sis_mpc \
     --max_queries 500 \
     --bands 8 --k 3 --n 5 \
@@ -93,15 +93,15 @@ PYTHONPATH=. python scripts/run_search_experiments.py \
 ## 図表の生成
 
 ```bash
-python -m evaluation.plotting \
-    evaluation/results/coco_val2017_modular/metrics.csv \
-    --output_dir evaluation/figures/coco_val2017_modular
+python -m experiments.common.plotting \
+    output/results/coco_val2017_modular/metrics.csv \
+    --output_dir output/figures/coco_val2017_modular
 ```
 
-候補削減グラフや通信量の内訳、Precision-Latency カーブなどが `evaluation/figures` 配下に出力されます。
+候補削減グラフや通信量の内訳、Precision-Latency カーブなどが `output/figures` 配下に出力されます。
 
 ## 補足
 
 - 研究レポート用テンプレートは `reports/2025_selective_reconstruction_report_template.md` にまとまっています。
 - セキュリティ強度検証や ROC/PR 曲線は `metrics.csv` と同じ成果物から再生成できます。
-- 追加の CLI オプションは `python scripts/prepare_coco.py --help` と `python scripts/run_search_experiments.py --help` で確認してください。
+-- 追加の CLI オプションは `python experiments/scripts/prepare_coco.py --help` と `python experiments/scripts/run_search_experiments.py --help` で確認してください。

@@ -2,13 +2,11 @@
 .venv
 __pycache__
 verify_artifacts/
-recon_out/
 data/
 images/
 evaluation/**/*.png
 evaluation/**/*.npz
 evaluation/**/*.csv
-img_meta/
-img_shares/
+output/
 figures/
 out*/

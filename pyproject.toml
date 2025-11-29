@@ -19,6 +19,9 @@ dependencies = [
 [project.scripts]
 sis-image = "sis_image.cli:main"
 
+[tool.setuptools]
+package-dir = {"" = "src"}
+
 [tool.setuptools.packages.find]
-where = ["."]
-include = ["sis_image*"]
+where = ["src"]
+include = ["sis_image*", "pHR_SIS*", "dealer_free_sis*"]

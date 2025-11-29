@@ -45,7 +45,7 @@ The project supports reproducible experiments, locally or on Google Colab, invol
 
 1.  **Prepare COCO derivatives:**
     ```bash
-    python scripts/prepare_coco.py \
+    python experiments/scripts/prepare_coco.py \
         --coco_dir data/coco2017/val2017 \
         --output_dir data/coco2017_derivatives/val2017 \
         --mapping_json data/coco2017_derivatives/derivative_mapping.json \
@@ -55,18 +55,18 @@ The project supports reproducible experiments, locally or on Google Colab, invol
     ```
 2.  **Run staged SIS experiments:**
     ```bash
-    PYTHONPATH=. python scripts/run_search_experiments.py \
+    PYTHONPATH=. python experiments/scripts/run_search_experiments.py \
         --mapping_json data/coco2017_derivatives/derivative_mapping.json \
-        --output_dir evaluation/results/coco_val2017_stageABC \
-        --work_dir evaluation/artifacts/coco_val2017_stageABC
+        --output_dir output/results/coco_val2017_stageABC \
+        --work_dir output/artifacts/coco_val2017_stageABC
     ```
 3.  **Produce Matplotlib figures from the metrics:**
     ```bash
-    python -m evaluation.plotting \
-        evaluation/results/coco_val2017_stageABC/metrics.csv \
-        --output_dir evaluation/figures/coco_val2017_stageABC
+    python -m experiments.common.plotting \
+        output/results/coco_val2017_stageABC/metrics.csv \
+        --output_dir output/figures/coco_val2017_stageABC
     ```
 
 # Development Conventions
 
-The project emphasizes reproducible research and evaluation, with dedicated scripts for preparing datasets, running experiments, and generating visual reports (Matplotlib figures) from collected metrics. The `scripts/run_search_experiments.py` plays a central role in recording timing, candidate counts, and byte usage for each stage of the SIS pipeline, feeding directly into reporting templates.
+The project emphasizes reproducible research and evaluation, with dedicated scripts for preparing datasets, running experiments, and generating visual reports (Matplotlib figures) from collected metrics. The `experiments/scripts/run_search_experiments.py` plays a central role in recording timing, candidate counts, and byte usage for each stage of the SIS pipeline, feeding directly into reporting templates.

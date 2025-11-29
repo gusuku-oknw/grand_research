@@ -76,7 +76,7 @@ It arranges the recovered/candidate image per `k` for both strategies so you can
 If you don't have a curated dataset, generate synthetic noise images with:
 
 ```bash
-python scripts/generate_noise_images.py --count 20 --size 128 128 --output_dir data/noise
+python experiments/scripts/generate_noise_images.py --count 20 --size 128 128 --output_dir data/noise
 ```
 
 These PNGs provide a quick visual workload for the demo scripts so you can inspect how noise versus real images behave as `k` changes.
@@ -85,19 +85,18 @@ These PNGs provide a quick visual workload for the demo scripts so you can inspe
 
 ## ⚙️ Modular Experiment Architecture
 
-Experiment scripts under `scripts/` are now **mode-based** and follow a shared interface.
+Experiment scripts under `experiments/scripts/` are now **mode-based** and follow a shared interface.
 
 ```
-scripts/
+experiments/scripts/
   run_search_experiments.py      # orchestrator (lightweight)
-sis_modes/
-  base.py                        # abstract ModeRunner, PhaseTimer, ByteMeter
+experiments/modes/
+  base_runner.py                 # abstract ModeRunner and helpers
   plain.py                       # baseline pHash ranking
   sis_naive.py                   # full reconstruction baseline
   sis_selective.py               # Stage-B selective reconstruction
   sis_staged.py                  # staged refinement pipeline
   sis_mpc.py                     # MPC-style fully private variant
-  sis_common.py                  # shared helpers (filtering, ranking)
 ```
 
 ### Design Philosophy and Architecture
@@ -162,7 +161,7 @@ pip install -r requirements.txt
 ### 2. Prepare COCO Derivatives
 
 ```bash
-python scripts/prepare_coco.py \
+python experiments/scripts/prepare_coco.py \
     --coco_dir data/coco2017/val2017 \
     --output_dir data/coco2017_derivatives/val2017 \
     --mapping_json data/coco2017_derivatives/derivative_mapping.json \
@@ -178,10 +177,10 @@ python scripts/prepare_coco.py \
 ### 3. Run Modular SIS Experiments
 
 ```bash
-PYTHONPATH=. python scripts/run_search_experiments.py \
+PYTHONPATH=. python experiments/scripts/run_search_experiments.py \
     --mapping_json data/coco2017_derivatives/derivative_mapping.json \
-    --output_dir evaluation/results/coco_val2017_modular \
-    --work_dir evaluation/artifacts/coco_val2017_modular \
+    --output_dir output/results/coco_val2017_modular \
+    --work_dir output/artifacts/coco_val2017_modular \
     --modes plain sis_naive sis_selective sis_staged sis_mpc \
     --max_queries 500 \
     --bands 8 --k 3 --n 5 \
@@ -194,14 +193,14 @@ PYTHONPATH=. python scripts/run_search_experiments.py \
 
   * `metrics.csv` — consolidated per-query results
   * `security_summary.json` — entropy & leakage analysis
-  * `evaluation/figures/*.png` — candidate reduction & latency graphs
+  * `output/figures/*.png` — candidate reduction & latency graphs
 
 ### 4. Generate Figures
 
 ```bash
-python -m evaluation.plotting \
-    evaluation/results/coco_val2017_modular/metrics.csv \
-    --output_dir evaluation/figures/coco_val2017_modular
+python -m experiments.common.plotting \
+    output/results/coco_val2017_modular/metrics.csv \
+    --output_dir output/figures/coco_val2017_modular
 ```
 
 Produces:
@@ -229,7 +228,7 @@ Produces:
 3. Run the same commands as above with smaller datasets:
 
    ```bash
-   !python scripts/run_search_experiments.py \
+   !python experiments/scripts/run_search_experiments.py \
        --max_images 1000 --max_queries 100 \
        --modes sis_selective sis_mpc
    ```
@@ -259,14 +258,13 @@ This includes automatic embedding of:
 
 ```
 sis_image/
-  phash.py              # perceptual hashing (64-bit DCT)
-  shamir.py             # GF(257) secret sharing core
-  index.py              # banded HMAC token index
-  workflow.py           # SIS + image store orchestration
-  utils.py              # common math and I/O helpers
-evaluation/
-  dataset.py            # COCO derivative mapping
-  plotting.py           # report figure generator
+  common/               # shared helpers (dataset parsing, metrics, plotting, tokens)
+  dealer_based/         # dealer-present index/store/workflow/CLI
+  dealer_free/          # dealer-free simulator + MPC helpers
+experiments/
+  common/               # moved dataset/metrics/plotting logic
+  scripts/              # run_search_experiments.py + helpers (COCO prep, plots)
+  modes/                # mode-specific runners for plain/sis_naive/selective/staged/mpc
 ```
 
 ---
