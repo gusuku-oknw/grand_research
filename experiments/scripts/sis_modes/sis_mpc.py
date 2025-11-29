@@ -10,7 +10,7 @@ class MPCRunner(ModeRunner):
         super().__init__("sis_mpc")
 
     @staticmethod
-    def _stage_a_bytes(idx, args, servers) -> int:
+    def _stage1_bytes(idx, args, servers) -> int:
         tokens_per_band = (
             args.fixed_band_queries
             if getattr(args, "fixed_band_queries", None) is not None
@@ -32,7 +32,7 @@ class MPCRunner(ModeRunner):
             fixed_band_queries=getattr(ctx.args, "fixed_band_queries", None),
         )
         f1 = (time.perf_counter() - t1) * 1000.0
-        bytes_f1 = self._stage_a_bytes(idx, ctx.args, servers)
+        bytes_f1 = self._stage1_bytes(idx, ctx.args, servers)
         cand_b = [c[0] for c in cand_a]
         # F2: secure ranking（復元なし）
         t2 = time.perf_counter()

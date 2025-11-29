@@ -24,36 +24,24 @@ import pandas as pd  # noqa: E402
 
 def load_metrics(path: Path) -> pd.DataFrame:
     df = pd.read_csv(path)
-    # Expect columns: mode, total_ms, stage_a_ms, stage_b_ms, stage_c_ms, bytes_a, bytes_b, bytes_c, ...
+    # Expect columns: mode, total_ms, stage1_ms, stage2_ms, stage1_bytes, stage2_bytes, ...
     return df
 
 
 def summarize(df: pd.DataFrame) -> Dict[str, float]:
     return {
-        "stage_a_ms": df["stage_a_ms"].mean(),
-        "stage_b_ms": df["stage_b_ms"].mean(),
-        "stage_c_ms": df["stage_c_ms"].mean(),
+        "stage1_ms": df["stage1_ms"].mean(),
+        "stage2_ms": df["stage2_ms"].mean(),
         "total_ms": df["total_ms"].mean(),
-        "bytes_a": df["bytes_a"].mean(),
-        "bytes_b": df["bytes_b"].mean(),
-        "bytes_c": df["bytes_c"].mean(),
+        "stage1_bytes": df["stage1_bytes"].mean(),
+        "stage2_bytes": df["stage2_bytes"].mean(),
     }
 
 
 def plot_latency(baseline: Dict[str, float], oprf: Dict[str, float], out: Path) -> None:
     labels = ["Stage-1", "Stage-2", "Total"]
-    base_vals = [
-        baseline["stage_a_ms"],
-        baseline["stage_b_ms"],
-        baseline["stage_c_ms"],
-        baseline["total_ms"],
-    ]
-    oprf_vals = [
-        oprf["stage_a_ms"],
-        oprf["stage_b_ms"],
-        oprf["stage_c_ms"],
-        oprf["total_ms"],
-    ]
+    base_vals = [baseline["stage1_ms"], baseline["stage2_ms"], baseline["total_ms"]]
+    oprf_vals = [oprf["stage1_ms"], oprf["stage2_ms"], oprf["total_ms"]]
     x = range(len(labels))
     w = 0.35
     fig, ax = plt.subplots(figsize=(6, 4))
@@ -70,9 +58,9 @@ def plot_latency(baseline: Dict[str, float], oprf: Dict[str, float], out: Path) 
 
 
 def plot_bytes(baseline: Dict[str, float], oprf: Dict[str, float], out: Path) -> None:
-    labels = ["Bytes-A", "Bytes-B", "Bytes-C"]
-    base_vals = [baseline["bytes_a"], baseline["bytes_b"], baseline["bytes_c"]]
-    oprf_vals = [oprf["bytes_a"], oprf["bytes_b"], oprf["bytes_c"]]
+    labels = ["Stage-1", "Stage-2"]
+    base_vals = [baseline["stage1_bytes"], baseline["stage2_bytes"]]
+    oprf_vals = [oprf["stage1_bytes"], oprf["stage2_bytes"]]
     x = range(len(labels))
     w = 0.35
     fig, ax = plt.subplots(figsize=(6, 4))

@@ -6,7 +6,7 @@ from .types import ModeContext, ModeResult, PhaseStats
 
 class NaiveRunner(ModeRunner):
     def __init__(self) -> None:
-        super().__init__("sis_naive")
+        super().__init__("sis_server_naive")
 
     def run_query(self, query_key: str, query_hash: int, ctx: ModeContext) -> ModeResult:
         t2 = time.perf_counter()

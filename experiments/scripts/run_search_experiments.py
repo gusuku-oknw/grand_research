@@ -20,10 +20,13 @@ from sis_image.common.phash import phash64, hamming64
 from sis_modes.types import ModeContext, ModeResult, PhaseStats
 from sis_modes.base import ModeRunner
 from sis_modes.plain import PlainRunner
+from sis_modes.sis_aes_gcm import AESGCMRunner
 from sis_modes.sis_naive import NaiveRunner
-from sis_modes.sis_selective import SelectiveRunner
-from sis_modes.sis_staged import StagedRunner
+from sis_modes.sis_only import SISOnlyRunner
+from sis_modes.sis_selective import PartialRunner, SelectiveRunner
 from sis_modes.sis_mpc import MPCRunner
+from sis_modes.minhash_lsh import MinHashLSHRunner
+from sis_modes.aes_crypto import AESGCMStorage, EncryptedImageRecord, load_aesgcm_master
 
 try:
     from tqdm import tqdm
@@ -36,20 +39,23 @@ class QueryLog:
     dataset: str; mode: str; query_key: str; query_variant: str; transform: str; tau: int
     precision_at_1: float; precision_at_5: float; precision_at_10: float
     recall_at_1: float; recall_at_5: float; recall_at_10: float; map: float
-    phash_ms: float; stage_a_ms: float; stage_b_ms: float; stage_c_ms: float; total_ms: float
-    n_dataset: int; n_candidates_a: int; n_candidates_b: int; n_candidates_c: int
-    n_reconstructed: int; bytes_a: int; bytes_b: int; bytes_c: int
+    phash_ms: float; stage1_ms: float; stage2_ms: float; total_ms: float
+    n_dataset: int; stage1_candidates: int; stage2_candidates: int; stage2_ranked: int
+    n_reconstructed: int; stage1_bytes: int; stage2_bytes: int
 
 # 実行するモード名のリストから ModeRunner の辞書を生成
 def build_runners(names: List[str]) -> Dict[str, ModeRunner]:
-    all_ = {
-        "plain": PlainRunner(),
-        "sis_naive": NaiveRunner(),
-        "sis_selective": SelectiveRunner(),
-        "sis_staged": StagedRunner(),
-        "sis_mpc": MPCRunner(),
+    alias = {
+        "plain": PlainRunner,
+        "sis_server_naive": NaiveRunner,
+        "sis_client_dealer_free": SelectiveRunner,
+        "sis_client_partial": PartialRunner,
+        "sis_mpc": MPCRunner,
+        "sis_only": SISOnlyRunner,
+        "aes_gcm": AESGCMRunner,
+        "minhash_lsh": MinHashLSHRunner,
     }
-    return {n: all_[n] for n in names}
+    return {n: alias[n]() for n in names}
 
 # SIS モードごとに共有ストアを初期化（必要なフォルダも作成）
 def ensure_workflow(
@@ -136,9 +142,19 @@ def main():
     ap.add_argument("--tau_values", type=int, nargs="+", default=[6,8,10,12])
     ap.add_argument("--stage_b_bytes", type=int, default=2)
     ap.add_argument("--stage_b_margin", type=int, default=8)
-    ap.add_argument("--modes", type=str, nargs="+", default=["plain","sis_naive","sis_selective","sis_staged","sis_mpc"])
+    allowed_modes = [
+        "plain",
+        "sis_only",
+        "sis_server_naive",
+        "sis_client_dealer_free",
+        "sis_client_partial",
+        "sis_mpc",
+        "aes_gcm",
+        "minhash_lsh",
+    ]
+    ap.add_argument("--modes", type=str, nargs="+", choices=allowed_modes, default=allowed_modes)
     ap.add_argument("--force", action="store_true")
-    ap.add_argument("--use_oprf", action="store_true", help="Use VOPRF for Stage-A band tokens.")
+    ap.add_argument("--use_oprf", action="store_true", help="Use VOPRF for Stage-1 band tokens.")
     ap.add_argument("--dummy_band_queries", type=int, default=0)
     ap.add_argument("--pad_band_queries", type=int, default=None)
     ap.add_argument("--fixed_band_queries", type=int, default=None)
@@ -159,6 +175,14 @@ def main():
     positives_lookup = build_positive_lookup(samples)
     id_to_index = {s.key:i for i,s in enumerate(samples)}
     phashes, phash_ms_avg = compute_phashes(samples)
+    aes_storage: AESGCMStorage | None = None
+    aes_records: Dict[str, EncryptedImageRecord] | None = None
+    if "aes_gcm" in args.modes:
+        aes_storage = AESGCMStorage(load_aesgcm_master())
+        aes_records = {}
+        for sample in samples:
+            raw = sample.path.read_bytes()
+            aes_records[sample.key] = aes_storage.encrypt_image(sample.key, raw)
 
     # indices
     plain_index = SearchableSISIndex(
@@ -176,7 +200,8 @@ def main():
 
     workflows: Dict[str, SearchableSISWithImageStore] = {}
     for m in iter_progress(args.modes, desc="Preparing workflows", total=len(args.modes), leave=False):
-        if m=="plain": continue
+        if m in {"plain", "aes_gcm"}:
+            continue
         wf = ensure_workflow(
             m,
             args.k,
@@ -202,8 +227,17 @@ def main():
 
     # クエリごとに問い合わせるサーバー（k 台）を決定
     servers = plain_index.list_servers()[: args.k]
-    ctx = ModeContext(samples=samples, id_to_index=id_to_index, phashes=phashes,
-                      plain_index=plain_index, workflows=workflows, servers=servers, args=args)
+    ctx = ModeContext(
+        samples=samples,
+        id_to_index=id_to_index,
+        phashes=phashes,
+        plain_index=plain_index,
+        workflows=workflows,
+        servers=servers,
+        args=args,
+        aes_storage=aes_storage,
+        aes_records=aes_records,
+    )
 
     runners = build_runners(args.modes)
 
@@ -227,6 +261,7 @@ def main():
             fpr,tpr,prec,rec = roc_pr_curves(mode_d, labels, tau_values=sorted(set(args.tau_values)) or [args.max_hamming or 10])
             roc_data[name].append((fpr,tpr,prec,rec))
 
+            stage2_bytes = res.stats.bytes_f2_early + res.stats.bytes_f2_final
             for tau in (sorted(set(args.tau_values)) or [args.max_hamming or 10]):
                 logs.append(QueryLog(
                     dataset=args.dataset_name, mode=name, query_key=q.key, query_variant=q.variant,
@@ -234,11 +269,11 @@ def main():
                     precision_at_5=metrics.precision_at.get(5,0.0), precision_at_10=metrics.precision_at.get(10,0.0),
                     recall_at_1=metrics.recall_at.get(1,0.0), recall_at_5=metrics.recall_at.get(5,0.0),
                     recall_at_10=metrics.recall_at.get(10,0.0), map=apv,
-                    phash_ms=phash_ms_avg, stage_a_ms=res.stats.f1_ms, stage_b_ms=0.0, stage_c_ms=res.stats.f2_ms,
+                    phash_ms=phash_ms_avg, stage1_ms=res.stats.f1_ms, stage2_ms=res.stats.f2_ms,
                     total_ms=total_ms, n_dataset=len(samples),
-                    n_candidates_a=res.stats.n_cand_f1, n_candidates_b=res.stats.n_cand_f2,
-                    n_candidates_c=res.stats.n_eval_final, n_reconstructed=res.stats.n_reconstructed,
-                    bytes_a=res.stats.bytes_f1, bytes_b=res.stats.bytes_f2_early, bytes_c=res.stats.bytes_f2_final
+                    stage1_candidates=res.stats.n_cand_f1, stage2_candidates=res.stats.n_cand_f2,
+                    stage2_ranked=res.stats.n_eval_final, n_reconstructed=res.stats.n_reconstructed,
+                    stage1_bytes=res.stats.bytes_f1, stage2_bytes=stage2_bytes
                 ))
 
     # metrics.csv を書き出し（各クエリ x モードの行）

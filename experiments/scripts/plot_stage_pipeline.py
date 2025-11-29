@@ -1,5 +1,5 @@
 """
-Visualize the three-stage SIS pipeline (Stage-A/B/C) in one figure.
+Visualize the two-stage SIS pipeline (Stage-1/Stage-2) in one figure.
 
 Output: output/figures/stage_pipeline.png (created if missing).
 
@@ -69,21 +69,16 @@ def main() -> None:
     ax.set_xlim(0, 12.5)
     ax.set_ylim(-1.5, 5)
 
-    # Stage boxes
-    add_box(ax, (0.5, 2.6), "Stage-1\nBand tokens via VOPRF\n+ fixed batch + dummies\n(Output: candidates)", width=3.4, height=2.0)
+    add_box(ax, (0.5, 2.6), "Stage-1\nBand tokens via VOPRF\n+ fixed batch + dummies\n(Output: candidate set)", width=3.4, height=2.0)
     add_box(
         ax,
         (4.0, 2.6),
-        "Stage-2\nPartial reconstruction,\nsecure MPC distance\n(Output: ranked Top-L)",
+        "Stage-2\nSelective reconstruction or MPC\nsecure distance evaluation\n(Output: ranked Top-L)",
         width=3.4,
         height=2.0,
     )
-    add_box(ax, (7.5, 0.4), "Reconstruction\nk-of-n image restore\nTop-K only (access-controlled)", color="#0FB879", width=3.4, height=1.8)
-
-    # Arrows between stages
     add_arrow(ax, (3.7, 3.6), (1.3, 3.6), "Candidates (votes ≥ τ)")
     add_arrow(ax, (7.2, 3.6), (4.2, 3.6), "Top-L")
-    add_arrow(ax, (9.2, 1.6), (9.2, 2.5), "Top-K")
 
     # Inputs/notes
     ax.text(
@@ -98,8 +93,8 @@ def main() -> None:
         -0.8,
         "Notes:\n"
         "• Stage-1: VOPRF hides band value; fixed-length padded batches soften access-pattern leakage\n"
-        "• Stage-2: reconstruction + MPC/TEE distance; skip reconstruction when MPC is enforced\n"
-        "• Reconstruction: only Top-K that meet k-of-n; output is access-controlled\n"
+        "• Stage-2: selective reconstruction + secure distance; MPC skips reconstruction and keeps shares secret\n"
+        "• Reconstruction: only Top-K that meet k-of-n (Stage-2 DIY); access is tightly controlled\n"
         "• Keys: HMAC/OPRF keys can be encrypted at rest; TEE/attestation gates key delivery",
         fontsize=8.5,
         color="#222",

@@ -154,7 +154,7 @@ def main() -> None:
     ax.set_xticks(list(x))
     ax.set_xticklabels(labels)
     ax.set_ylabel("Seconds (tests/fixtures)")
-    ax.set_title("Baseline vs VOPRF+Padding (Stage-A) on tests/fixtures")
+    ax.set_title("Baseline vs VOPRF+Padding (Stage-1) on tests/fixtures")
     ax.legend()
     fig.tight_layout()
     plot_path = out_dir / "oprf_padding_overhead.png"

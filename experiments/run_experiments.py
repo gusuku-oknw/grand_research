@@ -16,16 +16,16 @@ if str(SRC_ROOT) not in sys.path:
     sys.path.insert(0, str(SRC_ROOT))
 
 from experiments.modes.plain import PlainModeRunner
-from experiments.modes.sis_naive import SISNaiveModeRunner
-from experiments.modes.sis_selective import SISSelectiveModeRunner
-from experiments.modes.sis_staged import SISStagedModeRunner
+from experiments.modes.sis_client_dealer_free import SISClientDealerFreeModeRunner
+from experiments.modes.sis_client_partial import SISClientPartialModeRunner
 from experiments.modes.sis_mpc import SISMPCModeRunner
+from experiments.modes.sis_server_naive import SISServerNaiveModeRunner
 
 MODE_REGISTRY = {
     PlainModeRunner.name: PlainModeRunner,
-    SISNaiveModeRunner.name: SISNaiveModeRunner,
-    SISSelectiveModeRunner.name: SISSelectiveModeRunner,
-    SISStagedModeRunner.name: SISStagedModeRunner,
+    SISServerNaiveModeRunner.name: SISServerNaiveModeRunner,
+    SISClientDealerFreeModeRunner.name: SISClientDealerFreeModeRunner,
+    SISClientPartialModeRunner.name: SISClientPartialModeRunner,
     SISMPCModeRunner.name: SISMPCModeRunner,
 }
 

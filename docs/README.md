@@ -37,15 +37,31 @@
 ## M0. SIS-only（No-index）
 ### 説明文
 画像は SIS により分散保存されるが、pHash などの特徴が存在しないため、類似検索は全件復元もしくは全件MPCしか手段がない。したがって検索時間は実用不可能レベルとなる。
+実験では `sis_only` モードを使い、Stage-1 をスキップして全件復元/比較を行う形でこの悲惨さを再現します。
 
 ---
 
 ## M1. AES暗号化画像
 ### 説明文
 画像ファイルが AES 暗号化されて保存される。暗号文から類似検索を行うことはできず、復号が必要となるため、プライバシー要件を満たさない。
+### 実装ノート
+`run_search_experiments.py` の `aes_gcm` モードでは、`PHASH_AES_MASTER_KEY` を Base64 で環境変数に設定し、画像を AES-GCM で丸暗号化して一度記録したうえで、検索時に全件復号して pHash を計算します。  
+```bash
+PHASH_AES_MASTER_KEY=$(python - <<'PY'
+import base64, os
+print(base64.b64encode(os.urandom(32)).decode())
+PY)
+PYTHONPATH=./src:. python experiments/scripts/run_search_experiments.py --modes aes_gcm --max_queries 20
+```
+とすれば、暗号化されたデータセットに対して「インデックスなしはここまで遅い」ことが定量的に示せます。
 
----
-
+### M2 実験ノート
+`experiments/scripts/fhe_distance_demo.py` は本格的な Pyfhel FHE ではなく、FHE 並みに遅い bitwise 演算 + 消費ループで `64bit pHash` の距離計算にかかる時間を模擬します。実行例：
+```bash
+PYTHONPATH=./src:. python experiments/scripts/fhe_distance_demo.py --iterations 3
+```
+各試行で `plain` と `simulated FHE` の距離/時間を出力するので「FHE ではこのくらい遅い」という定性を示せます。  
+`--output-csv output/results/fhe_demo/metrics.csv` を付けると `mode=sis_fhe` の metrics.csv が生成されるため、他モードと同じグラフに含められます。
 ## M2. Homomorphic Encryption（FHE）距離計算
 ### 説明文
 画像を FHE 暗号化し暗号状態で距離計算を行う方式。理論的には類似検索が可能だが、医療画像の解像度では1件あたり数秒〜数十秒かかり、実運用は困難。
@@ -55,6 +71,14 @@
 ## M3. MinHash + LSH
 ### 説明文
 画像を平文特徴に変換し、MinHash と LSH により近似検索を実施する。高速だが、特徴が平文であるためプライバシー保護要件を満たさない。
+
+### 実装ノート
+`datasketch` の `MinHash`/`MinHashLSH` を使って、pHash の 1 ビット集合を MinHash 化し LSH に登録した上で候補を Stage-1 で絞り込み、Stage-2 で pHash Hamming 距離を計算します。  
+```bash
+pip install datasketch
+PYTHONPATH=./src:. python experiments/scripts/run_search_experiments.py --modes minhash_lsh --max_queries 200
+```
+このモードは LSH の候補数と Stage-2 の Hamming 時間を同じ metrics.csv に書き出すので、既存プロット (precision/time/bytes) に `minhash_lsh` を含めれば「MinHash も候補を絞っている」ことが可視化できます。
 
 ---
 
@@ -109,6 +133,7 @@ pHash は一切復元されず、SIS シェアのまま MPC によって距離�
   - plain：平文距離  
   - SIS：復元後距離  
   - MPC：復元なしで Hamming 距離
+- Stage-2 は従来 Stage-B/Stage-C に相当する再構成と距離評価をまとめたものであり、どのモードでも同じ出力フォーマットに整合することが評価の前提となる。
 
 ---
 

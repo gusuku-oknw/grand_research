@@ -24,20 +24,18 @@ NUMERIC_FIELDS = {
     "recall_at_10",
     "map",
     "phash_ms",
-    "stage_a_ms",
-    "stage_b_ms",
-    "stage_c_ms",
+    "stage1_ms",
+    "stage2_ms",
     "total_ms",
-    "bytes_a",
-    "bytes_b",
-    "bytes_c",
+    "stage1_bytes",
+    "stage2_bytes",
 }
 
 INT_FIELDS = {
     "n_dataset",
-    "n_candidates_a",
-    "n_candidates_b",
-    "n_candidates_c",
+    "stage1_candidates",
+    "stage2_candidates",
+    "stage2_ranked",
     "n_reconstructed",
     "tau",
 }
@@ -61,18 +59,16 @@ class MetricRecord:
     recall_at_10: float
     map: float
     phash_ms: float
-    stage_a_ms: float
-    stage_b_ms: float
-    stage_c_ms: float
+    stage1_ms: float
+    stage2_ms: float
     total_ms: float
     n_dataset: int
-    n_candidates_a: int
-    n_candidates_b: int
-    n_candidates_c: int
+    stage1_candidates: int
+    stage2_candidates: int
+    stage2_ranked: int
     n_reconstructed: int
-    bytes_a: float
-    bytes_b: float
-    bytes_c: float
+    stage1_bytes: float
+    stage2_bytes: float
 
     @classmethod
     def from_dict(cls, row: Mapping[str, str]) -> "MetricRecord":
@@ -158,9 +154,8 @@ def summarize_stage_ratios(groups: Mapping[str, Sequence[MetricRecord]]) -> Dict
         arr = np.array(
             [
                 [
-                    rec.n_candidates_a / rec.n_dataset if rec.n_dataset else 0.0,
-                    rec.n_candidates_b / rec.n_dataset if rec.n_dataset else 0.0,
-                    rec.n_candidates_c / rec.n_dataset if rec.n_dataset else 0.0,
+                    rec.stage1_candidates / rec.n_dataset if rec.n_dataset else 0.0,
+                    rec.stage2_candidates / rec.n_dataset if rec.n_dataset else 0.0,
                 ]
                 for rec in filtered
             ],
@@ -251,8 +246,8 @@ def plot_candidate_reduction(groups: Mapping[str, Sequence[MetricRecord]], outpu
         arr = np.array(
             [
                 [
-                    rec.n_candidates_a,
-                    rec.n_candidates_b + rec.n_candidates_c,
+                    rec.stage1_candidates,
+                    rec.stage2_candidates,
                 ]
                 for rec in records
             ]
@@ -278,8 +273,8 @@ def plot_time_breakdown(groups: Mapping[str, Sequence[MetricRecord]], output_pat
             [
                 [
                     rec.phash_ms,
-                    rec.stage_a_ms,
-                    rec.stage_b_ms + rec.stage_c_ms,
+                    rec.stage1_ms,
+                    rec.stage2_ms,
                 ]
                 for rec in records
             ]
@@ -313,8 +308,8 @@ def plot_bytes_breakdown(groups: Mapping[str, Sequence[MetricRecord]], output_pa
         arr = np.array(
             [
                 [
-                    rec.bytes_a,
-                    rec.bytes_b + rec.bytes_c,
+                    rec.stage1_bytes,
+                    rec.stage2_bytes,
                 ]
                 for rec in records
             ]

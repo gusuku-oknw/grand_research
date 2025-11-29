@@ -18,7 +18,7 @@
   クエリの pHash から HMAC トークンを生成し、各サーバーのインデックスと照合することで候補集合を絞り込みます。この段階で検索対象を数パーセントまで圧縮します。
 
 - **Stage-2（再構成 + セキュア距離計算）**  
-  Stage-1 で残った候補に対して、SIS シェアの部分的な再構成（`sis_selective` 等）や、再構成せずに MPC で距離を算出する処理を実行します。Stage-2 は従来の Stage-B 〜 Stage-C を合わせたもので、再構成と距離計算をまとめて扱います。
+  Stage-1 で残った候補に対して、SIS シェアの部分的な再構成（`sis_selective` 等）や、再構成せずに MPC で距離を算出する処理を実行します。Stage-2 は再構成・距離計算のワークストリームをまとめたもので、以前の Stage-B 〜 Stage-C の役割を統合しています。
 
 最終的な画像の**再構成**は検索とは切り離されており、実際に原本が必要な場合のみ K-of-N によってクライアント側で行われます。
 
@@ -39,9 +39,9 @@
 | モード | Stage-1 | Stage-2 |
 | :--- | :------ | :------ |
 | `plain` | ❌（全件 pHash 距離で走査） | ✅ `compute_plain_distances` で距離ソートのみ |
-| `sis_naive` | ❌（候補削減なし） | ✅ `rank_candidates` で全候補を復号・評価 |
-| `sis_selective` | ✅ HMAC 投票で候補削減 | ✅ `stage_b_filter` + 再構成で Top-K だけ評価 |
-| `sis_staged` | ✅ | ✅ |
+| `sis_server_naive` | ❌（候補削減なし） | ✅ `rank_candidates` で全候補を復号・評価 |
+| `sis_client_dealer_free` | ✅ HMAC 投票で候補削減 | ✅ `stage_b_filter` + 再構成で Top-K だけ評価 |
+| `sis_client_partial` | ✅ | ✅ |
 | `sis_mpc` | ✅ HMAC 投票 | ✅ `rank_candidates_secure` で MPC ランキング（再構成なし） |
 
 ## セットアップ
@@ -78,7 +78,7 @@ PYTHONPATH=. python experiments/scripts/run_search_experiments.py \
     --mapping_json data/coco2017_derivatives/derivative_mapping.json \
     --output_dir output/results/coco_val2017_modular \
     --work_dir output/artifacts/coco_val2017_modular \
-    --modes plain sis_naive sis_selective sis_staged sis_mpc \
+    --modes plain sis_server_naive sis_client_dealer_free sis_client_partial sis_mpc \
     --max_queries 500 \
     --bands 8 --k 3 --n 5 \
     --force

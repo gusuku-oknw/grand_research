@@ -7,6 +7,8 @@ from experiments.common.dataset import Sample
 from sis_image.dealer_based import SearchableSISIndex
 from sis_image.dealer_based import SearchableSISWithImageStore
 
+from .aes_crypto import AESGCMStorage, EncryptedImageRecord
+
 # F0-F3の共通ログ単位（ms/bytes/候補数/復元数）
 @dataclass
 class PhaseStats:
@@ -39,3 +41,5 @@ class ModeContext:
     workflows: Dict[str, SearchableSISWithImageStore]  # mode -> workflow（plain以外）
     servers: Sequence[int]
     args: object                                     # argparse.Namespace 相当
+    aes_storage: AESGCMStorage | None
+    aes_records: Dict[str, EncryptedImageRecord] | None

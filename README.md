@@ -93,9 +93,9 @@ experiments/scripts/
 experiments/modes/
   base_runner.py                 # abstract ModeRunner and helpers
   plain.py                       # baseline pHash ranking
-  sis_naive.py                   # full reconstruction baseline
-  sis_selective.py               # Stage-2 selective reconstruction
-  sis_staged.py                  # staged refinement pipeline
+  sis_server_naive.py            # full reconstruction baseline
+  sis_client_dealer_free.py      # Stage-2 selective reconstruction
+  sis_client_partial.py          # staged refinement pipeline
   sis_mpc.py                     # MPC-style fully private variant
 ```
 
@@ -115,7 +115,7 @@ The search is executed in a two-stage pipeline to keep the flow aligned with the
   HMAC tokens derived from the query pHash are matched against each server's index to emit an initial candidate set. This stage limits the search space to a very small fraction of the dataset.
 
 - **Stage-2 (Reconstruction + Secure Distance)**  
-  Candidates that survive Stage-1 are moved into Stage-2, where their SIS shares may be partially reconstructed (e.g., in `sis_selective`) and their distances are evaluated securely, typically via MPC without fully exposing the pHash values. Stage-2 therefore encompasses the previous reconstruction and distance evaluation phases (formerly Stage-B and Stage-C).
+Candidates that survive Stage-1 are moved into Stage-2, where their SIS shares may be partially reconstructed (e.g., in `sis_selective`) and their distances are evaluated securely, typically via MPC without fully exposing the pHash values. Stage-2 therefore encompasses the reconstruction and distance evaluation workstreams that used to be split into the now-deprecated Stage-B and Stage-C phases.
 
 The final image **reconstruction** remains separate from the search pipeline and is executed only when the original image is actually needed, using the K-of-N threshold reconstruction strategy, usually at the client-side.
 
@@ -136,9 +136,9 @@ The final image **reconstruction** remains separate from the search pipeline and
 | Mode | Stage-1 | Stage-2 |
 | :--- | :------ | :------ |
 | `plain` | ❌ (Scans all with pHash distance) | ✅ Sorts by distance with `compute_plain_distances` |
-| `sis_naive` | ❌ (No candidate reduction) | ✅ Reconstructs and evaluates all candidates with `rank_candidates` |
-| `sis_selective` | ✅ Reduces candidates with HMAC voting | ✅ `stage_b_filter` + reconstruction for Top-K |
-| `sis_staged` | ✅ | ✅ |
+| `sis_server_naive` | ❌ (No candidate reduction) | ✅ Reconstructs and evaluates all candidates with `rank_candidates` |
+| `sis_client_dealer_free` | ✅ Reduces candidates with HMAC voting | ✅ `stage_b_filter` + reconstruction for Top-K |
+| `sis_client_partial` | ✅ | ✅ |
 | `sis_mpc` | ✅ HMAC voting | ✅ MPC ranking with `rank_candidates_secure` (no reconstruction) |
 
 All modes conform to the same `ModeRunner` interface in `sis_modes/base.py`, making experiments interchangeable and their results comparable.
@@ -178,7 +178,7 @@ PYTHONPATH=. python experiments/scripts/run_search_experiments.py \
     --mapping_json data/coco2017_derivatives/derivative_mapping.json \
     --output_dir output/results/coco_val2017_modular \
     --work_dir output/artifacts/coco_val2017_modular \
-    --modes plain sis_naive sis_selective sis_staged sis_mpc \
+    --modes plain sis_server_naive sis_client_dealer_free sis_client_partial sis_mpc \
     --max_queries 500 \
     --bands 8 --k 3 --n 5 \
     --force

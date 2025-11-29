@@ -5,7 +5,7 @@
 現在のプロジェクト `README.md` を分析した結果、このプロジェクトが以下の2つの主要な目的を持っていることが確認できました。
 
 1.  **`sis_image` という再利用可能なPythonライブラリの開発:** 知覚ハッシュ、秘密分散、検索可能インデックスなどのコア機能を提供する。
-2.  **体系的な研究実験の実施と評価:** 複数の検索モード（`plain`, `sis_naive`, `sis_selective`, `sis_staged`, `sis_mpc`）を異なる条件下で実行し、性能やプライバシー特性を比較評価する。
+2.  **体系的な研究実験の実施と評価:** 複数の検索モード（`plain`, `sis_server_naive`, `sis_client_dealer_free`, `sis_client_partial`, `sis_mpc`）を異なる条件下で実行し、性能やプライバシー特性を比較評価する。
 
 この2つの目的を明確に分離し、`README.md` に記載されているワークフローを直感的に反映させるため、以下のディレクトリ構造を提案します。
 
@@ -36,9 +36,9 @@ C:\Users\tmkjn\PycharmProjects\Grand_Research\
 │   ├── modes/              # 比較対象となる各検索モードの実装
 │   │   ├── base_runner.py  # 全モード共通のインターフェース
 │   │   ├── plain.py
-│   │   ├── sis_naive.py
-│   │   ├── sis_selective.py
-│   │   ├── sis_staged.py
+│   │   ├── sis_server_naive.py
+│   │   ├── sis_client_dealer_free.py
+│   │   ├── sis_client_partial.py
 │   │   └── sis_mpc.py
 │   │
 │   ├── prepare_data.py     # データセット準備スクリプト
@@ -77,7 +77,7 @@ C:\Users\tmkjn\PycharmProjects\Grand_Research\
 
 *   **目的:** `README.md` に記載されている比較実験のワークフローを体系的に管理します。
 *   **構造:** 
-    *   `experiments/modes/`: `README.md` で比較対象とされている **`plain`, `sis_naive`, `sis_selective`, `sis_staged`, `sis_mpc`** といった各検索戦略の実装をここに配置します。これらはすべて共通の `base_runner.py` インターフェースを実装し、交換可能にします。
+    *   `experiments/modes/`: `README.md` で比較対象とされている **`plain`, `sis_server_naive`, `sis_client_dealer_free`, `sis_client_partial`, `sis_mpc`** といった各検索戦略の実装をここに配置します。これらはすべて共通の `base_runner.py` インターフェースを実装し、交換可能にします。
     *   `run_experiments.py`: 実験のオーケストレーターです。以下のように、評価したい「アーキテクチャ」と「検索戦略（モード）」を引数で組み合わせて実行できる設計を想定しています。
 
       ```bash

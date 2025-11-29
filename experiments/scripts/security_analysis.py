@@ -73,7 +73,7 @@ def summarize_nested_stats(nested: Dict[int, Dict[int, float]]) -> Dict[str, flo
     return {"mean": float(arr.mean()), "min": float(arr.min()), "max": float(arr.max())}
 
 
-def stage_a_link_probability(
+def stage1_link_probability(
     index_a: SearchableSISIndex,
     index_b: SearchableSISIndex,
     phashes: Dict[str, int],
@@ -241,9 +241,9 @@ def main() -> None:
     entropy_summary = summarize_nested_stats(entropy)
     mutual_summary = summarize_nested_stats(mutual_info)
 
-    # 2) Stage-Aトークンのリンク確率（同一鍵 vs 別鍵）
-    link_same_epoch = stage_a_link_probability(index_a, index_a, phashes)
-    link_rotated_epoch = stage_a_link_probability(index_a, index_b, phashes)
+    # 2) Stage-1トークンのリンク確率（同一鍵 vs 別鍵）
+    link_same_epoch = stage1_link_probability(index_a, index_a, phashes)
+    link_rotated_epoch = stage1_link_probability(index_a, index_b, phashes)
     link_drop_ratio = (link_rotated_epoch / link_same_epoch) if link_same_epoch > 0 else 0.0
 
     # 3) しきい値未満漏洩攻撃の統計
@@ -261,9 +261,9 @@ def main() -> None:
         "entropy_bits_summary": entropy_summary,
         "mutual_information_estimate": mutual_json,
         "mutual_information_summary": mutual_summary,
-        "stageA_token_link_probability_same_epoch": link_same_epoch,
-        "stageA_token_link_probability_rotated_epoch": link_rotated_epoch,
-        "stageA_token_link_drop_ratio": link_drop_ratio,
+        "stage1_token_link_probability_same_epoch": link_same_epoch,
+        "stage1_token_link_probability_rotated_epoch": link_rotated_epoch,
+        "stage1_token_link_drop_ratio": link_drop_ratio,
         "leakage_top1_success_rate": leak_success,
         "leakage_random_baseline": random_baseline,
         "leakage_mean_hamming_distance": leak_mean_distance,

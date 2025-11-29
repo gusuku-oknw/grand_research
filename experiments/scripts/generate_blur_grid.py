@@ -3,7 +3,7 @@ Generate a grid of blurred variants for a single image to compare blur strength.
 
 Example:
     python experiments/scripts/generate_blur_grid.py \
-        --image_path data/tianshu-liu-SBK40fdKbAg-unsplash.jpg \
+        --image_path data/img02.jpg \
         --output output/blur_strength_grid.png
 """
 

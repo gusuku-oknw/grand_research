@@ -6,11 +6,13 @@ from .types import ModeContext, ModeResult, PhaseStats
 from .sis_common import stage_b_filter, build_ranking_list
 
 class SelectiveRunner(ModeRunner):
+    name = "sis_client_dealer_free"
+
     def __init__(self) -> None:
-        super().__init__("sis_selective")
+        super().__init__(self.name)
 
     @staticmethod
-    def _stage_a_bytes(idx, args, servers) -> int:
+    def _stage1_bytes(idx, args, servers) -> int:
         tokens_per_band = (
             args.fixed_band_queries
             if getattr(args, "fixed_band_queries", None) is not None
@@ -32,8 +34,8 @@ class SelectiveRunner(ModeRunner):
             fixed_band_queries=getattr(ctx.args, "fixed_band_queries", None),
         )
         f1 = (time.perf_counter() - t1) * 1000.0
-        bytes_f1 = self._stage_a_bytes(idx, ctx.args, servers)
-        # F2-early: Stage-B filter
+        bytes_f1 = self._stage1_bytes(idx, ctx.args, servers)
+        # F2-early: Stage-2 filter
         cand_ids = [c[0] for c in cand_a]
         cand_b, f2_early_ms, bytes_b = stage_b_filter(
             idx, query_hash, servers, cand_ids, ctx.args.max_hamming, ctx.args.stage_b_bytes, ctx.args.stage_b_margin
@@ -55,3 +57,10 @@ class SelectiveRunner(ModeRunner):
             n_reconstructed=len(ranked)
         )
         return ModeResult(final_ranking_ids=final_ids, ranked_pairs=ranked, stats=stats)
+
+
+class PartialRunner(SelectiveRunner):
+    name = "sis_client_partial"
+
+    def __init__(self) -> None:
+        super().__init__()

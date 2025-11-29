@@ -82,7 +82,7 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument(
         "--use_oprf",
         action="store_true",
-        help="Use simulated OPRF for Stage-A token generation (demonstration; not real blinding).",
+        help="Use simulated OPRF for Stage-1 token generation (demonstration; not real blinding).",
     )
     parser.add_argument(
         "--oprf_key_encrypt_env",
