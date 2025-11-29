@@ -102,6 +102,14 @@ python -m experiments.common.plotting \
 
 ## 補足
 
-- 研究レポート用テンプレートは `reports/2025_selective_reconstruction_report_template.md` にまとまっています。
+- 研究レポート用テンプレートは `docs/reports/2025_selective_reconstruction_report_template.md` にまとまっています。
 - セキュリティ強度検証や ROC/PR 曲線は `metrics.csv` と同じ成果物から再生成できます。
--- 追加の CLI オプションは `python experiments/scripts/prepare_coco.py --help` と `python experiments/scripts/run_search_experiments.py --help` で確認してください。
+- 追加の CLI オプションは `python experiments/scripts/prepare_coco.py --help` と `python experiments/scripts/run_search_experiments.py --help` で確認してください。
+
+## ディレクトリ構成（整理後）
+
+- **`src/sis_image/`**: SISのコアライブラリ。共通処理は `common/`、ディーラー有りの index/workflow/CLI は `dealer_based/`、ディーラーフリーのシミュレータ・MPC分分析は `dealer_free/` に分かれています。
+- **`experiments/`**: データ準備・実験実行・分析をまとめたコード群。`prepare_data.py` で派生データを生成し、`run_experiments.py` が `experiments/modes/` にある各モードを動かし、`analyze_results.py` が出力を解釈します。
+- **`output/`**: 全出力物を集約。`output/datasets/` に派生データ、`output/artifacts/` に作業中の共有ストア、`output/results/` に `metrics.csv` などの数値、`output/figures/` に Matplotlib図版、`output/reports/` にレポート書類を置きます。
+
+このように `experiments/` が「何を計算するか」、`output/` が「何が生成されたか」を分担することで、コードと成果物の境界が明確になり、ドキュメントや再現性の要求にも対応しやすくなります。
