@@ -59,6 +59,12 @@ def ensure_workflow(
     share_strategy: str,
     fusion_grid: int,
     fusion_threshold: int | None,
+    use_oprf: bool,
+    dummy_band_queries: int,
+    pad_band_queries: int | None,
+    fixed_band_queries: int | None,
+    hmac_key_encrypt_env_var: str | None = None,
+    oprf_key_encrypt_env_var: str | None = None,
 ) -> SearchableSISWithImageStore:
     shares_dir.mkdir(parents=True, exist_ok=True)
     meta_dir.mkdir(parents=True, exist_ok=True)
@@ -74,6 +80,12 @@ def ensure_workflow(
         share_strategy=share_strategy,
         fusion_grid=fusion_grid,
         fusion_threshold=fusion_threshold,
+        use_oprf=use_oprf,
+        dummy_band_queries=dummy_band_queries,
+        pad_band_queries=pad_band_queries,
+        fixed_band_queries=fixed_band_queries,
+        hmac_key_encrypt_env_var=hmac_key_encrypt_env_var,
+        oprf_key_encrypt_env_var=oprf_key_encrypt_env_var,
     )
 
 # すべてのサンプルについて pHash を計算し辞書と平均処理時間を返す
@@ -121,6 +133,12 @@ def main():
     ap.add_argument("--stage_b_margin", type=int, default=8)
     ap.add_argument("--modes", type=str, nargs="+", default=["plain","sis_naive","sis_selective","sis_staged","sis_mpc"])
     ap.add_argument("--force", action="store_true")
+    ap.add_argument("--use_oprf", action="store_true", help="Use VOPRF for Stage-A band tokens.")
+    ap.add_argument("--dummy_band_queries", type=int, default=0)
+    ap.add_argument("--pad_band_queries", type=int, default=None)
+    ap.add_argument("--fixed_band_queries", type=int, default=None)
+    ap.add_argument("--hmac_key_encrypt_env", type=str, default=None)
+    ap.add_argument("--oprf_key_encrypt_env", type=str, default=None)
     args = ap.parse_args()
 
     output_dir: Path = args.output_dir; output_dir.mkdir(parents=True, exist_ok=True)
@@ -138,7 +156,16 @@ def main():
     phashes, phash_ms_avg = compute_phashes(samples)
 
     # indices
-    plain_index = SearchableSISIndex(k=args.k, n=args.n, bands=args.bands, token_len=8, seed=args.seed)
+    plain_index = SearchableSISIndex(
+        k=args.k,
+        n=args.n,
+        bands=args.bands,
+        token_len=8,
+        seed=args.seed,
+        use_oprf=args.use_oprf,
+        key_encrypt_env_var=args.hmac_key_encrypt_env,
+        oprf_key_encrypt_env_var=args.oprf_key_encrypt_env,
+    )
     for s in iter_progress(samples, desc="Indexing (plain)", total=len(samples), leave=False):
         plain_index.add_image_with_phash(s.key, str(s.path), phashes[s.key])
 
@@ -157,6 +184,12 @@ def main():
             share_strategy=args.share_strategy,
             fusion_grid=args.fusion_grid,
             fusion_threshold=args.fusion_threshold,
+            use_oprf=args.use_oprf,
+            dummy_band_queries=args.dummy_band_queries,
+            pad_band_queries=args.pad_band_queries,
+            fixed_band_queries=args.fixed_band_queries,
+            hmac_key_encrypt_env_var=args.hmac_key_encrypt_env,
+            oprf_key_encrypt_env_var=args.oprf_key_encrypt_env,
         )
         for s in iter_progress(samples, desc=f"Ingest {m}", total=len(samples), leave=False):
             wf.add_image(s.key, str(s.path), phash=phashes[s.key])

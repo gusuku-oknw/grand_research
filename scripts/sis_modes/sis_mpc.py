@@ -9,13 +9,30 @@ class MPCRunner(ModeRunner):
     def __init__(self) -> None:
         super().__init__("sis_mpc")
 
+    @staticmethod
+    def _stage_a_bytes(idx, args, servers) -> int:
+        tokens_per_band = (
+            args.fixed_band_queries
+            if getattr(args, "fixed_band_queries", None) is not None
+            else (args.pad_band_queries if getattr(args, "pad_band_queries", None) is not None else 1 + getattr(args, "dummy_band_queries", 0))
+        )
+        token_size = idx.token_len + (64 if getattr(idx, "use_oprf", False) else 0)
+        return len(servers) * idx.bands * tokens_per_band * token_size
+
     def run_query(self, query_key: str, query_hash: int, ctx: ModeContext) -> ModeResult:
         wf = ctx.workflows[self.name]; idx = wf.index; servers = ctx.servers
         # F1: preselect（秘密のまま）
         t1 = time.perf_counter()
-        cand_a: List[Tuple[str,int]] = idx.preselect_candidates(query_hash, servers, min_band_votes=ctx.args.min_band_votes)
+        cand_a: List[Tuple[str,int]] = idx.preselect_candidates(
+            query_hash,
+            servers,
+            min_band_votes=ctx.args.min_band_votes,
+            dummy_band_queries=getattr(ctx.args, "dummy_band_queries", 0),
+            pad_band_queries=getattr(ctx.args, "pad_band_queries", None),
+            fixed_band_queries=getattr(ctx.args, "fixed_band_queries", None),
+        )
         f1 = (time.perf_counter() - t1) * 1000.0
-        bytes_f1 = len(servers) * idx.bands * idx.token_len
+        bytes_f1 = self._stage_a_bytes(idx, ctx.args, servers)
         cand_b = [c[0] for c in cand_a]
         # F2: secure ranking（復元なし）
         t2 = time.perf_counter()
