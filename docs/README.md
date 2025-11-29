@@ -134,6 +134,7 @@ pHash は一切復元されず、SIS シェアのまま MPC によって距離�
   - SIS：復元後距離  
   - MPC：復元なしで Hamming 距離
 - Stage-2 は従来 Stage-B/Stage-C に相当する再構成と距離評価をまとめたものであり、どのモードでも同じ出力フォーマットに整合することが評価の前提となる。
+- Stage-2 だけでなく Stage-1 を持たないモード（`plain`, `aes_gcm`, `sis_fhe` など）については [`docs/stage_less_modes.md`](stage_less_modes.md) にまとめています。
 
 ---
 
@@ -178,11 +179,15 @@ pHash × SIS による検索可能化がどの程度有効かを、
 ### 精度
 - Precision@1,5,10  
 - Recall@10  
+- **Recall@10（重要な変換のみ）**  
+  `experiments/scripts/plot_selected_variants_recall.py output/results/coco_val2017_modular/metrics.csv` を実行すると `original`, `jpeg70`, `crop5%`, `rotate10%` などのキー変換だけで Recall を比較できます。  
 - mAP
 
 ### 速度
 - Stage1（インデックス検索時間）  
 - Stage2（距離計算時間）  
+- **標準偏差/信頼区間**  
+  `experiments/scripts/metrics_stats.py` は各モードの `stage1_ms`/`stage2_ms`/`total_ms` に対して平均・標準偏差・95% CI を書き出すため、スライドや表で「ばらつき」を示したい場合に活用できます（`python experiments/scripts/metrics_stats.py output/results/.../metrics.csv`）。
 
 ### 通信量
 - 登録時（シェア + トークンサイズ）  

@@ -72,6 +72,7 @@ PYTHONPATH=./src:. python -m experiments.common.plotting \
 
  - `precision_summary`, `time_breakdown`, `communication_breakdown`, `candidate_reduction` など主要な指標を `output/figures/...` に出力。  
 - Stage-1/Stage-2 という呼び方を図の凡例にも適用し、chapter-level report で Stage-1 の候補削減 vs Stage-2 の secure evaluation という対比が伝わるようにする。
+- `metrics_stats.py` を併用すれば、`total_ms` などの平均・標準偏差・95% CI を `output/results/metrics_summary.csv` に出力し、図の注釈やスライドに「ばらつき」を入れられます。
 - `python -m experiments.common.plotting ...` に `--exclude-mode aes_gcm` などを渡せば、全ての図から特定モードを除外して描けます。AES-GCM だけ別グラフ・他は別に調べたいときに活用してください。  
 - `plot_time_log_scale.py` も併用して AES を除いた log スケール図を得ると比較が崩れずにすみます。
 - 特に AES-GCM は他と桁違いに遅いので、`python experiments/scripts/plot_time_log_scale.py output/results/coco_val2017_modular/metrics.csv --output-dir output/figures/log_latency` のように `aes_gcm` を除外した log スケール図も生成して比較してください。
