@@ -70,8 +70,9 @@ PYTHONPATH=./src:. python -m experiments.common.plotting \
   --output_dir output/figures/coco_val2017_modular
 ```
 
- - `precision_summary`, `time_breakdown`, `communication_breakdown`, `candidate_reduction` など主要な指標を `output/figures/...` に出力。  
+- `precision_summary`, `time_breakdown`, `communication_breakdown`, `candidate_reduction` など主要な指標を `output/figures/...` に出力。  
 - Stage-1/Stage-2 という呼び方を図の凡例にも適用し、chapter-level report で Stage-1 の候補削減 vs Stage-2 の secure evaluation という対比が伝わるようにする。
+- `experiments/scripts/plot_selected_variants_recall.py ... --short-labels` を使えば、x 軸に `DF`/`CP`/`SN`/`SO` の略称を表示して、モード名が長くても潰れない図が出来ます。
 - `metrics_stats.py` を併用すれば、`total_ms` などの平均・標準偏差・95% CI を `output/results/metrics_summary.csv` に出力し、図の注釈やスライドに「ばらつき」を入れられます。
 - その `metrics_summary.csv` を `experiments/scripts/plot_metrics_with_ci.py` でプロットすると、mean±CI の error bar 図（`output/figures/metrics_ci/*.png`）が得られますので、グラフでもばらつきが示せます。
 - `python -m experiments.common.plotting ...` に `--exclude-mode aes_gcm` などを渡せば、全ての図から特定モードを除外して描けます。AES-GCM だけ別グラフ・他は別に調べたいときに活用してください。  

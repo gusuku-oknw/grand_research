@@ -181,6 +181,7 @@ pHash × SIS による検索可能化がどの程度有効かを、
 - Recall@10  
 - **Recall@10（重要な変換のみ）**  
   `experiments/scripts/plot_selected_variants_recall.py output/results/coco_val2017_modular/metrics.csv` を実行すると `original`, `jpeg70`, `crop5%`, `rotate10%` などのキー変換だけで Recall を比較できます。  
+  スライドに貼るときは `--short-labels` を付けると `DF/SN/CP/SO` などの略称が x 軸に入り、文字が潰れにくくなります。
 - mAP
 
 ### 速度

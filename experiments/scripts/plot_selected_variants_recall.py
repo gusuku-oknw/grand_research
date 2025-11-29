@@ -32,7 +32,17 @@ def summarize(filtered: pd.DataFrame) -> pd.DataFrame:
     return grouped
 
 
-def plot_recall(summary: pd.DataFrame, transforms: Sequence[str], out_path: Path) -> None:
+def plot_recall(summary: pd.DataFrame, transforms: Sequence[str], out_path: Path, use_short_labels: bool = False) -> None:
+    acronym_map = {
+        "sis_client_dealer_free": "DF",
+        "sis_client_partial": "CP",
+        "sis_server_naive": "SN",
+        "sis_only": "SO",
+        "aes_gcm": "AES",
+        "plain": "PL",
+        "sis_mpc": "MPC",
+        "minhash_lsh": "LSH",
+    }
     modes = sorted(summary["mode"].unique())
     fig, ax = plt.subplots(figsize=(10, 6))
     for idx, transform in enumerate(transforms):
@@ -41,7 +51,8 @@ def plot_recall(summary: pd.DataFrame, transforms: Sequence[str], out_path: Path
         for mode in modes:
             row = transform_data[transform_data["mode"] == mode]
             recalls.append(row["recall_at_10_mean"].iloc[0] if not row.empty else 0.0)
-        ax.plot(modes, recalls, marker="o", label=transform)
+        labels = [acronym_map.get(mode, mode) if use_short_labels else mode for mode in modes]
+        ax.plot(labels, recalls, marker="o", label=transform)
     ax.set_xlabel("Mode")
     ax.set_ylabel("Recall@10")
     ax.set_title("Recall@10 for Key Transforms")
@@ -69,6 +80,11 @@ def main() -> None:
         help="Transform names to include",
     )
     parser.add_argument(
+        "--short-labels",
+        action="store_true",
+        help="Use short acronyms (DF/CP/SN/SO) on the x-axis labels.",
+    )
+    parser.add_argument(
         "--exclude-mode",
         type=str,
         nargs="+",
@@ -82,7 +98,7 @@ def main() -> None:
         filtered_df = filtered_df[~filtered_df["mode"].isin(args.exclude_mode)]
     filtered = load_filtered_metrics(filtered_df, args.transforms)
     summary = summarize(filtered)
-    plot_recall(summary, args.transforms, args.output)
+    plot_recall(summary, args.transforms, args.output, use_short_labels=args.short_labels)
     print("Saved selected transforms recall plot to", args.output)
 
 
