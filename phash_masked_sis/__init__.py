@@ -1,8 +1,8 @@
 """
-phash_sis_dummy
+phash_masked_sis
 
-pHash と整合する DCT ベースの「ダミー画像」と、
-2 階層 Shamir SIS を組み合わせるためのミニパッケージ。
+pHash と整合する「マスク（不可視化）画像」を低層シークレットに、
+本物画像を高層シークレットに置く 2 階層 Shamir SIS のミニパッケージ。
 
 依存:
     - Pillow
