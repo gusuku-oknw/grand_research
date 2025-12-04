@@ -12,6 +12,7 @@ pHash と整合する「マスク（不可視化）画像」を低層シーク�
 from .phash_core import PHashConfig, compute_phash, phash_core, dct2, idct2
 from .dummy_image import make_phash_preserving_dummy
 from .sis_twolevel import TwoLevelShamirScheme, TwoLevelShare
+from .multisecret_image import MultiSecretImageSIS, MultiLevelImageShare
 
 __all__ = [
     "PHashConfig",
@@ -22,4 +23,6 @@ __all__ = [
     "make_phash_preserving_dummy",
     "TwoLevelShamirScheme",
     "TwoLevelShare",
+    "MultiSecretImageSIS",
+    "MultiLevelImageShare",
 ]

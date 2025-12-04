@@ -7,6 +7,7 @@ import secrets
 
 # 大きめの素数（実験用途）。必要に応じて変更する。
 PRIME = 2**521 - 1
+CHUNK_SIZE = PRIME.bit_length() // 8 - 1  # s_int < PRIME となる最大バイト長
 
 
 def _bytes_to_int(data: bytes) -> int:
@@ -45,25 +46,45 @@ def _lagrange_interpolate(x: int, xs: List[int], ys: List[int]) -> int:
     return total
 
 
-def shamir_split(secret: bytes, n: int, k: int) -> List[Tuple[int, int, int]]:
-    """1つのシークレットを Shamir で n 分割（k 閾値）。"""
-    s_int = _bytes_to_int(secret)
-    assert s_int < PRIME, "Secret too large for chosen PRIME"
-    coeffs = [s_int] + [secrets.randbelow(PRIME) for _ in range(k - 1)]
-    shares: List[Tuple[int, int, int]] = []
+def shamir_split(secret: bytes, n: int, k: int) -> List[Tuple[int, List[int], List[int]]]:
+    """
+    シークレットをチャンク分割し、各チャンクを Shamir で n 分割（k 閾値）。
+    戻り値: (x, y_list, len_list) のリスト（y_list/len_list はチャンクごと）。
+    """
+    chunks = [secret[i : i + CHUNK_SIZE] for i in range(0, len(secret), CHUNK_SIZE)]
+    polys: List[List[int]] = []
+    for chunk in chunks:
+        s_int = _bytes_to_int(chunk)
+        assert s_int < PRIME, "Secret chunk too large for chosen PRIME"
+        coeffs = [s_int] + [secrets.randbelow(PRIME) for _ in range(k - 1)]
+        polys.append(coeffs)
+
+    shares: List[Tuple[int, List[int], List[int]]] = []
     for x in range(1, n + 1):
-        y = _poly_eval(coeffs, x)
-        shares.append((x, y, len(secret)))
+        y_list: List[int] = []
+        len_list: List[int] = []
+        for chunk, coeffs in zip(chunks, polys):
+            y = _poly_eval(coeffs, x)
+            y_list.append(y)
+            len_list.append(len(chunk))
+        shares.append((x, y_list, len_list))
     return shares
 
 
-def shamir_combine(shares: List[Tuple[int, int, int]]) -> bytes:
-    """Shamir の share (x, y, length) からシークレット bytes を復元。"""
-    xs = [s[0] for s in shares]
-    ys = [s[1] for s in shares]
-    length = shares[0][2]
-    s_int = _lagrange_interpolate(0, xs, ys)
-    return _int_to_bytes(s_int, length)
+def shamir_combine(shares: List[Tuple[int, List[int], List[int]]]) -> bytes:
+    """
+    Shamir の share (x, y_list, len_list) からシークレット bytes を復元。
+    """
+    # どのシェアも同じチャンク数を持つ前提
+    num_chunks = len(shares[0][1])
+    xs_all = [s[0] for s in shares]
+    result_bytes = bytearray()
+    for idx in range(num_chunks):
+        ys = [s[1][idx] for s in shares]
+        length = shares[0][2][idx]
+        s_int = _lagrange_interpolate(0, xs_all, ys)
+        result_bytes.extend(_int_to_bytes(s_int, length))
+    return bytes(result_bytes)
 
 
 @dataclass
@@ -71,10 +92,10 @@ class TwoLevelShare:
     """1 参加者あたりの 2階層 share。"""
 
     index: int
-    y1: int
-    len1: int
-    y2: int
-    len2: int
+    y1: List[int]
+    len1: List[int]
+    y2: List[int]
+    len2: List[int]
 
 
 class TwoLevelShamirScheme:
