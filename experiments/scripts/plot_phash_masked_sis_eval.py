@@ -1,0 +1,192 @@
+from __future__ import annotations
+
+import argparse
+import json
+import math
+from pathlib import Path
+from typing import Dict, List
+
+import matplotlib
+
+matplotlib.use("Agg")
+import matplotlib.pyplot as plt  # noqa: E402
+import numpy as np  # noqa: E402
+
+
+def _load_eval(path: Path) -> Dict:
+    with open(path, "r", encoding="utf-8") as f:
+        return json.load(f)
+
+
+def _set_style() -> None:
+    plt.rcParams.update(
+        {
+            "figure.dpi": 150,
+            "axes.grid": True,
+            "grid.alpha": 0.25,
+            "font.size": 10,
+            "axes.titlesize": 12,
+            "axes.labelsize": 11,
+            "legend.fontsize": 9,
+        }
+    )
+
+
+def plot_phash_distances(images: List[Dict], out_path: Path) -> None:
+    names = [img["image"] for img in images]
+    dummy = [img["phash_dist_dummy"] for img in images]
+    full = [img["phash_dist_full"] for img in images]
+    less = [img["phash_dist_less_than_k1"] for img in images]
+    blur = [img["baseline_blur"]["phash_dist"] for img in images]
+    noise = [img["baseline_noise"]["phash_dist"] for img in images]
+
+    x = np.arange(len(names))
+    w = 0.18
+    fig, ax = plt.subplots(figsize=(10, 4.5))
+    ax.bar(x - 2 * w, dummy, width=w, label="Dummy (k1)", color="#4C78A8")
+    ax.bar(x - w, full, width=w, label="Full (k2)", color="#72B7B2")
+    ax.bar(x, less, width=w, label="<k1 noise", color="#E45756")
+    ax.bar(x + w, blur, width=w, label="Blur baseline", color="#F58518")
+    ax.bar(x + 2 * w, noise, width=w, label="Noise baseline", color="#B279A2")
+    ax.set_ylabel("Hamming distance (64-bit pHash)")
+    ax.set_xticks(x)
+    ax.set_xticklabels(names, rotation=20, ha="right")
+    ax.set_ylim(0, 64)
+    ax.set_title("pHash distances vs. original (proposed vs baselines)")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_psnr(images: List[Dict], out_path: Path) -> None:
+    names = [img["image"] for img in images]
+    psnr_dummy = [img["psnr_dummy_vs_original"] for img in images]
+    psnr_full = [img["psnr_full_vs_original"] for img in images]
+    psnr_blur = [img["baseline_blur"]["psnr"] for img in images]
+    psnr_noise = [img["baseline_noise"]["psnr"] for img in images]
+
+    x = np.arange(len(names))
+    w = 0.18
+    fig, ax = plt.subplots(figsize=(10, 4.5))
+    ax.bar(x - 1.5 * w, psnr_dummy, width=w, label="Dummy (k1)", color="#F58518")
+    ax.bar(x - 0.5 * w, psnr_full, width=w, label="Full (k2)", color="#54A24B")
+    ax.bar(x + 0.5 * w, psnr_blur, width=w, label="Blur baseline", color="#4C78A8")
+    ax.bar(x + 1.5 * w, psnr_noise, width=w, label="Noise baseline", color="#B279A2")
+    ax.axhline(30, color="#666666", linestyle="--", linewidth=1, label="30 dB reference")
+    ax.set_ylabel("PSNR (dB)")
+    ax.set_xticks(x)
+    ax.set_xticklabels(names, rotation=20, ha="right")
+    ax.set_title("Reconstruction quality (proposed vs baselines)")
+    ax.legend()
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_attack_distances(images: List[Dict], out_path: Path) -> None:
+    # Aggregate per-attack across images for proposed dummy, blur, noise
+    attack_keys = sorted(images[0]["attack_phash_distances"].keys())
+    series = {
+        "dummy": [images[i]["attack_phash_distances"] for i in range(len(images))],
+        "blur": [images[i]["baseline_blur"]["attack_phash_distances"] for i in range(len(images))],
+        "noise": [images[i]["baseline_noise"]["attack_phash_distances"] for i in range(len(images))],
+    }
+
+    fig, ax = plt.subplots(figsize=(10, 4.5))
+    x = np.arange(len(attack_keys))
+    w = 0.25
+    colors = {"dummy": "#4C78A8", "blur": "#F58518", "noise": "#B279A2"}
+    offsets = {"dummy": -w, "blur": 0.0, "noise": w}
+
+    for name, stats_list in series.items():
+        means = []
+        stds = []
+        for key in attack_keys:
+            vals = [s[key] for s in stats_list]
+            means.append(float(np.mean(vals)))
+            stds.append(float(np.std(vals)))
+        ax.bar(x + offsets[name], means, width=w, yerr=stds, capsize=4, label=name, color=colors[name])
+
+    ax.set_ylabel("Hamming distance (mean ± sd)")
+    ax.set_xticks(x)
+    ax.set_xticklabels(attack_keys, rotation=15, ha="right")
+    ax.set_ylim(0, 64)
+    ax.set_title("Robustness under attacks (pHash distance)")
+    ax.legend(title="variant")
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+
+
+def plot_timings(dct: Dict, shamir: Dict, images: List[Dict], out_path: Path) -> None:
+    fig, axes = plt.subplots(2, 2, figsize=(10, 6))
+    ax_dct = axes[0, 0]
+    ax_shamir = axes[0, 1]
+    ax_split = axes[1, 0]
+    ax_recover = axes[1, 1]
+
+    # DCT micro
+    ax_dct.bar(["forward", "inverse"], [dct["forward_ms_mean"], dct["inverse_ms_mean"]], color="#4C78A8")
+    ax_dct.set_ylabel("ms")
+    ax_dct.set_title(f"DCT ({dct['size']}×{dct['size']})\nmax error={dct['max_reconstruction_error']:.2e}")
+
+    # Shamir micro
+    ax_shamir.bar(["split", "recover"], [shamir["split_ms_mean"], shamir["recover_ms_mean"]], color="#72B7B2")
+    ax_shamir.set_ylabel("ms")
+    ax_shamir.set_title(f"Shamir micro (n={shamir['n']}, k={shamir['k']}, {shamir['secret_len_bytes']}B)")
+
+    # Per-image split
+    names = [img["image"] for img in images]
+    x = np.arange(len(names))
+    ax_split.bar(x, [img["split_ms"] for img in images], color="#F58518")
+    ax_split.set_ylabel("ms")
+    ax_split.set_xticks(x)
+    ax_split.set_xticklabels(names, rotation=20, ha="right")
+    ax_split.set_title("Split time per image")
+
+    # Per-image recover
+    ax_recover.bar(
+        x - 0.15, [img["recover_dummy_ms"] for img in images], width=0.3, label="dummy (k1)", color="#E45756"
+    )
+    ax_recover.bar(
+        x + 0.15, [img["recover_full_ms"] for img in images], width=0.3, label="full (k2)", color="#54A24B"
+    )
+    ax_recover.scatter(
+        x, [img["single_layer_shamir"]["recover_ms"] for img in images], marker="x", color="#222222", label="single-layer Shamir"
+    )
+    ax_recover.set_ylabel("ms")
+    ax_recover.set_xticks(x)
+    ax_recover.set_xticklabels(names, rotation=20, ha="right")
+    ax_recover.set_title("Recover time per image")
+    ax_recover.legend()
+
+    fig.tight_layout()
+    fig.savefig(out_path, bbox_inches="tight")
+    plt.close(fig)
+
+
+def main() -> None:
+    parser = argparse.ArgumentParser(description="Plot phash_masked_sis evaluation results.")
+    parser.add_argument("--eval_json", type=Path, default=Path("output/phash_masked_sis_eval/phash_masked_sis_eval.json"))
+    parser.add_argument("--output_dir", type=Path, default=Path("output/phash_masked_sis_eval/figures"))
+    args = parser.parse_args()
+
+    data = _load_eval(args.eval_json)
+    images = data["images"]
+    dct = data["dct"]
+    shamir = data["shamir"]
+
+    args.output_dir.mkdir(parents=True, exist_ok=True)
+    _set_style()
+
+    plot_phash_distances(images, args.output_dir / "phash_distances.png")
+    plot_psnr(images, args.output_dir / "psnr.png")
+    plot_attack_distances(images, args.output_dir / "attack_phash_distances.png")
+    plot_timings(dct, shamir, images, args.output_dir / "timings.png")
+
+    print(f"Saved figures to {args.output_dir}")
+
+
+if __name__ == "__main__":
+    main()

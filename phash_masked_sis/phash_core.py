@@ -12,16 +12,17 @@ _DCT_CACHE: dict[int, Tuple[np.ndarray, np.ndarray]] = {}
 
 def _get_dct_mats(n: int) -> Tuple[np.ndarray, np.ndarray]:
     """
-    サイズ n の 1D DCT 変換行列とその逆行列をキャッシュして返す。
-    JPEG 互換の厳密なスケーリングではないが、pHash で一貫性が取れれば十分。
+    サイズ n の 1D 正規直交 DCT-II 変換行列とその転置（逆行列）をキャッシュして返す。
     """
     if n in _DCT_CACHE:
         return _DCT_CACHE[n]
 
     k = np.arange(n)[:, None]
     x = np.arange(n)[None, :]
-    dct_mat = np.cos(np.pi * (2 * x + 1) * k / (2.0 * n))
-    inv_mat = np.linalg.inv(dct_mat)
+    scale = np.sqrt(2.0 / n) * np.ones_like(k, dtype=np.float64)
+    scale[0] = np.sqrt(1.0 / n)
+    dct_mat = scale * np.cos(np.pi * (2 * x + 1) * k / (2.0 * n))
+    inv_mat = dct_mat.T  # 正規直交なので転置が逆行列
     _DCT_CACHE[n] = (dct_mat, inv_mat)
     return dct_mat, inv_mat
 

@@ -1,3 +1,13 @@
+Metadata-Version: 2.4
+Name: sis-image
+Version: 0.1.0
+Summary: Secret Image Sharing utilities with searchable perceptual hashes
+Author: Grand Research Contributors
+Requires-Python: >=3.10
+Description-Content-Type: text/markdown
+Requires-Dist: numpy>=1.24
+Requires-Dist: Pillow>=9.0
+
 # SIS Image Sharing Package
 
 This repository packages the original **Searchable Image Sharing (SIS)** demos into an installable Python module named **`sis_image`**.
@@ -15,12 +25,6 @@ The `sis_image` package implements reusable building blocks:
 * **Persistent image store** — reconstructs full images from any `k` of `n` servers.
 * **Modular experiment runners (`sis_modes/`)** — independently testable Stage-1/Stage-2 pipelines.
 * **Primary research track — `phash_masked_sis/`** — two-level Shamir sharing with a pHash-preserving dummy image at the low threshold and the original image at the high threshold, enabling masked reconstruction behavior as the main experimental focus.
-
-### `phash_masked_sis` internals
-- Orthonormal DCT-II on a `(hash_size * highfreq_factor)` (default 32×32) grayscale patch, then take the top-left `hash_size × hash_size` low-frequency block and threshold its mean to form the 64-bit pHash.
-- Dummy synthesis: set that low-frequency block to the target bit signs with a safety margin, reinforce the margin in a few passes to avoid bit flips after interpolation/quantization, add controlled Gaussian high-frequency noise, IDCT back to spatial, then upscale to the original size.
-- Two-level Shamir: `k1` reconstructs the pHash-identical dummy (visually noisy), `k2` reconstructs the original; `<k1` returns pure noise. This makes leakage and threshold behavior measurable.
-- Tooling: `experiments/scripts/evaluate_phash_masked_sis.py` (metrics), `plot_phash_masked_sis_eval.py` (paper-ready figures), `visualize_phash_masked_sis_image.py` (single-image pipeline grid with pHash distances).
 
 ---
 
