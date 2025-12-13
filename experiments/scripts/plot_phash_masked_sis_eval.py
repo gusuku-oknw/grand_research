@@ -70,11 +70,13 @@ def plot_psnr(images: List[Dict], out_path: Path) -> None:
     w = 0.18
     fig, ax = plt.subplots(figsize=(10, 4.5))
     ax.bar(x - 1.5 * w, psnr_dummy, width=w, label="Dummy (k1)", color="#F58518")
-    ax.bar(x - 0.5 * w, psnr_full, width=w, label="Full (k2)", color="#54A24B")
+    # Full is theoretically lossless (PSNR=inf). Represent as a marker/text instead of a bar.
+    ax.scatter(x - 0.5 * w, [min(v, 60.0) for v in psnr_full], marker="*", color="#54A24B", label="Full (k2) ~ inf")
     ax.bar(x + 0.5 * w, psnr_blur, width=w, label="Blur baseline", color="#4C78A8")
     ax.bar(x + 1.5 * w, psnr_noise, width=w, label="Noise baseline", color="#B279A2")
     ax.axhline(30, color="#666666", linestyle="--", linewidth=1, label="30 dB reference")
     ax.set_ylabel("PSNR (dB)")
+    ax.set_ylim(0, 60)  # cap to show finite values; Full is shown as ~inf via marker
     ax.set_xticks(x)
     ax.set_xticklabels(names, rotation=20, ha="right")
     ax.set_title("Reconstruction quality (proposed vs baselines)")
@@ -85,35 +87,52 @@ def plot_psnr(images: List[Dict], out_path: Path) -> None:
 
 
 def plot_attack_distances(images: List[Dict], out_path: Path) -> None:
-    # Aggregate per-attack across images for proposed dummy, blur, noise
-    attack_keys = sorted(images[0]["attack_phash_distances"].keys())
-    series = {
-        "dummy": [images[i]["attack_phash_distances"] for i in range(len(images))],
-        "blur": [images[i]["baseline_blur"]["attack_phash_distances"] for i in range(len(images))],
-        "noise": [images[i]["baseline_noise"]["attack_phash_distances"] for i in range(len(images))],
-    }
+    # Aggregate per-attack across images for multiple variants
+    def _attacks(img: Dict, key: str, fallback: str | None = None) -> Dict[str, int]:
+        if key in img:
+            return img[key]
+        if fallback and fallback in img:
+            return img[fallback]
+        raise KeyError(key)
 
-    fig, ax = plt.subplots(figsize=(10, 4.5))
+    try:
+        attack_keys = sorted(images[0]["attack_phash_distances_dummy"].keys())
+        series = {
+            "dummy (k1)": [img["attack_phash_distances_dummy"] for img in images],
+            "full (k2)": [img["attack_phash_distances_full"] for img in images],
+            "<k1 noise": [img["attack_phash_distances_less"] for img in images],
+            "blur baseline": [img["baseline_blur"]["attack_phash_distances"] for img in images],
+            "noise baseline": [img["baseline_noise"]["attack_phash_distances"] for img in images],
+        }
+    except KeyError:
+        # Backward compatibility: older JSON only has attack_phash_distances for dummy/baselines
+        attack_keys = sorted(images[0]["attack_phash_distances"].keys())
+        series = {
+            "dummy (k1)": [img["attack_phash_distances"] for img in images],
+            "blur baseline": [img["baseline_blur"]["attack_phash_distances"] for img in images],
+            "noise baseline": [img["baseline_noise"]["attack_phash_distances"] for img in images],
+        }
+
+    fig, ax = plt.subplots(figsize=(11, 5))
     x = np.arange(len(attack_keys))
-    w = 0.25
-    colors = {"dummy": "#4C78A8", "blur": "#F58518", "noise": "#B279A2"}
-    offsets = {"dummy": -w, "blur": 0.0, "noise": w}
+    w = 0.15
+    palette = ["#4C78A8", "#54A24B", "#E45756", "#F58518", "#B279A2"]
 
-    for name, stats_list in series.items():
+    for idx, (name, stats_list) in enumerate(series.items()):
         means = []
         stds = []
         for key in attack_keys:
             vals = [s[key] for s in stats_list]
             means.append(float(np.mean(vals)))
             stds.append(float(np.std(vals)))
-        ax.bar(x + offsets[name], means, width=w, yerr=stds, capsize=4, label=name, color=colors[name])
+        ax.bar(x + (idx - 2) * w, means, width=w, yerr=stds, capsize=3, label=name, color=palette[idx % len(palette)])
 
     ax.set_ylabel("Hamming distance (mean ± sd)")
     ax.set_xticks(x)
     ax.set_xticklabels(attack_keys, rotation=15, ha="right")
     ax.set_ylim(0, 64)
     ax.set_title("Robustness under attacks (pHash distance)")
-    ax.legend(title="variant")
+    ax.legend(title="variant", ncol=2)
     fig.tight_layout()
     fig.savefig(out_path, bbox_inches="tight")
     plt.close(fig)

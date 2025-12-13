@@ -7,7 +7,7 @@ import sys
 import time
 from io import BytesIO
 from pathlib import Path
-from typing import Dict, List
+from typing import Dict, List, Iterable
 
 # Allow running the script without installing as a package (editable install recommended).
 REPO_ROOT = Path(__file__).resolve().parents[2]
@@ -16,6 +16,11 @@ if str(REPO_ROOT) not in sys.path:
 
 import numpy as np
 from PIL import Image, ImageFilter
+
+def load_derivative_mapping(mapping_json: Path) -> Dict[str, Dict[str, str]]:
+    with mapping_json.open("r", encoding="utf-8") as f:
+        raw = json.load(f)
+    return {img_id: {variant: str(path) for variant, path in variants.items()} for img_id, variants in raw.items()}
 
 from phash_masked_sis import (
     MultiSecretImageSIS,
@@ -151,22 +156,33 @@ def evaluate_image(
     h_dummy = compute_phash(dummy_img, cfg)
     h_full = compute_phash(full_img, cfg)
 
-    attack_metrics: Dict[str, int] = {}
+    attack_metrics_dummy: Dict[str, int] = {}
     for name, variant in _attack_variants(dummy_img, rng=rng).items():
-        attack_metrics[name] = _phash_distance(h_orig, compute_phash(variant, cfg))
+        attack_metrics_dummy[name] = _phash_distance(h_orig, compute_phash(variant, cfg))
+
+    attack_metrics_full: Dict[str, int] = {}
+    for name, variant in _attack_variants(full_img, rng=rng).items():
+        attack_metrics_full[name] = _phash_distance(h_orig, compute_phash(variant, cfg))
 
     less_than_k1_level, less_than_k1_image = sis.reconstruct_with_levels(shares[: max(1, sis.k1 - 1)])
     h_less = compute_phash(less_than_k1_image, cfg)
+    attack_metrics_less: Dict[str, int] = {}
+    for name, variant in _attack_variants(less_than_k1_image, rng=rng).items():
+        attack_metrics_less[name] = _phash_distance(h_orig, compute_phash(variant, cfg))
 
     # Baseline: blurred dummy
     blur_img = _blur_image(img)
     h_blur = compute_phash(blur_img, cfg)
-    blur_attacks = {name: _phash_distance(h_orig, compute_phash(v, cfg)) for name, v in _attack_variants(blur_img, rng).items()}
+    blur_attacks = {
+        name: _phash_distance(h_orig, compute_phash(v, cfg)) for name, v in _attack_variants(blur_img, rng).items()
+    }
 
     # Baseline: random noise
     noise_img = _noise_image_like(img, rng)
     h_noise = compute_phash(noise_img, cfg)
-    noise_attacks = {name: _phash_distance(h_orig, compute_phash(v, cfg)) for name, v in _attack_variants(noise_img, rng).items()}
+    noise_attacks = {
+        name: _phash_distance(h_orig, compute_phash(v, cfg)) for name, v in _attack_variants(noise_img, rng).items()
+    }
 
     # Baseline: single-layer Shamir (full image only)
     s_bytes = image_path.read_bytes()
@@ -188,7 +204,9 @@ def evaluate_image(
         "phash_dist_less_than_k1": _phash_distance(h_orig, h_less),
         "psnr_dummy_vs_original": _psnr(dummy_img, img),
         "psnr_full_vs_original": _psnr(full_img, img),
-        "attack_phash_distances": attack_metrics,
+        "attack_phash_distances_dummy": attack_metrics_dummy,
+        "attack_phash_distances_full": attack_metrics_full,
+        "attack_phash_distances_less": attack_metrics_less,
         "split_ms": split_ms,
         "recover_dummy_ms": recover_dummy_ms,
         "recover_full_ms": recover_full_ms,
@@ -214,13 +232,30 @@ def evaluate_image(
 def gather_images(images_dir: Path, max_images: int) -> List[Path]:
     paths: List[Path] = []
     for ext in ("*.png", "*.jpg", "*.jpeg", "*.bmp", "*.webp"):
-        paths.extend(sorted(images_dir.glob(ext)))
+        # rglob でサブディレクトリも探索
+        paths.extend(sorted(images_dir.rglob(ext)))
+    return paths[:max_images]
+
+
+def gather_images_from_mapping(mapping_json: Path, max_images: int, include_variants: Iterable[str] | None) -> List[Path]:
+    mapping = load_derivative_mapping(mapping_json)
+    paths: List[Path] = []
+    for variants in mapping.values():
+        for variant, p in variants.items():
+            if include_variants is not None and variant not in include_variants:
+                continue
+            paths.append(Path(p))
     return paths[:max_images]
 
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Evaluate phash_masked_sis performance and robustness.")
-    parser.add_argument("--images_dir", type=Path, required=True, help="Directory containing input images.")
+    parser.add_argument(
+        "--images_dir",
+        type=Path,
+        default=None,
+        help="Directory containing input images. Optional if mapping_json is provided.",
+    )
     parser.add_argument("--output_dir", type=Path, default=Path("output/phash_masked_sis_eval"))
     parser.add_argument("--max_images", type=int, default=10)
     parser.add_argument("--n", type=int, default=5)
@@ -231,6 +266,13 @@ def main() -> None:
     parser.add_argument("--shamir_secret_len", type=int, default=65536, help="Bytes for Shamir micro-benchmark.")
     parser.add_argument("--repeat", type=int, default=5, help="Repetitions for micro-benchmarks.")
     parser.add_argument("--seed", type=int, default=2025)
+    parser.add_argument("--mapping_json", type=Path, default=None, help="Optional mapping JSON to select images.")
+    parser.add_argument(
+        "--include_variants",
+        type=str,
+        default=None,
+        help="Comma-separated variant names when using mapping_json (e.g., original,jpeg75).",
+    )
     args = parser.parse_args()
 
     cfg = PHashConfig(hash_size=args.hash_size, highfreq_factor=args.highfreq_factor)
@@ -245,9 +287,21 @@ def main() -> None:
     )
 
     sis = MultiSecretImageSIS(n=args.n, k1=args.k1, k2=args.k2, cfg=cfg)
-    images = gather_images(args.images_dir, args.max_images)
-    if not images:
-        raise SystemExit(f"No images found under {args.images_dir}")
+
+    include_variants = None
+    if args.include_variants:
+        include_variants = [v.strip() for v in args.include_variants.split(",") if v.strip()]
+
+    if args.mapping_json:
+        images = gather_images_from_mapping(args.mapping_json, args.max_images, include_variants)
+        if not images:
+            raise SystemExit(f"No images found in mapping {args.mapping_json} (variants={include_variants}).")
+    else:
+        if args.images_dir is None:
+            raise SystemExit("Either --images_dir or --mapping_json must be provided.")
+        images = gather_images(args.images_dir, args.max_images)
+        if not images:
+            raise SystemExit(f"No images found under {args.images_dir}")
 
     image_results: List[Dict[str, object]] = []
     for img_path in images:

@@ -1,0 +1,75 @@
+\documentclass{jarticle}
+\usepackage{graphicx} % Required for inserting images
+\usepackage[top=5truemm,bottom=20truemm,left=10truemm,right=10truemm]{geometry}
+\usepackage{amsmath,amssymb,mathtools}
+\DeclarePairedDelimiter{\norm}{\lVert}{\rVert}
+\usepackage{arydshln}
+\usepackage{otf}
+\usepackage{multirow}
+\usepackage{wasysym}
+\usepackage{titlesec}
+
+
+\title{[論文題目]}
+\author{横田・\CID{08521}水研究室　[氏名]}
+\date{2025年度 卒業論文審査会}
+
+\setlength{\columnsep}{20pt}
+% \section の設定
+\titleformat{\section}
+  {\normalfont\large\bfseries}    % フォント：通常体・大・太字
+  {\thesection}                  % 番号部分：ピリオド付きにもできる
+  {.5em}                           % 番号とタイトルの間隔
+  {}                              % タイトル前に挿入するもの（不要なら空）
+
+% 丸数字マクロ（1〜20のみ対応）
+\newcommand{\marunum}[1]{%
+  \textcircled{\scriptsize #1}%
+}
+% 四角で囲った丸数字（fbox使用、tikz不使用）
+\newcommand{\boxedmaru}[1]{%
+  \fbox{\strut\,\marunum{#1}\,}%
+}
+\setlength{\fboxsep}{1pt}
+
+\newcommand{\boxedmaruselect}[2]{%
+  \fbox{\strut\,\marunum{#1}#2\,}%
+}
+
+\makeatletter
+\renewcommand{\maketitle}{%
+  \begin{center}
+    \Large\bfseries \@title
+  \end{center}
+  \begin{flushright}
+    {\large\@author}\par%
+    \@date\par
+  \end{flushright}
+  \vspace{-10pt}
+  \centering
+   \rule{.48\textwidth}{0.5pt}
+   $\surd$
+   \rule{.48\textwidth}{0.5pt}
+}
+\makeatother
+
+\begin{document}
+\twocolumn[\maketitle]
+
+\section*{概要}
+
+\section{はじめに}
+
+\section{関連技術}
+
+\section{提案法}
+
+\section{実験}
+
+\section{おわりに}
+
+\begin{thebibliography}{9}
+%\bibitem{item1}
+\end{thebibliography}
+
+\end{document}
