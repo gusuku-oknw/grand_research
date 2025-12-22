@@ -1,4 +1,4 @@
-\documentclass{jarticle}
+﻿\documentclass{jarticle}
 \usepackage[dvipdfmx]{graphicx}
 \usepackage[dvipdfmx,top=5truemm,bottom=20truemm,left=10truemm,right=10truemm]{geometry}
 \usepackage{amsmath,amssymb,mathtools}
@@ -80,7 +80,7 @@
 
 \section{提案手法}
 \subsection{記号と定義}
-入力画像をグレースケール 32$\times$32 に縮小し DCT を取る。低周波 8$\times$8 ブロック $C_{\text{LF}}$ の符号で 64bit の pHash $b \in \{0,1\}^{64}$ を定義し、$b_i = 1$ は正、0 は負の符号を表す。二階層 Shamir は $n{=}5$, $(k_1,k_2)=(2,4)$ とし、シェア数 $r$ に応じた段階開示を次のように定義する:
+入力画像をグレースケール 32$\times$32 に縮小し DCT を取る。低周波 8$\times$8 ブロック $C_{\text{LF}}$ の符号で 64bit の pHash $b \in \{0,1\}^{64}$ を定義し、$b_i = 1$ は正、0 は負の符号を表す。二階層 Shamir は $n{=}5$, $(k_1,k_2)=(2,4)$ とし、\textbf{$1<k_1<k_2\le n$ で $k_1$ は検索のみ許可、$k_2$ は原画像復元許可の閾値}としてシェア数 $r$ に応じた段階開示を次のように定義する:
 \[
   \text{output}(r) = \begin{cases}
     \text{noise} & (r < k_1) \\
@@ -91,6 +91,12 @@
 ここで $\text{dummy}(b)$ は pHash 符号が $b$ と一致するノイズ画像である。
 \subsection{三段階開示}
 シェア数 $r$ に応じて、$r<k_1$ はノイズ、$k_1 \le r < k_2$ は pHash 符号一致ダミー、$r \ge k_2$ は原本を復元する。
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.9\linewidth]{output/fig_scene_cropped.png}
+  \caption{三段階 SIS の概念図（$k_1$:検索のみ，$k_2$:完全復元）}
+  \label{fig:three-stage}
+\end{figure}
 \subsection{pHash 整合ダミー}
 ダミー生成の流れを図\ref{fig:dummy-top3} に示す。(1) 元画像を 32$\times$32 に縮小し DCT から target bits（低周波 8$\times$8 の符号）を抽出、(2) 符号が反転しないようマージンを持たせて低周波ブロックを強調（reinforced low-freq）、(3) 高周波をランダムノイズで埋めて逆DCTし 32$\times$32 空間画像を得る。逆DCT後の符号が目標値からずれないよう、低周波振幅を複数回補強し、空間域でのわずかな変動では符号が反転しないマージンを確保する。
 \subsection{理論的な安全性と復元不可性}
@@ -222,3 +228,5 @@ R. Venkatesan, S.-M. Koon, M. Jakubowski, and P. Moulin, ``Robust image hashing,
 \end{thebibliography}
 
 \end{document}
+
+

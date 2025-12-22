@@ -6,3 +6,4 @@ pyarrow>=12.0
 pyyaml>=6.0
 cryptography>=41.0
 datasketch>=1.5
+python-pptx>=1.0.2
