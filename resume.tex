@@ -9,6 +9,8 @@
 % \usepackage{wasysym}
 \usepackage{titlesec}
 \usepackage{float} % Hオプションで図表位置を固定するため
+\usepackage{url}
+\graphicspath{{./output/}{./output/phash_masked_sis_eval/}{./output/phash_masked_sis_eval/figures/}{./output/results/}{./output/results/masked_phash_eval_figs/}}
 
 \title{秘密画像共有における pHash 検索を可能にする知覚暗号化の設計}
 \author{横田・\CID{08521}水研究室　玉城 洵弥}
@@ -44,46 +46,52 @@
 \linespread{0.92}\selectfont
 
 \section*{概要}
-秘密画像共有 (SIS) で分散保存した画像について，平文化せずに pHash による類似画像検索を行う方式を提案する。
+秘密画像共有（Secret Image Sharing; SIS）で分散保存した画像について，平文化せずに知覚ハッシュ pHash（perceptual hash）による類似画像検索を行う方式を提案する．
 シェアのみを持つサーバでも検索できるよう，
 \textbf{$k_1$ で pHash の符号だけを開示し，視覚的にはノイズ化した pHash 整合ダミー画像だけを見せる}
-三段階開示モデルを設計した。ここで $1<k_1<k_2\le n$ とし，$k_1$ は検索のみ許可，$k_2$ は完全復元の閾値とする。
+三段階開示モデルを設計した．ここで $1<k_1<k_2\le n$ とし，$k_1$ は検索のみ許可，$k_2$ は完全復元の閾値とする．
 シェア数に応じて
 \textbf{「ノイズ」「pHash 整合ダミー」「原画像」}
 の三段階で情報を開示し，
-検索精度と秘匿性の両立を図る。
+検索精度と秘匿性の両立を図る．
 MS COCO（Common Objects in Context）派生データによる評価では，
-pHash 検索精度・処理時間ともに平文と同等であることを確認した。
+pHash 検索精度・処理時間ともに平文と同等であることを確認した．
 
 \section{はじめに}
-医療画像や監視映像では「検索は必要だが中身は見せられない」
-という要求がある。
+医用画像や監視映像ではプライバシ侵害の可能性があるため，
+画像を秘密共有した状態で検索したいという要求がある．
 既存の類似画像検索（CBIR: Content-Based Image Retrieval）は画像や特徴量を平文で保持するため，
-漏洩リスクが高い。
+漏洩リスクが高い．
 pHash は軽量で実用的な知覚特徴量である一方，
-符号を平文で扱うと情報漏洩につながる。
+符号を平文で扱うと情報漏洩につながる．
 また，既存の秘密画像共有（SIS）は
 「復元する／しない」の二択であり，
-\textbf{復元せずに検索だけを許可する中間状態}を扱えないという課題がある。
+\textbf{復元せずに検索だけを許可する中間状態}を扱えないという課題がある．
+そこで，秘密共有した状態で検索を可能にする暗号化方式を提案する．
 
 プライバシ保護 CBIR では，
-CNN 特徴量を秘密分散や MPC により安全計算する方式が提案されている。
-しかし，高次元特徴を前提とするため計算コストが高く，
-段階的な情報開示は考慮されていない。
+CNN 特徴量を秘密分散や MPC により安全計算する方式が提案されている．
+しかし，高次元特徴を前提とするため計算コストが高い．
+加えて，平文特徴の類似度計算を前提に設計されており，
+秘密共有や知覚暗号化された画像に対しては
+検索精度が低下するか，そもそも適用対象外になりやすい．
+段階的な情報開示も備えていない．
 一方，pHash は低次元で高速だが，
-暗号技術と統合した研究はほとんど存在しない。
+暗号技術と統合した研究はほとんど存在しない．
 特に，
 \textbf{pHash 符号のみを保持したまま視覚情報を消去する設計}
-は未検討である。
+は未検討である．
 
 \section{提案法}
-本研究では，
-pHash の低周波符号構造と二階層 Shamir 秘密分散を組み合わせ，
-三段階の情報開示を実現する。
+本研究で用いる pHash は，32$\times$32 画像の DCT 左上 8$\times$8 の符号から
+64bit を得る軽量特徴であり，低周波構造のみを保持する．
+二階層 Shamir 秘密分散は，同じシェア集合から
+$k_1$ で検索専用の情報，$k_2$ で原画像を復元する段階閾値を与える．
+本研究では，両者を組み合わせて三段階の情報開示を実現する．
 
-\subsection*{定式化（三段階 SIS）}
-閾値は $1<k_1<k_2\le n$ とし，$k_1$ は検索権限，$k_2$ は原画像復元権限を表す。
-配布した $n$ 枚のシェア集合を $A$，$r=|A|$ とし，秘密を $S_0,S_1,S_2$ で定義する。
+\subsection{定式化（三段階 SIS）}
+閾値は $1<k_1<k_2\le n$ とし，$k_1$ は検索権限，$k_2$ は原画像復元権限を表す．
+配布した $n$ 枚のシェア集合を $A$，$r=|A|$ とし，秘密を $S_0,S_1,S_2$ で定義する．
 \[
 \text{output}(r)=
 \begin{cases}
@@ -92,28 +100,51 @@ pHash の低周波符号構造と二階層 Shamir 秘密分散を組み合わせ
 \text{原画像} & (r \ge k_2)
 \end{cases}
 \]
-\noindent ここで $S_0$ は無意味なノイズ画像，$S_1$ は pHash 整合ダミー生成情報，$S_2$ は原画像復元情報を表す。
-\noindent 安全性として $r<k_1$ で $I(S_1;A)=0$，かつ $r<k_2$ で $I(S_2;A)=0$ を要求する。
-\noindent また $k_1 \le r < k_2$ では pHash による検索のみ可能（$\mathrm{pHash}(S_1)=\mathrm{pHash}(I)$）とする。
+\noindent ここで $S_0$ は無意味なノイズ画像，$S_1$ は pHash 整合ダミー生成情報，$S_2$ は原画像復元情報を表す．
+\noindent 安全性として $r<k_1$ で $I(S_1;A)=0$，かつ $r<k_2$ で $I(S_2;A)=0$ を要求する．
+\noindent また $k_1 \le r < k_2$ では pHash による検索のみ可能（$\mathrm{pHash}(S_1)=\mathrm{pHash}(I)$）とする．
+\noindent 同じシェア集合から復元結果が段階的に変わる設計であり，
+\textbf{秘密分散のシェア計算を3回行うわけではない．}
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{output/fig_scene_cropped.png}
+\includegraphics[width=0.85\linewidth]{fig_scene_cropped.png}
 \caption{三段階 SIS の概念図（$k_1$:検索のみ，$k_2$:完全復元）}
 \label{fig:three-stage}
 \end{figure}
 
-\subsection*{pHash 整合ダミー}
+\subsection{pHash 整合ダミー}
 低周波 DCT 符号のみを一致させ，
 高周波成分をランダムノイズで置換することで，
-pHash は一致するが視覚情報は失われた画像を生成する。
+pHash は一致するが視覚情報は失われた画像を生成する．
+図\ref{fig:dummy-pipeline} に生成手順の要点を示す．
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.9\linewidth]{pipeline_top3.png}
+\caption{pHash 整合ダミー生成の流れ（符号抽出→低周波強調→32$\times$32 空間）}
+\label{fig:dummy-pipeline}
+\end{figure}
 
-\subsection*{二階層 Shamir}
+\subsection{二階層 Shamir}
 $n=5,\ k_1=2,\ k_2=4$ とし，
 $k_1$ で検索権限，
-$k_2$ で原画像復元を許可する。
+$k_2$ で原画像復元を許可する．
 
 \section{実験}
-COCO val2017 派生データ（500 クエリ，20 バリアント）を用いて評価した。
+COCO val2017 公式配布\footnote{\url{http://cocodataset.org/#download}}から
+seed=2025 で 500 枚を抽出し，
+JPEG 劣化・ガンマ/輝度/コントラスト・回転・クロップ・ノイズ・透かし等の
+20 種変換を適用して派生データを作成した．
+各画像について，
+(1) 32$\times$32 グレースケール化と pHash 計算，
+(2) 低周波符号を固定した pHash 整合ダミー生成，
+(3) $n=5,\ k_1=2,\ k_2=4$ の二階層 Shamir によるシェア化を行い，
+平文 pHash と $k_1$ ダミー pHash の検索順位を比較した．
+
+生成されたダミーは視覚的にはノイズだが pHash 符号は元画像と一致する．
+同一画像のシェアから $k_1$ 復元した場合は Hamming 距離 0 近傍に集中し，
+異なる画像のシェア同士では距離が大きく分離した．
+一方 $k_1$ 未満の組合せでは距離がランダム同等（平均 20.8）となり，
+pHash の漏洩が起きないことを確認した．
 その結果，
 \begin{itemize}
   \item 上位1件の検索精度は 100\%（平文・ダミー一致）
@@ -121,16 +152,32 @@ COCO val2017 派生データ（500 クエリ，20 バリアント）を用いて
   \item 検索時間は約 0.5 ms/query と平文と同等
 \end{itemize}
 であり，
-pHash 整合ダミーが検索性能を劣化させないことを確認した。
+pHash 整合ダミーが検索性能を劣化させないことを確認した．
+図\ref{fig:resume-prec} と図\ref{fig:resume-time} に，オリジナルのみの精度と時間の要約を示す．
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{precision_summary.png}
+\caption{検索精度（オリジナルのみ，plain vs dummy\_k1）}
+\label{fig:resume-prec}
+\end{figure}
+
+\begin{figure}[t]
+\centering
+\includegraphics[width=0.95\linewidth]{time_summary.png}
+\caption{検索時間（オリジナルのみ，plain vs dummy\_k1）}
+\label{fig:resume-time}
+\end{figure}
+
 
 \section{おわりに}
 pHash 符号一致ダミーと二階層秘密分散を用いた
-段階的情報開示方式を提案した。
+段階的情報開示方式を提案した．
 本方式により，
 \textbf{画像を見せずに画像を検索する}という要求を
-軽量かつ実用的に実現できることを示した。
+軽量かつ実用的に実現できることを示した．
 今後は大規模データへの拡張や，
-CNN 特徴とのハイブリッド化を検討する。
+CNN 特徴とのハイブリッド化を検討する．
 
 \begin{thebibliography}{9}
 \bibitem{xia}
