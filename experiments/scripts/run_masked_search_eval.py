@@ -36,7 +36,17 @@ class Sample:
 def load_derivative_mapping(mapping_json: Path) -> Dict[str, Dict[str, str]]:
     with mapping_json.open("r", encoding="utf-8") as f:
         raw = json.load(f)
-    return {img_id: {variant: str(path) for variant, path in variants.items()} for img_id, variants in raw.items()}
+    def _normalize(p: str) -> str:
+        normalized = p.replace("\\", "/")
+        if len(normalized) >= 2 and normalized[1] == ":":
+            drive = normalized[0].lower()
+            normalized = f"/mnt/{drive}{normalized[2:]}"
+        return normalized
+
+    return {
+        img_id: {variant: _normalize(str(path)) for variant, path in variants.items()}
+        for img_id, variants in raw.items()
+    }
 
 
 def build_samples(mapping: Dict[str, Dict[str, str]], include_variants: Iterable[str] | None = None) -> List[Sample]:
@@ -62,8 +72,19 @@ def hamming(a: np.ndarray, b: np.ndarray) -> int:
     return int(np.count_nonzero(a.astype(np.uint8) ^ b.astype(np.uint8)))
 
 
-def compute_phashes(samples: List[Sample], cfg: PHashConfig) -> Dict[str, np.ndarray]:
-    return {s.key: compute_phash(Image.open(s.path).convert("RGB"), cfg=cfg) for s in samples}
+def compute_phashes_with_dummy(
+    samples: List[Sample],
+    cfg: PHashConfig,
+    seed: int,
+) -> Tuple[Dict[str, np.ndarray], Dict[str, np.ndarray]]:
+    plain: Dict[str, np.ndarray] = {}
+    dummy: Dict[str, np.ndarray] = {}
+    for s in samples:
+        img = Image.open(s.path).convert("RGB")
+        plain[s.key] = compute_phash(img, cfg=cfg)
+        dummy_img, _ = make_phash_preserving_dummy(img, cfg=cfg, seed=seed, return_debug=True)
+        dummy[s.key] = compute_phash(dummy_img, cfg=cfg)
+    return plain, dummy
 
 
 def rank(db_ph: Dict[str, np.ndarray], q_ph: np.ndarray) -> List[str]:
@@ -82,6 +103,8 @@ class Row:
     recall_at_1: float
     recall_at_5: float
     recall_at_10: float
+    map: float
+    mrr: float
     total_ms: float
     n_dataset: int
 
@@ -97,6 +120,25 @@ def precision_recall_at_k(ranked: List[int], positives: List[int], k_values=(1, 
         p_vals.append(p)
         r_vals.append(r)
     return p_vals, r_vals
+
+
+def average_precision_from_ranking(ranked: List[int], positives: set[int]) -> float:
+    if not positives:
+        return 0.0
+    hits = 0
+    sum_prec = 0.0
+    for rank, idx in enumerate(ranked, start=1):
+        if idx in positives:
+            hits += 1
+            sum_prec += hits / rank
+    return sum_prec / len(positives)
+
+
+def reciprocal_rank(ranked: List[int], positives: set[int]) -> float:
+    for rank, idx in enumerate(ranked, start=1):
+        if idx in positives:
+            return 1.0 / rank
+    return 0.0
 
 
 def main() -> None:
@@ -136,7 +178,7 @@ def main() -> None:
             print(f"No samples for variants={include_variants}; skipping.")
             return
         cfg = PHashConfig(hash_size=args.hash_size, highfreq_factor=args.highfreq_factor)
-        db_ph = compute_phashes(samples, cfg)
+        db_ph, db_dummy = compute_phashes_with_dummy(samples, cfg, seed=args.seed)
 
         rows: List[Row] = []
         id_to_index = {s.key: idx for idx, s in enumerate(samples)}
@@ -144,9 +186,7 @@ def main() -> None:
         for s in samples:
             positives = positives_lookup.get(s.image_id, [])
             q_ph_plain = db_ph[s.key]
-            img = Image.open(s.path).convert("RGB")
-            dummy_img, _ = make_phash_preserving_dummy(img, cfg=cfg, seed=args.seed, return_debug=True)
-            q_ph_dummy = compute_phash(dummy_img, cfg)
+            q_ph_dummy = db_dummy[s.key]
 
             for mode, q_ph in [("plain", q_ph_plain), ("dummy_k1", q_ph_dummy)]:
                 t0 = time.perf_counter()
@@ -154,6 +194,9 @@ def main() -> None:
                 ms = (time.perf_counter() - t0) * 1000.0
                 ranked_idx = [id_to_index[k] for k in ranked_keys]
                 p_vals, r_vals = precision_recall_at_k(ranked_idx, positives)
+                pos_set = set(positives)
+                ap = average_precision_from_ranking(ranked_idx, pos_set)
+                rr = reciprocal_rank(ranked_idx, pos_set)
                 rows.append(
                     Row(
                         query_key=s.key,
@@ -164,6 +207,8 @@ def main() -> None:
                         recall_at_1=r_vals[0],
                         recall_at_5=r_vals[1],
                         recall_at_10=r_vals[2],
+                        map=ap,
+                        mrr=rr,
                         total_ms=ms,
                         n_dataset=len(samples),
                     )
@@ -175,7 +220,11 @@ def main() -> None:
                 agg.setdefault(r.mode, {}).setdefault("p1", []).append(r.precision_at_1)
                 agg[r.mode].setdefault("p5", []).append(r.precision_at_5)
                 agg[r.mode].setdefault("p10", []).append(r.precision_at_10)
+                agg[r.mode].setdefault("r1", []).append(r.recall_at_1)
+                agg[r.mode].setdefault("r5", []).append(r.recall_at_5)
                 agg[r.mode].setdefault("r10", []).append(r.recall_at_10)
+                agg[r.mode].setdefault("map", []).append(r.map)
+                agg[r.mode].setdefault("mrr", []).append(r.mrr)
                 agg[r.mode].setdefault("ms", []).append(r.total_ms)
             out: Dict[str, Dict[str, float]] = {}
             for mode, vals in agg.items():
@@ -183,7 +232,11 @@ def main() -> None:
                     "precision_at_1": float(np.mean(vals["p1"])),
                     "precision_at_5": float(np.mean(vals["p5"])),
                     "precision_at_10": float(np.mean(vals["p10"])),
+                    "recall_at_1": float(np.mean(vals["r1"])),
+                    "recall_at_5": float(np.mean(vals["r5"])),
                     "recall_at_10": float(np.mean(vals["r10"])),
+                    "map": float(np.mean(vals["map"])),
+                    "mrr": float(np.mean(vals["mrr"])),
                     "total_ms": float(np.mean(vals["ms"])),
                 }
             return out
@@ -198,7 +251,11 @@ def main() -> None:
                     "precision_at_1": vals["precision_at_1"],
                     "precision_at_5": vals["precision_at_5"],
                     "precision_at_10": vals["precision_at_10"],
+                    "recall_at_1": vals["recall_at_1"],
+                    "recall_at_5": vals["recall_at_5"],
                     "recall_at_10": vals["recall_at_10"],
+                    "map": vals["map"],
+                    "mrr": vals["mrr"],
                     "total_ms": vals["total_ms"],
                 }
             )
@@ -216,6 +273,8 @@ def main() -> None:
                     "recall_at_1",
                     "recall_at_5",
                     "recall_at_10",
+                    "map",
+                    "mrr",
                     "total_ms",
                     "n_dataset",
                 ]
@@ -231,6 +290,8 @@ def main() -> None:
                         r.recall_at_1,
                         r.recall_at_5,
                         r.recall_at_10,
+                        r.map,
+                        r.mrr,
                         r.total_ms,
                         r.n_dataset,
                     ]
@@ -249,25 +310,25 @@ def main() -> None:
                 print("No modes to plot.")
                 return
 
-            prec_fig, prec_ax = plt.subplots(figsize=(6, 4))
+            recall_fig, recall_ax = plt.subplots(figsize=(6, 4))
             x = np.arange(len(modes))
             width = 0.25
-            p1 = [summary[m]["precision_at_1"] for m in modes]
-            p5 = [summary[m]["precision_at_5"] for m in modes]
-            p10 = [summary[m]["precision_at_10"] for m in modes]
-            prec_ax.bar(x - width, p1, width, label="P@1")
-            prec_ax.bar(x, p5, width, label="P@5")
-            prec_ax.bar(x + width, p10, width, label="P@10")
-            prec_ax.set_xticks(x)
-            prec_ax.set_xticklabels(modes, rotation=20)
-            prec_ax.set_ylim(0, 1.05)
-            prec_ax.set_ylabel("Precision")
-            prec_ax.set_title("Precision (mean)")
-            prec_ax.legend()
-            prec_fig.tight_layout()
-            prec_out = plot_dir / "precision_summary.png"
-            prec_fig.savefig(prec_out, bbox_inches="tight", dpi=150)
-            plt.close(prec_fig)
+            r1 = [summary[m]["recall_at_1"] for m in modes]
+            r5 = [summary[m]["recall_at_5"] for m in modes]
+            r10 = [summary[m]["recall_at_10"] for m in modes]
+            recall_ax.bar(x - width, r1, width, label="R@1")
+            recall_ax.bar(x, r5, width, label="R@5")
+            recall_ax.bar(x + width, r10, width, label="R@10")
+            recall_ax.set_xticks(x)
+            recall_ax.set_xticklabels(modes, rotation=20)
+            recall_ax.set_ylim(0, 1.05)
+            recall_ax.set_ylabel("Recall")
+            recall_ax.set_title("Recall (mean)")
+            recall_ax.legend()
+            recall_fig.tight_layout()
+            recall_out = plot_dir / "recall_summary.png"
+            recall_fig.savefig(recall_out, bbox_inches="tight", dpi=150)
+            plt.close(recall_fig)
 
             time_fig, time_ax = plt.subplots(figsize=(6, 4))
             ms_vals = [summary[m]["total_ms"] for m in modes]
@@ -280,7 +341,7 @@ def main() -> None:
             time_fig.savefig(time_out, bbox_inches="tight", dpi=150)
             plt.close(time_fig)
 
-            print(f"saved plots: {prec_out}, {time_out}")
+            print(f"saved plots: {recall_out}, {time_out}")
 
     mapping = load_derivative_mapping(args.mapping_json)
 
@@ -302,9 +363,37 @@ def main() -> None:
             summary_csv.parent.mkdir(parents=True, exist_ok=True)
             with summary_csv.open("w", newline="") as f:
                 writer = csv.writer(f)
-                writer.writerow(["variant", "mode", "precision_at_1", "precision_at_5", "precision_at_10", "recall_at_10", "total_ms"])
+                writer.writerow(
+                    [
+                        "variant",
+                        "mode",
+                        "precision_at_1",
+                        "precision_at_5",
+                        "precision_at_10",
+                        "recall_at_1",
+                        "recall_at_5",
+                        "recall_at_10",
+                        "map",
+                        "mrr",
+                        "total_ms",
+                    ]
+                )
                 for r in summary_rows:
-                    writer.writerow([r["variant"], r["mode"], r["precision_at_1"], r["precision_at_5"], r["precision_at_10"], r["recall_at_10"], r["total_ms"]])
+                    writer.writerow(
+                        [
+                            r["variant"],
+                            r["mode"],
+                            r["precision_at_1"],
+                            r["precision_at_5"],
+                            r["precision_at_10"],
+                            r["recall_at_1"],
+                            r["recall_at_5"],
+                            r["recall_at_10"],
+                            r["map"],
+                            r["mrr"],
+                            r["total_ms"],
+                        ]
+                    )
             # plots
             plot_base = args.plot_dir if args.plot_dir else args.output_csv.parent / f"{args.output_csv.stem}_figs"
             if not (isinstance(args.plot_dir, str) and args.plot_dir.lower() == "none"):
@@ -313,7 +402,7 @@ def main() -> None:
                 except ImportError:
                     raise SystemExit("matplotlib is required for plotting. Install with `pip install matplotlib`.") from None
                 plot_base.mkdir(parents=True, exist_ok=True)
-                # Precision@1 per variant
+                # Recall@10 per variant
                 variants = sorted({r["variant"] for r in summary_rows})
                 modes = sorted({r["mode"] for r in summary_rows})
                 x = np.arange(len(variants))
@@ -323,16 +412,16 @@ def main() -> None:
                     vals = []
                     for v in variants:
                         matched = [r for r in summary_rows if r["variant"] == v and r["mode"] == mode]
-                        vals.append(matched[0]["precision_at_1"] if matched else 0.0)
+                        vals.append(matched[0]["recall_at_10"] if matched else 0.0)
                     ax.bar(x + i * width, vals, width, label=mode)
                 ax.set_xticks(x + width * (len(modes) - 1) / 2)
                 ax.set_xticklabels(variants, rotation=45, ha="right")
-                ax.set_ylabel("Precision@1")
+                ax.set_ylabel("Recall@10")
                 ax.set_ylim(0, 1.05)
-                ax.set_title("Precision@1 per variant")
+                ax.set_title("Recall@10 per variant")
                 ax.legend()
                 fig.tight_layout()
-                fig.savefig(plot_base / "precision_summary_all_variants.png", bbox_inches="tight", dpi=150)
+                fig.savefig(plot_base / "recall_summary_all_variants.png", bbox_inches="tight", dpi=150)
                 plt.close(fig)
 
                 # Time per variant

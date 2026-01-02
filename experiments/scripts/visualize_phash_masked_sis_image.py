@@ -17,7 +17,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from phash_masked_sis import MultiSecretImageSIS, PHashConfig, compute_phash  # noqa: E402
+from phash_masked_sis import MultiSecretImageSIS, PHashConfig, compute_phash, idct2  # noqa: E402
 from phash_masked_sis.dummy_image import make_phash_preserving_dummy  # noqa: E402
 
 
@@ -87,11 +87,15 @@ def main() -> None:
             steps.append(("target bits", bits_img, None))
         lf = debug.get("lf_final")
         if lf is not None:
-            lf_norm = lf - lf.min()
-            if lf_norm.max() > 0:
-                lf_norm = lf_norm / lf_norm.max() * 255.0
-            lf_img = Image.fromarray(lf_norm.astype(np.uint8), mode="L").resize((64, 64), Image.BICUBIC)
-            steps.append(("low-freq (reinforced)", lf_img, None))
+            size = cfg.hash_size * cfg.highfreq_factor
+            coeffs = np.zeros((size, size), dtype=np.float64)
+            coeffs[: cfg.hash_size, : cfg.hash_size] = lf
+            spatial = idct2(coeffs)
+            spatial -= spatial.min()
+            if spatial.max() > 0:
+                spatial = spatial / spatial.max() * 255.0
+            lf_img = Image.fromarray(spatial.astype(np.uint8), mode="L").resize((64, 64), Image.BICUBIC)
+            steps.append(("low-freq spatial", lf_img, None))
         spatial = debug.get("spatial_small")
         if spatial is not None:
             steps.append(("32x32 spatial", Image.fromarray(spatial.astype(np.uint8), mode="L"), None))

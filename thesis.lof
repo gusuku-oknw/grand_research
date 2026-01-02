@@ -1,0 +1,18 @@
+\addvspace {10\jsc@mpt }
+\addvspace {10\jsc@mpt }
+\addvspace {10\jsc@mpt }
+\contentsline {figure}{\numberline {3.1}{\ignorespaces 三段階 SIS の概念図（$k_1$:検索のみ，$k_2$:完全復元）}}{13}{}%
+\addvspace {10\jsc@mpt }
+\contentsline {figure}{\numberline {4.1}{\ignorespaces pHash 距離（ダミー、原本、$<k_1$）}}{15}{}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces PSNR の分布（ダミーと原本）}}{15}{}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces ダミー生成トップ3（pHash 符号→低周波のみの空間像→32$\times $32 空間）}}{15}{}%
+\addvspace {10\jsc@mpt }
+\contentsline {figure}{\numberline {5.1}{\ignorespaces pHash 距離の分布（plain/dummy/$<k_1$）}}{17}{}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces PSNR の分布（ダミーと原本）}}{17}{}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces 復元時間の分布（$k_1$/$k_2$）}}{17}{}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Recall（平均値、オリジナルのみ）}}{18}{}%
+\contentsline {figure}{\numberline {5.5}{\ignorespaces Latency（平均値、オリジナルのみ）}}{18}{}%
+\contentsline {figure}{\numberline {5.6}{\ignorespaces Recall@10（バリアント別、plain vs dummy\_k1）}}{18}{}%
+\contentsline {figure}{\numberline {5.7}{\ignorespaces Latency（バリアント別、plain vs dummy\_k1）}}{18}{}%
+\addvspace {10\jsc@mpt }
+\addvspace {10\jsc@mpt }

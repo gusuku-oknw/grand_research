@@ -5,6 +5,7 @@ import argparse
 from pathlib import Path
 from typing import List, Tuple
 
+import numpy as np
 from PIL import Image, ImageDraw
 
 # Allow running without installation
@@ -14,7 +15,7 @@ REPO_ROOT = Path(__file__).resolve().parents[2]
 if str(REPO_ROOT) not in sys.path:
     sys.path.insert(0, str(REPO_ROOT))
 
-from phash_masked_sis import PHashConfig  # noqa: E402
+from phash_masked_sis import PHashConfig, idct2  # noqa: E402
 from phash_masked_sis.dummy_image import make_phash_preserving_dummy  # noqa: E402
 
 
@@ -35,10 +36,14 @@ def export_top3(image_path: Path, output_path: Path, cfg: PHashConfig, seed: int
             panels.append(("target bits", _to_img(bits * 255)))
         lf = debug.get("lf_final")
         if lf is not None:
-            lf_norm = lf - lf.min()
-            if lf_norm.max() > 0:
-                lf_norm = lf_norm / lf_norm.max() * 255.0
-            panels.append(("low-freq (reinforced)", _to_img(lf_norm)))
+            size = cfg.hash_size * cfg.highfreq_factor
+            coeffs = np.zeros((size, size), dtype=np.float64)
+            coeffs[: cfg.hash_size, : cfg.hash_size] = lf
+            spatial = idct2(coeffs)
+            spatial -= spatial.min()
+            if spatial.max() > 0:
+                spatial = spatial / spatial.max() * 255.0
+            panels.append(("low-freq spatial", _to_img(spatial)))
         spatial = debug.get("spatial_small")
         if spatial is not None:
             panels.append(("32x32 spatial", _to_img(spatial)))
