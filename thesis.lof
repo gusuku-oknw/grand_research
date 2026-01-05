@@ -1,15 +1,14 @@
 \addvspace {10\jsc@mpt }
 \addvspace {10\jsc@mpt }
 \addvspace {10\jsc@mpt }
-\contentsline {figure}{\numberline {3.1}{\ignorespaces 三段階 SIS の概念図（$k_1$:検索のみ，$k_2$:完全復元）}}{15}{}%
 \addvspace {10\jsc@mpt }
-\contentsline {figure}{\numberline {4.1}{\ignorespaces pHash 距離の分布（原画像平文／$k_1$ ダミー／$r<k_1$ ノイズ）}}{18}{}%
-\contentsline {figure}{\numberline {4.2}{\ignorespaces PSNR の分布（ダミーと原本）}}{18}{}%
-\contentsline {figure}{\numberline {4.3}{\ignorespaces ダミー生成トップ3（pHash 符号→強調低周波→32$\times $32 空間）}}{18}{}%
+\contentsline {figure}{\numberline {4.1}{\ignorespaces pHash 距離の分布（原画像平文／$k_1$ ダミー／$r<k_1$ ノイズ）}}{20}{}%
+\contentsline {figure}{\numberline {4.2}{\ignorespaces PSNR の分布（ダミーと原画像）}}{20}{}%
+\contentsline {figure}{\numberline {4.3}{\ignorespaces ダミー生成の途中出力例（pHash 符号$\rightarrow $低周波補強$\rightarrow 32\times 32$ 空間画像）}}{21}{}%
 \addvspace {10\jsc@mpt }
-\contentsline {figure}{\numberline {5.1}{\ignorespaces Precision（平均値、オリジナルのみ）}}{20}{}%
-\contentsline {figure}{\numberline {5.2}{\ignorespaces Latency（平均値、オリジナルのみ）}}{21}{}%
-\contentsline {figure}{\numberline {5.3}{\ignorespaces Precision@1（バリアント別、plain vs dummy\_k1）}}{21}{}%
-\contentsline {figure}{\numberline {5.4}{\ignorespaces Latency（バリアント別、plain vs dummy\_k1）}}{22}{}%
+\contentsline {figure}{\numberline {5.1}{\ignorespaces Precision（平均値，オリジナルのみ；各クエリの正解は1件）}}{25}{}%
+\contentsline {figure}{\numberline {5.2}{\ignorespaces Latency（平均値，オリジナルのみ）}}{25}{}%
+\contentsline {figure}{\numberline {5.3}{\ignorespaces Precision@1（バリアント別，plain vs dummy\_k1）}}{26}{}%
+\contentsline {figure}{\numberline {5.4}{\ignorespaces Latency（バリアント別，plain vs dummy\_k1）}}{26}{}%
 \addvspace {10\jsc@mpt }
 \addvspace {10\jsc@mpt }

@@ -10,17 +10,38 @@
 \contentsline {section}{\numberline {2.5}知覚ハッシュ（pHash）に関する研究}{13}{}%
 \contentsline {chapter}{\numberline {第3章}提案手法}{14}{}%
 \contentsline {section}{\numberline {3.1}動機付け}{14}{}%
-\contentsline {section}{\numberline {3.2}記号と定義}{14}{}%
-\contentsline {section}{\numberline {3.3}三段階開示}{15}{}%
-\contentsline {section}{\numberline {3.4}pHash 整合ダミー}{15}{}%
-\contentsline {section}{\numberline {3.5}安全性の保証範囲と評価（Shamir の保証／ダミーの可視性）}{16}{}%
-\contentsline {section}{\numberline {3.6}検索パイプライン}{16}{}%
-\contentsline {chapter}{\numberline {第4章}実装}{17}{}%
-\contentsline {chapter}{\numberline {第5章}実験}{19}{}%
-\contentsline {section}{\numberline {5.1}条件・手順}{19}{}%
-\contentsline {section}{\numberline {5.2}pHash 距離分布と精度維持の理由}{19}{}%
-\contentsline {section}{\numberline {5.3}検索精度と時間（オリジナル）}{20}{}%
-\contentsline {section}{\numberline {5.4}バリアント別の精度と時間}{20}{}%
-\contentsline {chapter}{\numberline {第6章}考察}{23}{}%
-\contentsline {chapter}{\numberline {第7章}おわりに}{24}{}%
-\contentsline {chapter}{参考文献}{25}{}%
+\contentsline {section}{\numberline {3.2}記号と前提}{15}{}%
+\contentsline {section}{\numberline {3.3}三段階開示モデル（Level 0/1/2）}{15}{}%
+\contentsline {section}{\numberline {3.4}二段閾値SIS（検索用秘密と復元用秘密の同時分散）}{16}{}%
+\contentsline {section}{\numberline {3.5}pHash整合ダミーの生成}{16}{}%
+\contentsline {section}{\numberline {3.6}安全性の扱い（Shamirの保証とダミーの評価）}{17}{}%
+\contentsline {section}{\numberline {3.7}検索パイプライン}{17}{}%
+\contentsline {chapter}{\numberline {第4章}実装}{18}{}%
+\contentsline {section}{\numberline {4.1}実装方針と依存関係}{18}{}%
+\contentsline {section}{\numberline {4.2}pHash 計算と DCT/IDCT の実装}{18}{}%
+\contentsline {section}{\numberline {4.3}pHash 整合ダミー生成の実装}{18}{}%
+\contentsline {subsection}{\numberline {4.3.1}低周波ブロックの構成}{19}{}%
+\contentsline {subsection}{\numberline {4.3.2}符号反転を避けるためのマージン補強}{19}{}%
+\contentsline {subsection}{\numberline {4.3.3}高周波の無構造化とダミー画像の生成}{19}{}%
+\contentsline {section}{\numberline {4.4}二段階 Shamir（低閾値・高閾値）の実装}{19}{}%
+\contentsline {subsection}{\numberline {4.4.1}有限体と補間}{19}{}%
+\contentsline {subsection}{\numberline {4.4.2}秘密の符号化（チャンク化）}{19}{}%
+\contentsline {subsection}{\numberline {4.4.3}パラメータ設定}{20}{}%
+\contentsline {section}{\numberline {4.5}評価に用いる指標の算出と可視化}{20}{}%
+\contentsline {chapter}{\numberline {第5章}実験}{22}{}%
+\contentsline {section}{\numberline {5.1}条件・手順}{22}{}%
+\contentsline {subsection}{\numberline {5.1.1}評価指標}{22}{}%
+\contentsline {subsection}{\numberline {5.1.2}データと派生画像の生成}{22}{}%
+\contentsline {subsection}{\numberline {5.1.3}検索・比較の手順}{23}{}%
+\contentsline {section}{\numberline {5.2}結果と考察（5章に統合）}{23}{}%
+\contentsline {subsection}{\numberline {5.2.1}pHash 距離分布の確認}{23}{}%
+\contentsline {subsection}{\numberline {5.2.2}検索精度と時間（オリジナルのみ）}{23}{}%
+\contentsline {subsection}{\numberline {5.2.3}バリアント別の精度と時間（全20バリアント）}{24}{}%
+\contentsline {subsection}{\numberline {5.2.4}考察：何が示せていて，何が示せていないか}{24}{}%
+\contentsline {chapter}{\numberline {第6章}考察}{27}{}%
+\contentsline {section}{\numberline {6.1}Shamir秘密分散が保証する範囲}{27}{}%
+\contentsline {section}{\numberline {6.2}Level 1（検索専用出力）における情報露出と限界}{27}{}%
+\contentsline {section}{\numberline {6.3}アクセスパターン等の副次的漏えい}{28}{}%
+\contentsline {section}{\numberline {6.4}pHashの頑健性と適用範囲}{28}{}%
+\contentsline {chapter}{\numberline {第7章}おわりに}{29}{}%
+\contentsline {chapter}{参考文献}{30}{}%
