@@ -1,25 +1,25 @@
-\contentsline {chapter}{\numberline {第1章}はじめに}{7}{}%
-\contentsline {section}{\numberline {1.1}背景}{7}{}%
-\contentsline {section}{\numberline {1.2}目的}{7}{}%
-\contentsline {section}{\numberline {1.3}貢献}{8}{}%
-\contentsline {chapter}{\numberline {第2章}関連研究}{9}{}%
-\contentsline {section}{\numberline {2.1}類似画像検索に用いられる特徴量：CNN と pHash}{9}{}%
-\contentsline {section}{\numberline {2.2}秘密分散・MPC を用いたプライバシー保護類似画像検索}{9}{}%
-\contentsline {section}{\numberline {2.3}検索可能暗号（SE）によるプライバシー保護 CBIR}{10}{}%
-\contentsline {section}{\numberline {2.4}知覚ハッシュ（pHash）に関する研究}{10}{}%
-\contentsline {chapter}{\numberline {第3章}提案手法}{11}{}%
-\contentsline {section}{\numberline {3.1}動機付け}{11}{}%
-\contentsline {section}{\numberline {3.2}記号と定義}{11}{}%
-\contentsline {section}{\numberline {3.3}三段階開示}{12}{}%
-\contentsline {section}{\numberline {3.4}pHash 整合ダミー}{12}{}%
-\contentsline {section}{\numberline {3.5}安全性の保証範囲と評価（Shamir の保証／ダミーの可視性）}{13}{}%
-\contentsline {section}{\numberline {3.6}検索パイプライン}{13}{}%
-\contentsline {chapter}{\numberline {第4章}実装}{14}{}%
-\contentsline {chapter}{\numberline {第5章}実験}{16}{}%
-\contentsline {section}{\numberline {5.1}条件・手順}{16}{}%
-\contentsline {section}{\numberline {5.2}pHash 距離分布と精度維持の理由}{16}{}%
-\contentsline {section}{\numberline {5.3}検索精度と時間（オリジナル）}{17}{}%
-\contentsline {section}{\numberline {5.4}バリアント別の精度と時間}{17}{}%
-\contentsline {chapter}{\numberline {第6章}考察}{20}{}%
-\contentsline {chapter}{\numberline {第7章}おわりに}{21}{}%
-\contentsline {chapter}{参考文献}{22}{}%
+\contentsline {chapter}{\numberline {第1章}はじめに}{8}{}%
+\contentsline {section}{\numberline {1.1}背景}{8}{}%
+\contentsline {section}{\numberline {1.2}目的}{9}{}%
+\contentsline {section}{\numberline {1.3}貢献}{10}{}%
+\contentsline {chapter}{\numberline {第2章}関連研究}{12}{}%
+\contentsline {section}{\numberline {2.1}類似画像検索に用いられる特徴量：CNN と pHash}{12}{}%
+\contentsline {section}{\numberline {2.2}秘密分散・MPC を用いたプライバシー保護類似画像検索}{12}{}%
+\contentsline {section}{\numberline {2.3}検索可能暗号（SE）によるプライバシー保護 CBIR}{13}{}%
+\contentsline {section}{\numberline {2.4}知覚ハッシュ（pHash）に関する研究}{13}{}%
+\contentsline {chapter}{\numberline {第3章}提案手法}{14}{}%
+\contentsline {section}{\numberline {3.1}動機付け}{14}{}%
+\contentsline {section}{\numberline {3.2}記号と定義}{14}{}%
+\contentsline {section}{\numberline {3.3}三段階開示}{15}{}%
+\contentsline {section}{\numberline {3.4}pHash 整合ダミー}{15}{}%
+\contentsline {section}{\numberline {3.5}安全性の保証範囲と評価（Shamir の保証／ダミーの可視性）}{16}{}%
+\contentsline {section}{\numberline {3.6}検索パイプライン}{16}{}%
+\contentsline {chapter}{\numberline {第4章}実装}{17}{}%
+\contentsline {chapter}{\numberline {第5章}実験}{19}{}%
+\contentsline {section}{\numberline {5.1}条件・手順}{19}{}%
+\contentsline {section}{\numberline {5.2}pHash 距離分布と精度維持の理由}{19}{}%
+\contentsline {section}{\numberline {5.3}検索精度と時間（オリジナル）}{20}{}%
+\contentsline {section}{\numberline {5.4}バリアント別の精度と時間}{20}{}%
+\contentsline {chapter}{\numberline {第6章}考察}{23}{}%
+\contentsline {chapter}{\numberline {第7章}おわりに}{24}{}%
+\contentsline {chapter}{参考文献}{25}{}%
