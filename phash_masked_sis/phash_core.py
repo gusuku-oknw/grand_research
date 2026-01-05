@@ -53,12 +53,13 @@ class PHashConfig:
 
     hash_size: int = 8
     highfreq_factor: int = 4
+    resample: int = Image.LANCZOS
 
 
 def _preprocess_image(img: Image.Image, cfg: PHashConfig) -> np.ndarray:
     """画像をグレースケール+リサイズして DCT 入力にする。"""
     size = cfg.hash_size * cfg.highfreq_factor
-    img_gray = img.convert("L").resize((size, size), Image.BICUBIC)
+    img_gray = img.convert("L").resize((size, size), cfg.resample)
     return np.asarray(img_gray, dtype=np.float64)
 
 
@@ -70,8 +71,12 @@ def phash_core(img: Image.Image, cfg: PHashConfig = PHashConfig()) -> Tuple[np.n
     arr = _preprocess_image(img, cfg)
     d = dct2(arr)
     lf = d[: cfg.hash_size, : cfg.hash_size]
-    mean_val = lf.mean()
-    bits = (lf > mean_val).astype(np.uint8)
+    flat = lf.flatten()
+    if flat.size <= 1:
+        median_val = float(flat[0])
+    else:
+        median_val = float(np.median(flat[1:]))  # DC 成分を除外
+    bits = (flat > median_val).astype(np.uint8).reshape(lf.shape)
     return bits, lf
 
 

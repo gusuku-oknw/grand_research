@@ -29,12 +29,16 @@ def _dct2(x: np.ndarray) -> np.ndarray:
 def phash64(image_path: str, resize: int = 32, band: int = 8) -> int:
     """Compute a 64-bit perceptual hash for an image file."""
     img = Image.open(image_path).convert("L")
-    img = img.resize((resize, resize), Image.BILINEAR)
+    img = img.resize((resize, resize), Image.LANCZOS)
     values = np.asarray(img, dtype=np.float32)
     dct = _dct2(values)
     low = dct[:band, :band]
-    avg = float(low.mean())
-    bits = (low.flatten() > avg).astype(np.uint8)
+    flat = low.flatten()
+    if flat.size <= 1:
+        median = float(flat[0])
+    else:
+        median = float(np.median(flat[1:]))  # exclude DC
+    bits = (flat > median).astype(np.uint8)
     h = 0
     for bit in bits:
         h = (h << 1) | int(bit)

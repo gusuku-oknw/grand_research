@@ -1,4 +1,4 @@
-This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.12.13)  3 JAN 2026 20:47
+This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.12.13)  3 JAN 2026 21:00
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -467,20 +467,21 @@ LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
 (Font)              scaled to size 6.47278pt on input line 112.
 LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
 (Font)              scaled to size 4.62341pt on input line 112.
+[12
+
+]
 File: output/fig_scene_cropped.png Graphic file (type bmp)
 <output/fig_scene_cropped.png>
 LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 8.32214pt on input line 127.
+(Font)              scaled to size 8.32214pt on input line 128.
 LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 8.32214pt on input line 127.
+(Font)              scaled to size 8.32214pt on input line 128.
 LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 5.5481pt on input line 127.
-[12
-
-] [13] [14]
+(Font)              scaled to size 5.5481pt on input line 128.
+ [13] [14]
 第4章
 
-Overfull \hbox (12.52075pt too wide) in paragraph at lines 140--141
+Overfull \hbox (12.52075pt too wide) in paragraph at lines 142--143
 []\JY1/hgt/m/n/10 ダミ ー生成\OT1/cmr/m/n/10 : 64bit \JY1/hmc/m/n/10 符号を []\
 OT1/cmtt/m/n/10 build[]lowfreq[]from[]bits \JY1/hmc/m/n/10 で低周波振幅に写像し
  、 []\OT1/cmtt/m/n/10 reinforce[]margin
@@ -501,7 +502,7 @@ File: output/phash_masked_sis_eval/pipeline_top3.png Graphic file (type bmp)
 [17
 
 ]
-Underfull \hbox (badness 1496) in paragraph at lines 179--180
+Underfull \hbox (badness 1496) in paragraph at lines 181--182
 []\JY1/hmc/m/n/10 図 \OT1/cmr/m/n/10 5.1, \JY1/hmc/m/n/10 図 \OT1/cmr/m/n/10 5.
 2 \JY1/hmc/m/n/10 はオリジナルのみの結果 。 \OT1/cmr/m/n/10 Pre-ci-sion@1=100%\
 JY1/hmc/m/n/10 ， \OT1/cmr/m/n/10 Pre-ci-sion@5=20%\JY1/hmc/m/n/10 ， \OT1/cmr/
@@ -530,8 +531,6 @@ raphic file (type bmp)
 
 ]
 LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
-(Font)              No change on input line 246.
-LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
 (Font)              No change on input line 248.
 LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
 (Font)              No change on input line 250.
@@ -543,6 +542,8 @@ LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
 (Font)              No change on input line 256.
 LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
 (Font)              No change on input line 258.
+LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
+(Font)              No change on input line 260.
  [23
 
 ] (./thesis.aux)
@@ -566,4 +567,4 @@ Here is how much of TeX's memory you used:
  41 hyphenation exceptions out of 8191
  57i,12n,65p,1575b,1025s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on thesis.dvi (23 pages, 55156 bytes).
+Output written on thesis.dvi (23 pages, 58308 bytes).

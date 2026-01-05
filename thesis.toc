@@ -12,7 +12,7 @@
 \contentsline {section}{\numberline {3.2}記号と定義}{12}{}%
 \contentsline {section}{\numberline {3.3}三段階開示}{13}{}%
 \contentsline {section}{\numberline {3.4}pHash 整合ダミー}{13}{}%
-\contentsline {section}{\numberline {3.5}理論的な安全性と復元不可性}{13}{}%
+\contentsline {section}{\numberline {3.5}安全性の保証範囲と評価（Shamir の保証／ダミーの可視性）}{14}{}%
 \contentsline {section}{\numberline {3.6}検索パイプライン}{14}{}%
 \contentsline {chapter}{\numberline {第4章}実装}{15}{}%
 \contentsline {chapter}{\numberline {第5章}実験}{17}{}%
