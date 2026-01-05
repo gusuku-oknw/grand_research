@@ -450,115 +450,21 @@ $r\ge k_2$では原画像$I$を復元して必要に応じて平文側の処理�
 このように，閾値到達に応じて「検索専用の入力」と「復元入力」を切り替えることで，
 検索と閲覧（復元）の権限・コストを段階的に分離する．
 
-\chapter{実装}
-本章では，第\ref{chap:proposed}章で述べた三段階開示方式を実装として具体化する．
-あわせて，後続の評価で用いる実装上の設定（パラメータ，乱数の扱い，指標の算出方法）も本章で明確化する．
+\chapter{条件・手順}
+\label{chap:conditions}
+本章では，第3章で述べた三段階開示方式を，Python 実装と実験手順として具体化する．
+あわせて，評価で用いる実装上の設定（パラメータ，乱数の扱い，指標の算出方法）も本章で明確化する．
 
-\section{実装方針と依存関係}
-実装は Python 3 系で構築し，数値計算に NumPy，画像入出力とリサイズに Pillow を用いた．
-提案方式の中核（pHash 計算，DCT/IDCT，Shamir 秘密分散，ダミー生成）は自前実装とし，
-SciPy／OpenCV などの外部画像処理ライブラリや，暗号・秘密分散の専用ライブラリには依存しない．
-これは，環境構築の容易さと再現性を優先するためである．
-なお，図表の可視化と集計は評価用スクリプト側で Matplotlib を用いる（中核アルゴリズムの依存関係とは分離する）．
+\section{実装}
 
-\section{pHash 計算と DCT/IDCT の実装}
-pHash は，画像を $32\times 32$ のグレースケールへ正規化した後，2次元 DCT を適用し，
-低周波 $8\times 8$ ブロックの係数から 64bit 指紋を生成する．
-DCT/IDCT は DCT-II（および逆変換）を用い，2次元変換は分離可能性に基づき 1次元変換を縦横に適用して実装した．
-本研究では画像サイズを $32\times 32$ に固定するため，cosine テーブル（変換行列）を事前計算して使い回し，
-計算量と実装の単純性のバランスを取っている．
-
-\section{pHash 整合ダミー生成の実装}
-Level 1（$k_1 \le r < k_2$）では，pHash 計算で参照される低周波成分の符号が目標ビット列と一致するように構成した
-pHash 整合ダミーを出力する．実装では以下の手順を採る．
-
-\subsection{低周波ブロックの構成}
-64bit 指紋 $b\in\{0,1\}^{64}$ を受け取り，
-低周波 $8\times 8$ ブロックの各係数の符号が $b$ と一致するように振幅を割り当てる
-（\texttt{\_build\_lowfreq\_from\_bits}）．
-ここで $b_i=1$ を正，$b_i=0$ を負に対応させる．
-
-\subsection{符号反転を避けるためのマージン補強}
-逆 DCT や 0--255 への正規化で係数の符号が反転すると pHash 一致性が崩れるため，
-低周波係数にマージンを持たせる補強処理を導入する（\texttt{\_reinforce\_margin}）．
-具体的には，低周波係数の絶対値が閾値を下回る場合に増幅し，
-空間域の微小な揺らぎで符号が反転しにくい状態を作る．
-
-\subsection{高周波の無構造化とダミー画像の生成}
-高周波成分は平均0・標準偏差 $12$ のガウスノイズで埋めることで無構造化し，
-低周波のみを拘束した周波数領域表現を構成する．その後，IDCT により $32\times 32$ の空間画像を得て，
-0--255 に正規化し，最終的に元解像度へ Bicubic で拡大する
-（\texttt{make\_phash\_preserving\_dummy}）．
-乱数は NumPy の \texttt{default\_rng} を用い，評価時はシードを固定することで再現可能性を担保する．
-
-\section{二段階 Shamir（低閾値・高閾値）の実装}
-本研究では，低閾値側の秘密 $s_L$ と高閾値側の秘密 $s_H$ を分離し，
-同一のインデックス $i$ に対して二種類のシェアを束ねて配布する．
-低閾値側は $s_L:=b$（pHash の 64bit 指紋），高閾値側は $s_H:=I$（原画像データ）とする．
-各シェアは
-$\mathrm{share}_i=(i,\mathrm{share}_i^L,\mathrm{share}_i^H)$
-として保持する．
-
-\subsection{有限体と補間}
-Shamir 秘密分散は有限体 $\mathbb{F}_p$ 上で実装し，復元は Lagrange 補間により行う
-（\texttt{\_lagrange\_interpolate}）．
-法 $p$ には大きな素数を用いる必要があるため，本実装では
-$p=2^{521}-1$ を採用した（一般化メルセンヌ形であり，P-521 の法としても用いられる）\cite{nist_sp800_186}．
-これにより，画像データを整数列へ符号化して分散する際も十分な余裕が得られる．
-
-\subsection{秘密の符号化（チャンク化）}
-画像 $I$ はバイト列として扱い，$p$ 未満に収まるよう固定長チャンクへ分割して整数へ変換した上で分散する．
-復元時に元の長さへ戻せるよう，チャンク長（および末尾の有効長）もメタ情報として保持する．
-pHash 指紋 $b$ は 64bit の整数にパックして $s_L$ として分散する．
-
-\subsection{パラメータ設定}
-以降の評価では $n=5$，$(k_1,k_2)=(2,4)$ を用いる．
-すなわち，$r<k_1$ では $s_L,s_H$ のいずれも復元できず，
-$k_1 \le r < k_2$ では $s_L$ のみ復元でき，
-$r\ge k_2$ で初めて $s_H$ を復元できる．
-二段階分散は \texttt{TwoLevelShamirScheme} として実装した．
-
-\section{評価に用いる指標の算出と可視化}
-提案方式の挙動を確認するため，原画像（平文），$k_1$ 到達時に得られるダミー，
-および $r<k_1$ のときに出力されるノイズについて，
-pHash 距離（Hamming 距離）の分布を比較する（図\ref{fig:mask-phash}）．
-また，ダミーと原画像の視覚的乖離の程度を定量化するため PSNR を算出する（図\ref{fig:mask-mse}）．
-ダミー生成の内部状態（低周波構成と補強の効果）を確認する可視化として，
-処理途中の $32\times 32$ 画像を出力する（図\ref{fig:dummy-top3}）．
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{output/figures/phash_masked_sis/data00_tuned/stats_phash.png}
-  \caption{pHash 距離の分布（原画像平文／$k_1$ ダミー／$r<k_1$ ノイズ）}
-  \label{fig:mask-phash}
-\end{figure}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{output/figures/phash_masked_sis/data00_tuned/stats_mse.png}
-  \caption{PSNR の分布（ダミーと原画像）}
-  \label{fig:mask-mse}
-\end{figure}
-
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{output/phash_masked_sis_eval/pipeline_top3.png}
-  \caption{ダミー生成の途中出力例（pHash 符号$\rightarrow$低周波補強$\rightarrow 32\times 32$ 空間画像）}
-  \label{fig:dummy-top3}
-\end{figure}
-
-\chapter{実装}
-本章では，第\ref{chap:proposed}章で述べた三段階開示方式を，Python 実装として具体化する．
-あわせて，後続章の評価で用いる実装上の設定（パラメータ，乱数の扱い，指標の算出方法）も本章で明確化する．
-
-\section{実装方針と依存関係}
+\subsection{実装方針と依存関係}
 実装は Python 3 系で構築し，数値計算に NumPy，画像の入出力・リサイズに Pillow を用いた．
 提案方式の中核（pHash 計算，DCT/IDCT，Shamir 秘密分散，pHash 整合ダミー生成）は自前実装とし，
 SciPy／OpenCV などの外部画像処理ライブラリや暗号・秘密分散の専用ライブラリには依存しない．
 これは，環境構築の容易さと再現性を優先するためである．
 なお，可視化と集計は評価用スクリプト側で Matplotlib を用いて行い，中核アルゴリズムの依存関係とは分離した．
 
-\section{pHash 計算と DCT/IDCT の実装}
+\subsection{pHash 計算と DCT/IDCT の実装}
 pHash は，画像を $32\times 32$ のグレースケールへ正規化した後，2 次元 DCT を適用し，
 低周波 $8\times 8$ ブロックの係数を基準値（中央値）で 2 値化して 64bit の指紋を生成する．
 DCT/IDCT は DCT-II（および逆変換）に基づき，2 次元変換は分離可能性を用いて
@@ -567,25 +473,26 @@ DCT/IDCT は DCT-II（および逆変換）に基づき，2 次元変換は分�
 cosine テーブル（変換行列）を事前計算して使い回し，
 計算量と実装の単純性のバランスを取っている．
 
-\section{pHash 整合ダミー生成の実装}
-Level 1（$k_1 \le r < k_2$）では，pHash 計算が参照する低周波成分の符号が
+\subsection{pHash 整合ダミー生成の実装}
+Level 1（$k_1 \le r < k_2$）では，pHash 計算が参照する低周波成分が
 目標ビット列と整合するように構成した pHash 整合ダミーを出力する．
 ダミー生成は Level 1 で復元できる情報（$s_L=b$）のみから実行されることが要件であり，
 実装では以下の手順を採る．
 
-\subsection{低周波ブロックの構成}
+\subsubsection{低周波ブロックの構成}
 64bit 指紋 $b\in\{0,1\}^{64}$ を受け取り，
-低周波 $8\times 8$ ブロックの各係数の符号が $b$ と一致するように振幅を割り当てる
+低周波 $8\times 8$ ブロックの各係数が $b$ と整合するように振幅を割り当てる
 （\texttt{\_build\_lowfreq\_from\_bits}）．
-ここで $b_i=1$ を正，$b_i=0$ を負に対応させる．
+本実装では，中央値を 0 近傍に保つ設計とし，$b_i=1$ を正，$b_i=0$ を負に対応させることで，
+pHash の 2 値化結果が一致するように構成する．
 
-\subsection{符号反転を避けるためのマージン補強}
+\subsubsection{符号反転を避けるためのマージン補強}
 逆 DCT，および 0--255 への正規化・量子化により係数の符号が反転すると pHash 一致性が崩れるため，
 低周波係数にマージンを持たせる補強処理を導入する（\texttt{\_reinforce\_margin}）．
 具体的には，低周波係数の絶対値が所定の閾値を下回る場合に増幅し，
 空間域の微小な揺らぎで符号が反転しにくい状態を作る．
 
-\subsection{高周波の無構造化とダミー画像の生成}
+\subsubsection{高周波の無構造化とダミー画像の生成}
 高周波成分は平均 0・標準偏差 $12$ のガウスノイズで埋めることで無構造化し，
 低周波のみを拘束した周波数領域表現を構成する．その後，IDCT により $32\times 32$ の空間画像を得て，
 0--255 に正規化し，最終的に元解像度へ Bicubic で拡大する
@@ -593,7 +500,7 @@ Level 1（$k_1 \le r < k_2$）では，pHash 計算が参照する低周波成�
 乱数は NumPy の \texttt{default\_rng} を用い，評価時はシードを固定して再現可能性を担保する．
 また，生成後に pHash を再計算し，目標 $b$ と一致しない場合は補強量（マージン）を増やして再生成する．
 
-\section{二段階 Shamir（低閾値・高閾値）の実装}
+\subsection{二段階 Shamir（低閾値・高閾値）の実装}
 本研究では，低閾値側の秘密 $s_L$ と高閾値側の秘密 $s_H$ を分離し，
 同一のインデックス $i$ に対して 2 種類のシェアを束ねて配布する．
 低閾値側は $s_L:=b$（pHash の 64bit 指紋），高閾値側は $s_H:=I$（原画像データ）とする．
@@ -601,26 +508,26 @@ Level 1（$k_1 \le r < k_2$）では，pHash 計算が参照する低周波成�
 $\mathrm{share}_i=(i,\mathrm{share}_i^L,\mathrm{share}_i^H)$
 として保持する．
 
-\subsection{有限体と補間}
+\subsubsection{有限体と補間}
 Shamir 秘密分散は有限体 $\mathbb{F}_p$ 上で実装し，復元は Lagrange 補間により行う
 （\texttt{\_lagrange\_interpolate}）．
 法 $p$ には十分大きな素数が必要であるため，本実装では
 $p=2^{521}-1$ を採用した（一般化メルセンヌ形であり，P-521 の法としても用いられる）\cite{nist_sp800_186}．
 これにより，画像データを整数列へ符号化して分散する際にも十分な余裕が得られる．
 
-\subsection{秘密の符号化（チャンク化）}
+\subsubsection{秘密の符号化（チャンク化）}
 画像 $I$ はバイト列として扱い，$p$ 未満に収まるよう固定長チャンクへ分割して整数へ変換した上で分散する．
 復元時に元のバイト列へ復元できるよう，チャンク長（および末尾の有効長）をメタ情報として保持する．
 pHash 指紋 $b$ は 64bit の整数にパックし，$s_L$ として分散する．
 
-\subsection{パラメータ設定}
+\subsubsection{パラメータ設定}
 以降の評価では $n=5$，$(k_1,k_2)=(2,4)$ を用いる．
 すなわち，$r<k_1$ では $s_L,s_H$ のいずれも復元できず，
 $k_1 \le r < k_2$ では $s_L$ のみ復元でき，
 $r\ge k_2$ で初めて $s_H$ を復元できる．
 二段階分散は \texttt{TwoLevelShamirScheme} として実装した．
 
-\section{評価に用いる指標の算出と可視化}
+\subsection{評価に用いる指標の算出と可視化}
 提案方式の挙動確認として，原画像（平文），$k_1$ 到達時に得られるダミー，
 および $r<k_1$ のときに出力されるノイズについて，
 pHash 距離（Hamming 距離）の分布を比較する（図\ref{fig:mask-phash}）．
@@ -649,12 +556,10 @@ pHash 距離（Hamming 距離）の分布を比較する（図\ref{fig:mask-phas
   \label{fig:dummy-top3}
 \end{figure}
 
-
-\chapter{実験}
-\section{条件・手順}
+\section{実験条件・手順}
 
 \subsection{評価指標}
-本章では検索性能の評価指標として Precision@K と Recall@K を用いる．
+本節では検索性能の評価指標として Precision@K と Recall@K を用いる．
 ここで K は評価する上位件数である．
 クエリ画像 $q$ に対して検索結果上位 $K$ 件を $\mathrm{Top}K(q)$，正解集合を $G(q)$ とすると，
 \begin{align}
