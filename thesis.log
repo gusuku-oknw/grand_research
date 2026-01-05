@@ -1,15 +1,15 @@
-This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.12.13)  3 JAN 2026 21:00
+This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.uptex) (TeX Live 2025) (preloaded format=uplatex 2025.12.13)  5 JAN 2026 13:05
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
 **thesis.tex
 (./thesis.tex
-pLaTeX2e <2023-02-14>+1, based on
+pLaTeX2e <2023-02-14u04>+1, based on
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-14>
 (c:/texlive/2025/texmf-dist/tex/platex/jsclasses/jsbook.cls
 Document Class: jsbook 2025/04/27 jsclasses (okumura, texjporg)
-Class jsbook Info: Autodetected engine: pLaTeX on input line 241.
+Class jsbook Info: Autodetected engine: upLaTeX on input line 222.
 \jsc@mpt=\dimen164
 \jsc@mmm=\dimen165
 \jsc@smallskipamount=\skip49
@@ -17,16 +17,16 @@ LaTeX Info: Redefining \textmc on input line 516.
 LaTeX Info: Redefining \textgt on input line 518.
 \symmincho=\mathgroup4
 LaTeX Font Info:    Overwriting symbol font `mincho' in version `bold'
-(Font)                  JY1/mc/m/n --> JY1/gt/m/n on input line 580.
-LaTeX Font Info:    Font shape `JT1/mc/m/n' will be
-(Font)              scaled to size 9.60999pt on input line 774.
-LaTeX Font Info:    Font shape `JY1/mc/m/n' will be
-(Font)              scaled to size 9.60999pt on input line 774.
+(Font)                  JY2/mc/m/n --> JY2/gt/m/n on input line 580.
+LaTeX Font Info:    Font shape `JT2/mc/m/n' will be
+(Font)              scaled to size 9.24683pt on input line 774.
+LaTeX Font Info:    Font shape `JY2/mc/m/n' will be
+(Font)              scaled to size 9.24683pt on input line 774.
 \fullwidth=\dimen166
-LaTeX Font Info:    Font shape `JT1/mc/m/n' will be
-(Font)              scaled to size 7.68799pt on input line 935.
-LaTeX Font Info:    Font shape `JY1/mc/m/n' will be
-(Font)              scaled to size 7.68799pt on input line 935.
+LaTeX Font Info:    Font shape `JT2/mc/m/n' will be
+(Font)              scaled to size 7.39746pt on input line 935.
+LaTeX Font Info:    Font shape `JY2/mc/m/n' will be
+(Font)              scaled to size 7.39746pt on input line 935.
 \c@part=\count274
 \c@chapter=\count275
 \c@section=\count276
@@ -142,18 +142,18 @@ Package: keyval 2022/05/29 v1.15 key=value parser (DPC)
 )
 LaTeX Font Info:    Redeclaring symbol font `mincho' on input line 354.
 LaTeX Font Info:    Overwriting symbol font `mincho' in version `normal'
-(Font)                  JY1/mc/m/n --> JY1/hmc/m/n on input line 354.
+(Font)                  JY2/mc/m/n --> JY2/hmc/m/n on input line 354.
 LaTeX Font Info:    Overwriting symbol font `mincho' in version `bold'
-(Font)                  JY1/gt/m/n --> JY1/hmc/m/n on input line 354.
+(Font)                  JY2/gt/m/n --> JY2/hmc/m/n on input line 354.
 LaTeX Font Info:    Overwriting symbol font `mincho' in version `bold'
-(Font)                  JY1/hmc/m/n --> JY1/hmc/bx/n on input line 356.
+(Font)                  JY2/hmc/m/n --> JY2/hmc/bx/n on input line 356.
 LaTeX Font Info:    Redeclaring math alphabet \mathgt on input line 357.
 LaTeX Font Info:    Overwriting math alphabet `\mathgt' in version `normal'
-(Font)                  JY1/gt/m/n --> JY1/hgt/m/n on input line 357.
+(Font)                  JY2/gt/m/n --> JY2/hgt/m/n on input line 357.
 LaTeX Font Info:    Overwriting math alphabet `\mathgt' in version `bold'
-(Font)                  JY1/gt/m/n --> JY1/hgt/m/n on input line 357.
+(Font)                  JY2/gt/m/n --> JY2/hgt/m/n on input line 357.
 LaTeX Font Info:    Overwriting math alphabet `\mathgt' in version `bold'
-(Font)                  JY1/hgt/m/n --> JY1/hgt/bx/n on input line 358.
+(Font)                  JY2/hgt/m/n --> JY2/hgt/bx/n on input line 358.
 
 (c:/texlive/2025/texmf-dist/tex/platex/japanese-otf/ajmacros.sty
 Package: ajmacros 2019/04/01 21:00 iNOUE Koich! <inoue@ma.ns.musashi-tech.ac.jp
@@ -285,9 +285,9 @@ Package: iftex 2024/12/12 v1.0g TeX engine tests
 \Gm@layoutvoffset=\dimen261
 \Gm@dimlist=\toks29
 )
-LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
+LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
 (Font)              scaled to size 9.24683pt on input line 68.
-LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
+LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
 (Font)              scaled to size 9.24683pt on input line 68.
 
 (c:/texlive/2025/texmf-dist/tex/latex/l3backend/l3backend-dvips.def
@@ -315,9 +315,9 @@ LaTeX Font Info:    Checking defaults for OMX/cmex/m/n on input line 68.
 LaTeX Font Info:    ... okay on input line 68.
 LaTeX Font Info:    Checking defaults for U/cmr/m/n on input line 68.
 LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for JY1/mc/m/n on input line 68.
+LaTeX Font Info:    Checking defaults for JY2/mc/m/n on input line 68.
 LaTeX Font Info:    ... okay on input line 68.
-LaTeX Font Info:    Checking defaults for JT1/mc/m/n on input line 68.
+LaTeX Font Info:    Checking defaults for JT2/mc/m/n on input line 68.
 LaTeX Font Info:    ... okay on input line 68.
 
 *geometry* detected driver: dvipdfm
@@ -335,14 +335,14 @@ LaTeX Font Info:    ... okay on input line 68.
 * \textheight=688.5567pt
 * \oddsidemargin=13.08827pt
 * \evensidemargin=13.08827pt
-* \topmargin=-36.8353pt
+* \topmargin=-36.83537pt
 * \headheight=20.0pt
-* \headsep=15.69719pt
-* \topskip=12.76073pt
+* \headsep=15.69727pt
+* \topskip=12.76065pt
 * \footskip=28.45792pt
-* \marginparwidth=18.49374pt
-* \marginparsep=18.49374pt
-* \columnsep=18.49374pt
+* \marginparwidth=18.49365pt
+* \marginparsep=18.49365pt
+* \columnsep=18.49365pt
 * \skip\footins=16.0pt plus 5.0pt minus 2.0pt
 * \hoffset=0.0pt
 * \voffset=0.0pt
@@ -353,65 +353,65 @@ LaTeX Font Info:    ... okay on input line 68.
 * \@reversemarginfalse
 * (1in=72.27pt=25.4mm, 1cm=28.453pt)
 
-LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 16.64429pt on input line 69.
-LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 16.64429pt on input line 69.
+LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
+(Font)              scaled to size 14.79492pt on input line 69.
+LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
+(Font)              scaled to size 14.79492pt on input line 69.
 
-LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <18> not available
+LaTeX Font Warning: Font shape `OT1/cmr/m/n' in size <16> not available
 (Font)              size <17.28> substituted on input line 69.
 
-LaTeX Font Info:    Font shape `JT1/utfj/m/-' will be
-(Font)              scaled to size 16.64429pt on input line 69.
-LaTeX Font Info:    Font shape `JY1/utfj/m/-' will be
-(Font)              scaled to size 16.64429pt on input line 69.
+LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
+(Font)              scaled to size 12.94556pt on input line 69.
+LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
+(Font)              scaled to size 12.94556pt on input line 69.
 [1
 
-] [2]
-LaTeX Font Info:    Font shape `JT1/hgt/m/n' will be
+]
+LaTeX Font Info:    Font shape `JT2/hgt/m/n' will be
 (Font)              scaled to size 9.24683pt on input line 70.
-LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
+LaTeX Font Info:    Font shape `JY2/hgt/m/n' will be
 (Font)              scaled to size 9.24683pt on input line 70.
-LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
+LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
 (Font)              scaled to size 19.17792pt on input line 70.
-LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
+LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
 (Font)              scaled to size 19.17792pt on input line 70.
-LaTeX Font Info:    Font shape `JT1/hmc/bx/n' in size <20.74> not available
-(Font)              Font shape `JT1/hgt/m/n' tried instead on input line 70.
-LaTeX Font Info:    Font shape `JT1/hgt/m/n' will be
+LaTeX Font Info:    Font shape `JT2/hmc/bx/n' in size <20.74> not available
+(Font)              Font shape `JT2/hgt/m/n' tried instead on input line 70.
+LaTeX Font Info:    Font shape `JT2/hgt/m/n' will be
 (Font)              scaled to size 19.17792pt on input line 70.
-LaTeX Font Info:    Font shape `JY1/hmc/bx/n' in size <20.74> not available
-(Font)              Font shape `JY1/hgt/m/n' tried instead on input line 70.
-LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
+LaTeX Font Info:    Font shape `JY2/hmc/bx/n' in size <20.74> not available
+(Font)              Font shape `JY2/hgt/m/n' tried instead on input line 70.
+LaTeX Font Info:    Font shape `JY2/hgt/m/n' will be
 (Font)              scaled to size 19.17792pt on input line 70.
-LaTeX Font Info:    Font shape `JT1/hmc/bx/n' in size <24.88> not available
-(Font)              Font shape `JT1/hgt/m/n' tried instead on input line 70.
-LaTeX Font Info:    Font shape `JT1/hgt/m/n' will be
+LaTeX Font Info:    Font shape `JT2/hmc/bx/n' in size <24.88> not available
+(Font)              Font shape `JT2/hgt/m/n' tried instead on input line 70.
+LaTeX Font Info:    Font shape `JT2/hgt/m/n' will be
 (Font)              scaled to size 23.0061pt on input line 70.
-LaTeX Font Info:    Font shape `JY1/hmc/bx/n' in size <24.88> not available
-(Font)              Font shape `JY1/hgt/m/n' tried instead on input line 70.
-LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
+LaTeX Font Info:    Font shape `JY2/hmc/bx/n' in size <24.88> not available
+(Font)              Font shape `JY2/hgt/m/n' tried instead on input line 70.
+LaTeX Font Info:    Font shape `JY2/hgt/m/n' will be
 (Font)              scaled to size 23.0061pt on input line 70.
  (./thesis.toc
-LaTeX Font Info:    Font shape `JT1/hgt/bx/n' in size <10> not available
-(Font)              Font shape `JT1/hgt/m/n' tried instead on input line 1.
-LaTeX Font Info:    Font shape `JT1/hgt/m/n' will be
+LaTeX Font Info:    Font shape `JT2/hgt/bx/n' in size <10> not available
+(Font)              Font shape `JT2/hgt/m/n' tried instead on input line 1.
+LaTeX Font Info:    Font shape `JT2/hgt/m/n' will be
 (Font)              scaled to size 9.24683pt on input line 1.
-LaTeX Font Info:    Font shape `JY1/hgt/bx/n' in size <10> not available
-(Font)              Font shape `JY1/hgt/m/n' tried instead on input line 1.
-LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
+LaTeX Font Info:    Font shape `JY2/hgt/bx/n' in size <10> not available
+(Font)              Font shape `JY2/hgt/m/n' tried instead on input line 1.
+LaTeX Font Info:    Font shape `JY2/hgt/m/n' will be
 (Font)              scaled to size 9.24683pt on input line 1.
-LaTeX Font Info:    Font shape `JT1/hmc/bx/n' in size <10> not available
-(Font)              Font shape `JT1/hgt/m/n' tried instead on input line 1.
-LaTeX Font Info:    Font shape `JT1/hgt/m/n' will be
+LaTeX Font Info:    Font shape `JT2/hmc/bx/n' in size <10> not available
+(Font)              Font shape `JT2/hgt/m/n' tried instead on input line 1.
+LaTeX Font Info:    Font shape `JT2/hgt/m/n' will be
 (Font)              scaled to size 9.24683pt on input line 1.
-LaTeX Font Info:    Font shape `JY1/hmc/bx/n' in size <10> not available
-(Font)              Font shape `JY1/hgt/m/n' tried instead on input line 1.
-LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
+LaTeX Font Info:    Font shape `JY2/hmc/bx/n' in size <10> not available
+(Font)              Font shape `JY2/hgt/m/n' tried instead on input line 1.
+LaTeX Font Info:    Font shape `JY2/hgt/m/n' will be
 (Font)              scaled to size 9.24683pt on input line 1.
-LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
+LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
 (Font)              scaled to size 6.47278pt on input line 2.
-LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
+LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
 (Font)              scaled to size 4.62341pt on input line 2.
 LaTeX Font Info:    Trying to load font information for U+msa on input line 2.
  (c:/texlive/2025/texmf-dist/tex/latex/amsfonts/umsa.fd
@@ -421,70 +421,70 @@ LaTeX Font Info:    Trying to load font information for U+msb on input line 2.
 
 (c:/texlive/2025/texmf-dist/tex/latex/amsfonts/umsb.fd
 File: umsb.fd 2013/01/14 v3.01 AMS symbols B
-) [3
+) [2
 
 ])
 \tf@toc=\write3
 \openout3 = `thesis.toc'.
 
- [4] (./thesis.lof)
+ [3] (./thesis.lof)
 \tf@lof=\write4
 \openout4 = `thesis.lof'.
 
-[5
+[4
 
 ] (./thesis.lot)
 \tf@lot=\write5
 \openout5 = `thesis.lot'.
 
- [6
+ [5
 
-] [7
+] [6
 
 ]
 第1章
-LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 78.
-LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 78.
-LaTeX Font Info:    Font shape `JT1/hmc/bx/n' in size <14.4> not available
-(Font)              Font shape `JT1/hgt/m/n' tried instead on input line 78.
-LaTeX Font Info:    Font shape `JT1/hgt/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 78.
-LaTeX Font Info:    Font shape `JY1/hmc/bx/n' in size <14.4> not available
-(Font)              Font shape `JY1/hgt/m/n' tried instead on input line 78.
-LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 78.
-[8
+LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
+(Font)              scaled to size 13.31541pt on input line 90.
+LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
+(Font)              scaled to size 13.31541pt on input line 90.
+LaTeX Font Info:    Font shape `JT2/hmc/bx/n' in size <14.4> not available
+(Font)              Font shape `JT2/hgt/m/n' tried instead on input line 90.
+LaTeX Font Info:    Font shape `JT2/hgt/m/n' will be
+(Font)              scaled to size 13.31541pt on input line 90.
+LaTeX Font Info:    Font shape `JY2/hmc/bx/n' in size <14.4> not available
+(Font)              Font shape `JY2/hgt/m/n' tried instead on input line 90.
+LaTeX Font Info:    Font shape `JY2/hgt/m/n' will be
+(Font)              scaled to size 13.31541pt on input line 90.
+[7
 
-] [9]
+] [8]
 第2章
-[10
+[9
 
-] [11]
+] [10]
 第3章
-LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 6.47278pt on input line 112.
-LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 4.62341pt on input line 112.
-[12
+LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
+(Font)              scaled to size 6.47278pt on input line 124.
+LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
+(Font)              scaled to size 4.62341pt on input line 124.
+[11
 
 ]
 File: output/fig_scene_cropped.png Graphic file (type bmp)
 <output/fig_scene_cropped.png>
-LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 8.32214pt on input line 128.
-LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 8.32214pt on input line 128.
-LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 5.5481pt on input line 128.
- [13] [14]
+LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
+(Font)              scaled to size 8.32214pt on input line 140.
+LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
+(Font)              scaled to size 8.32214pt on input line 140.
+LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
+(Font)              scaled to size 5.5481pt on input line 140.
+ [12] [13]
 第4章
 
-Overfull \hbox (12.52075pt too wide) in paragraph at lines 142--143
-[]\JY1/hgt/m/n/10 ダミ ー生成\OT1/cmr/m/n/10 : 64bit \JY1/hmc/m/n/10 符号を []\
-OT1/cmtt/m/n/10 build[]lowfreq[]from[]bits \JY1/hmc/m/n/10 で低周波振幅に写像し
- 、 []\OT1/cmtt/m/n/10 reinforce[]margin
+Overfull \hbox (12.52061pt too wide) in paragraph at lines 154--155
+[]\JY2/hgt/m/n/10 ダミ ー生成\OT1/cmr/m/n/10 : 64bit \JY2/hmc/m/n/10 符
+号を []\OT1/cmtt/m/n/10 build[]lowfreq[]from[]bits \JY2/hmc/m/n/10 で低周
+波振幅に写像し 、 []\OT1/cmtt/m/n/10 reinforce[]margin
  []
 
 File: output/figures/phash_masked_sis/data00_tuned/stats_phash.png Graphic file
@@ -495,18 +495,18 @@ type bmp)
 <output/figures/phash_masked_sis/data00_tuned/stats_mse.png>
 File: output/phash_masked_sis_eval/pipeline_top3.png Graphic file (type bmp)
 <output/phash_masked_sis_eval/pipeline_top3.png>
-[15
+[14
 
-] [16]
+] [15]
 第5章
-[17
+[16
 
 ]
-Underfull \hbox (badness 1496) in paragraph at lines 181--182
-[]\JY1/hmc/m/n/10 図 \OT1/cmr/m/n/10 5.1, \JY1/hmc/m/n/10 図 \OT1/cmr/m/n/10 5.
-2 \JY1/hmc/m/n/10 はオリジナルのみの結果 。 \OT1/cmr/m/n/10 Pre-ci-sion@1=100%\
-JY1/hmc/m/n/10 ， \OT1/cmr/m/n/10 Pre-ci-sion@5=20%\JY1/hmc/m/n/10 ， \OT1/cmr/
-m/n/10 Pre-ci-
+Underfull \hbox (badness 1496) in paragraph at lines 193--194
+[]\JY2/hmc/m/n/10 図 \OT1/cmr/m/n/10 5.1, \JY2/hmc/m/n/10 図 \OT1/cmr/m/n/10 
+5.2 \JY2/hmc/m/n/10 はオリジナルのみの結果 。 \OT1/cmr/m/n/10 Pre-c
+i-sion@1=100%\JY2/hmc/m/n/10 ， \OT1/cmr/m/n/10 Pre-ci-sion@5=20%\JY2/hmc/m/n/
+10 ， \OT1/cmr/m/n/10 Pre-ci-
  []
 
 File: output/results/masked_phash_eval_figs/precision_summary.png Graphic file 
@@ -521,50 +521,50 @@ png Graphic file (type bmp)
 File: output/results/masked_phash_eval_all_figs/time_summary_all_variants.png G
 raphic file (type bmp)
 <output/results/masked_phash_eval_all_figs/time_summary_all_variants.png>
-[18] [19] [20]
+[17] [18] [19]
 第6章
-[21
+[20
 
 ]
 第7章
-[22
+[21
 
 ]
-LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
-(Font)              No change on input line 248.
-LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
-(Font)              No change on input line 250.
-LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
-(Font)              No change on input line 252.
-LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
-(Font)              No change on input line 254.
-LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
-(Font)              No change on input line 256.
-LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
-(Font)              No change on input line 258.
-LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
+LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
 (Font)              No change on input line 260.
- [23
+LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
+(Font)              No change on input line 262.
+LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
+(Font)              No change on input line 264.
+LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
+(Font)              No change on input line 266.
+LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
+(Font)              No change on input line 268.
+LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
+(Font)              No change on input line 270.
+LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
+(Font)              No change on input line 272.
+ [22
 
 ] (./thesis.aux)
  ***********
-pLaTeX2e <2023-02-14>+1, based on
+pLaTeX2e <2023-02-14u04>+1, based on
 LaTeX2e <2025-11-01>
 L3 programming layer <2025-11-14>
  ***********
 
 
 LaTeX Font Warning: Size substitutions with differences
-(Font)              up to 0.72pt have occurred.
+(Font)              up to 1.28pt have occurred.
 
  ) 
 Here is how much of TeX's memory you used:
- 6299 strings out of 469647
- 90791 string characters out of 5472187
- 503647 words of memory out of 5000000
- 34999 multiletter control sequences out of 15000+600000
- 643251 words of font info for 119 fonts, out of 8000000 for 9000
+ 6298 strings out of 469647
+ 92545 string characters out of 5472212
+ 503999 words of memory out of 5000000
+ 35003 multiletter control sequences out of 15000+600000
+ 643569 words of font info for 120 fonts, out of 8000000 for 9000
  41 hyphenation exceptions out of 8191
- 57i,12n,65p,1575b,1025s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,12n,65p,1553b,1025s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on thesis.dvi (23 pages, 58308 bytes).
+Output written on thesis.dvi (22 pages, 58552 bytes).

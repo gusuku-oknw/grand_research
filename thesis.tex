@@ -23,16 +23,16 @@
 知覚暗号化の設計}
 
 \newcommand{\thesistype}{2025年度 卒業論文}
-\newcommand{\studentname}{玉城洸弥}
+\newcommand{\studentname}{玉城洵弥}
 \newcommand{\studentid}{1213033903}
-\newcommand{\advisor}{\UTF{6DF8}水 恒輔}
+\newcommand{\advisor}{清水 恒輔}
 \newcommand{\faculty}{工学部電気電子・情報工学科情報コース}
 \newcommand{\university}{岐阜大学}
 
-\author{氏名：\\\studentname\\学生番号：\studentid\\指導教員：\advisor}
+\author{氏名：\studentname\\学生番号：\studentid\\指導教員：\advisor}
 \date{2026年2月6日}
 
-\newcommand{\titlesize}{\fontsize{18pt}{23.4pt}\selectfont}
+\newcommand{\titlesize}{\fontsize{16pt}{20pt}\selectfont}
 
 \makeatletter
 \renewcommand{\maketitle}{
@@ -49,8 +49,8 @@
 {\titlesize{\faculty}\par}
 \vskip 36pt
 {\titlesize{\university}\par}
-\vskip 36pt
-{\titlesize\@date\par}
+\vskip 24pt
+{\fontsize{14pt}{18pt}\selectfont\@date\par}
 \end{center}
 \newpage
 }
@@ -72,7 +72,19 @@
 \listoftables
 
 \chapter*{概要}
-平文の画像特徴量をサーバに保持する従来の類似画像検索（Content-Based Image Retrieval; CBIR）は情報漏えいのリスクがある．そこでまず，プライバシー保護の観点から秘密画像共有（Secret Image Sharing; SIS）が必要となる．検索には特徴量の露出が不可欠であり，復元／非復元の二択では不十分である．そこで「検索のみ許可／閲覧は禁止」という中間状態を設ける段階開示が必要となる．次に，シェアのまま類似検索を行うためには軽量でロバストで，Hamming 距離で高速検索できる特徴量である pHash を用いるのが適している．しかし，シェア画像は暗号化・分散されているため，通常の pHash 検索では精度が低下する恐れがある．そこで本研究では，pHash の検索精度を落とさずに SIS 上で検索を可能にする知覚暗号化方式を設計する．本方式では，収集したシェア数に応じて検索専用の出力から復元許可へ段階的に切り替える．具体的には，収集したシェア数 $r$ が $k_1$ に達すると検索のみを許可し，$k_2$ に達すると復元を許可する（$k_1<k_2$，$r$ は収集したシェア数，$k_1,k_2$ は必要なシェア数）．$k_1$ では，検索に必要な低周波符号のみ一致する pHash 整合ダミーを返す．このダミーは，輪郭・文字・顔など人が内容を推測できる視覚情報を含まない（高周波成分はノイズ化し，視認性を意図的に失わせる）．COCO 派生データ（最大 500 クエリ）で評価した結果，オリジナル画像では Precision@1=100\%，Precision@5=20\%，Precision@10=10\% で平文とダミーが一致し，全20バリアントでも Precision@1=100\%，Precision@5=86.6\%，Precision@10=84.82\% で一致した．処理時間も 0.58/0.55 ms（オリジナル平文/ダミー），0.53/0.49 ms（全バリアント平文/ダミー）と同等，復元時間は $k_1$ 到達時に 121 ms，$k_2$ 到達時に 10.2 s となり，段階化できた．
+平文の画像特徴量をサーバに保持する従来の類似画像検索（Content-Based Image Retrieval; CBIR）には情報漏えいのリスクがある．
+そこでまず，プライバシー保護の観点から秘密画像共有（Secret Image Sharing; SIS）が必要となる．
+検索には特徴量の露出が不可欠であり，復元／非復元の二択では不十分である．
+そこで「検索のみ許可／閲覧は禁止」という中間状態を設ける段階開示が必要となる．
+次に，シェアのまま類似検索を行うためには軽量でロバストで，Hamming 距離で高速検索できる特徴量である pHash を用いるのが適している．
+しかし，シェア画像は暗号化・分散されているため，通常の pHash 検索では精度が低下する恐れがある．
+そこで本研究では，pHash の検索精度を落とさずに SIS 上で検索を可能にする知覚暗号化方式を設計する．
+本方式では，収集したシェア数に応じて検索専用の出力から復元許可へ段階的に切り替える．
+具体的には，収集したシェア数 $r$ が $k_1$ に達すると検索のみを許可し，$k_2$ に達すると復元を許可する（$k_1<k_2$，$r$ は収集したシェア数，$k_1,k_2$ は必要なシェア数）．
+$k_1$ では，検索に必要な低周波符号のみ一致する pHash 整合ダミーを返す．
+このダミーは，輪郭・文字・顔など人が内容を推測できる視覚情報を含まない（高周波成分はノイズ化し，視認性を意図的に失わせる）．
+COCO 派生データ（最大 500 クエリ）で評価した結果，オリジナル画像では Precision@1=100\%，Precision@5=20\%，Precision@10=10\% で平文とダミーが一致し，全20バリアントでも Precision@1=100\%，Precision@5=86.6\%，Precision@10=84.82\% で一致した．
+処理時間も 0.58/0.55 ms（オリジナル平文/ダミー），0.53/0.49 ms（全バリアント平文/ダミー）と同等，復元時間は $k_1$ 到達時に 121 ms，$k_2$ 到達時に 10.2 s となり，段階化できた．
 
 \chapter{はじめに}
 \section{背景}
