@@ -1,4 +1,4 @@
-This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.uptex) (TeX Live 2025) (preloaded format=uplatex 2025.12.13)  7 JAN 2026 14:27
+This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.uptex) (TeX Live 2025) (preloaded format=uplatex 2025.12.13)  7 JAN 2026 19:21
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -448,286 +448,84 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ] [7]
 第1章
 LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 124.
+(Font)              scaled to size 13.31541pt on input line 121.
 LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 124.
+(Font)              scaled to size 13.31541pt on input line 121.
 LaTeX Font Info:    Font shape `JT2/hmc/bx/n' in size <14.4> not available
-(Font)              Font shape `JT2/hgt/m/n' tried instead on input line 124.
+(Font)              Font shape `JT2/hgt/m/n' tried instead on input line 121.
 LaTeX Font Info:    Font shape `JT2/hgt/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 124.
+(Font)              scaled to size 13.31541pt on input line 121.
 LaTeX Font Info:    Font shape `JY2/hmc/bx/n' in size <14.4> not available
-(Font)              Font shape `JY2/hgt/m/n' tried instead on input line 124.
+(Font)              Font shape `JY2/hgt/m/n' tried instead on input line 121.
 LaTeX Font Info:    Font shape `JY2/hgt/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 124.
-! Undefined control sequence.
-l.125 ...写真などの機微画像には，\sout
-                                                  {画像内容そのもの...
-? ^^A% 取り消し線（\sout{}）を出すにはプリアンブルで以下
-が必要：
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? % \usepackage[normalem]{ulem}
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? 
-! Interruption.
-<to be read again> 
-                   {
-l.125 ...真などの機微画像には，\sout{
-                                                画像内容そのものを広
-? \section{背景}
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-H for help, X to quit.
-? 医療画像や監視映像，個人写真などの機微画像には，\sout
-{画像内容そのものを広く開示することなく，
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-H for help, X to quit.
-? 類似事例を検索して診断・治療方針の検討，臨床教育，
-研究用途に活用したいという要求がある．}
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-H for help, X to quit.
-? \uline{画像内容を広く開示せずに類似事例を検索し，診断
-・治療方針の検討や教育・研究に活用したいというニーズ
-がある．}
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-H for help, X to quit.
-? 実際，医療分野では\sout{Content-Based Medical Image Retrieval（CBMI
-R/CBIR）が，}
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-H for help, X to quit.
-? \uline{Content-Based Medical Image Retrieval（CBMIR；医療分野におけ
-るCBIR）が，}
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-H for help, X to quit.
-? 症例参照型の意思決定支援や教育支援のための基盤技術
-として位置づけられてきた\cite{muller2020mir,sotomayor2021cbmir,su20
-07decision_support}．
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-H for help, X to quit.
-? 一方で，こうした画像は患者情報や個人情報と結びつく
-ことが多く，
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-H for help, X to quit.
-? 「検索できる」こと自体が情報露出の入口になり得るた
-め，利便性とプライバシーの両立が課題となる．
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-H for help, X to quit.
-? 
-! Undefined control sequence.
-l.127 \uline
-            {画像内容を広く開示せずに類似事例を検索し，...
-
-? 従来のコンテンツベース画像検索（Content-Based Image Retrieval
-; CBIR）は，
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? 検索精度と運用容易性を優先し，画像特徴量（埋め込み
-やハッシュ等）をサーバ側で保持・照合する構成が一般的
-である．
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? しかしサーバを信頼しない（\sout{semi-honest / honest-but-curious
-}\uline{honest-but-curious（semi-honest）}）状況では，
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? (1) サーバが保持する特徴量，(2) 照合の中間結果や順位，
-(3) アクセスパターンやログといった周辺情報が攻撃面とな
-り得る．
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? これらが漏えいした場合，画像内容・属性の推測や，近
-傍関係（どの画像がどれに似ているか）に基づくメタデー
-タ露出が生じ得るため，
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? \sout{honest-but-curiousなクラウド（CSP）を想定した}%
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? \uline{クラウドサービス提供者（CSP）がhonest-but-curiousであ
-る状況を想定した}%
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? プライバシー保護CBIRが研究されてきた\cite{xu2017ppcbir_cloud,
-ferreira_iescbir}．
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? 
-! Undefined control sequence.
-l.128 実際，医療分野では\sout
-                                      {Content-Based Medical Image Retrieval...
-
-? 本研究では，さらに「サーバに平文画像を置かない」だ
-けでなく，
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? 画像そのものを秘密画像共有（Secret Image Sharing; SIS）によ
-り分散保持した画像集合を検索対象とする状況を扱う．
-Type <return> to proceed, S to scroll future error messages,
-R to run without stopping, Q to run quietly,
-I to insert something, E to edit your file,
-1 or ... or 9 to ignore the next 1 to 9 tokens of input,
-H for help, X to quit.
-? SISは画像を$n$個のシェアに分割し，所定数（閾値）以上
-のシェアが揃った場合にのみ復元できる一方，
-OK, entering \scrollmode...
-! Undefined control sequence.
-l.129 \uline
-            {Content-Based Medical Image Retrieval（CBMIR；医療分野に...
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-! Undefined control sequence.
-l.136 しかしサーバを信頼しない（\sout
-                                                  {semi-honest / honest-but-...
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-! Undefined control sequence.
-l.136 ...t{semi-honest / honest-but-curious}\uline
-                                                  {honest-but-curious（semi...
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-! Undefined control sequence.
-l.139 \sout
-           {honest-but-curiousなクラウド（CSP）を想定した}%
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
-! Undefined control sequence.
-l.140 \uline
-            {クラウドサービス提供者（CSP）がhonest-but-curious...
-The control sequence at the end of the top line
-of your error message was never \def'ed. If you have
-misspelled it (e.g., `\hobx'), type `I' and the correct
-spelling (e.g., `I\hbox'). Otherwise just continue,
-and I'll forget about whatever was undefined.
-
+(Font)              scaled to size 13.31541pt on input line 121.
 [8
 
-] [9]
-LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 222.
- [10] [11]
+] [9] [10] [11]
 第2章
 [12
 
 ]
 
-LaTeX Warning: Citation `multisecret_access' on page 13 undefined on input line
- 284.
+LaTeX Warning: Citation `tassa2007hierarchical' on page 13 undefined on input l
+ine 281.
 
 
-LaTeX Warning: Citation `progressive_vc_survey' on page 13 undefined on input l
-ine 285.
+LaTeX Warning: Citation `benaloh1988generalized' on page 13 undefined on input 
+line 281.
+
+
+LaTeX Warning: Citation `jin2005progressive_color' on page 13 undefined on inpu
+t line 282.
+
+
+LaTeX Warning: Citation `liu2015visual_crypto_book' on page 13 undefined on inp
+ut line 282.
 
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 288.
+(Font)              No change on input line 285.
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 289.
+(Font)              No change on input line 286.
 [13] [14]
 第3章
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 336.
+(Font)              No change on input line 333.
 [15
 
 ]
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 370.
+(Font)              No change on input line 367.
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 370.
+(Font)              No change on input line 367.
  [16]
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 422.
+(Font)              No change on input line 419.
  [17]
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 446.
+(Font)              No change on input line 443.
  [18]
 第4章
 LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
-(Font)              scaled to size 11.09619pt on input line 474.
+(Font)              scaled to size 11.09619pt on input line 471.
 LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
-(Font)              scaled to size 11.09619pt on input line 474.
+(Font)              scaled to size 11.09619pt on input line 471.
 LaTeX Font Info:    Font shape `JT2/hmc/bx/n' in size <12> not available
-(Font)              Font shape `JT2/hgt/m/n' tried instead on input line 474.
+(Font)              Font shape `JT2/hgt/m/n' tried instead on input line 471.
 LaTeX Font Info:    Font shape `JT2/hgt/m/n' will be
-(Font)              scaled to size 11.09619pt on input line 474.
+(Font)              scaled to size 11.09619pt on input line 471.
 LaTeX Font Info:    Font shape `JY2/hmc/bx/n' in size <12> not available
-(Font)              Font shape `JY2/hgt/m/n' tried instead on input line 474.
+(Font)              Font shape `JY2/hgt/m/n' tried instead on input line 471.
 LaTeX Font Info:    Font shape `JY2/hgt/m/n' will be
-(Font)              scaled to size 11.09619pt on input line 474.
+(Font)              scaled to size 11.09619pt on input line 471.
 [19
 
 ]
 
-LaTeX Warning: Citation `nist_sp800_186' on page 20 undefined on input line 529
+LaTeX Warning: Citation `nist_sp800_186' on page 20 undefined on input line 526
 .
 
 
-Overfull \hbox (12.14488pt too wide) in paragraph at lines 526--531
+Overfull \hbox (12.14488pt too wide) in paragraph at lines 523--528
 []\OT1/cmr/m/n/10 Shamir \JY2/hmc/m/n/10 秘密分散は有限体 $\U/msb/m/n/1
 0 F[]$ \JY2/hmc/m/n/10 上で実装し ， 復元は \OT1/cmr/m/n/10 La-grange 
 \JY2/hmc/m/n/10 補間により行う （[]\OT1/cmtt/m/n/10 lagrange[]interpola
@@ -739,11 +537,11 @@ File: output/figures/phash_masked_sis/data00_tuned/stats_phash.png Graphic file
  (type bmp)
 <output/figures/phash_masked_sis/data00_tuned/stats_phash.png>
 LaTeX Font Info:    Font shape `JT2/hmc/m/n' will be
-(Font)              scaled to size 8.32214pt on input line 555.
+(Font)              scaled to size 8.32214pt on input line 552.
 LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
-(Font)              scaled to size 8.32214pt on input line 555.
+(Font)              scaled to size 8.32214pt on input line 552.
 LaTeX Font Info:    Font shape `JY2/hmc/m/n' will be
-(Font)              scaled to size 5.5481pt on input line 555.
+(Font)              scaled to size 5.5481pt on input line 552.
 File: output/figures/phash_masked_sis/data00_tuned/stats_mse.png Graphic file (
 type bmp)
 <output/figures/phash_masked_sis/data00_tuned/stats_mse.png>
@@ -768,60 +566,68 @@ raphic file (type bmp)
 
 ]
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 734.
+(Font)              No change on input line 731.
 
-Underfull \hbox (badness 1838) in paragraph at lines 732--737
+Underfull \hbox (badness 1838) in paragraph at lines 729--734
 []\OT1/cmr/m/n/10 H. M^^?uller, ``Med-i-cal Im-age Re-trieval: Ap-pli-ca-tions 
 and Re-sources,'' in \OT1/cmr/m/it/10 Pro-ceed-ings
  []
 
 
-Underfull \hbox (badness 1769) in paragraph at lines 732--737
+Underfull \hbox (badness 1769) in paragraph at lines 729--734
 \OT1/cmr/m/it/10 of the ACM In-ter-na-tional Con-fer-ence on Mul-ti-me-dia Re-t
 rieval (ICMR 2020)\OT1/cmr/m/n/10 , 2020.
  []
 
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 741.
+(Font)              No change on input line 738.
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 747.
+(Font)              No change on input line 744.
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 752.
+(Font)              No change on input line 749.
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 758.
+(Font)              No change on input line 755.
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 764.
+(Font)              No change on input line 761.
 
-Underfull \hbox (badness 2318) in paragraph at lines 768--772
+Underfull \hbox (badness 2318) in paragraph at lines 765--769
 []\OT1/cmr/m/n/10 N. Krawetz, ``Looks Like It (Per-cep-tual Hash-ing),'' The Ha
 cker Fac-tor. $\OT1/cmtt/m/n/10 https : / /
  []
 
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 776.
+(Font)              No change on input line 773.
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 786.
+(Font)              No change on input line 783.
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 791.
+(Font)              No change on input line 788.
 [28
 
 ]
 LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
-(Font)              No change on input line 796.
-LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
-(Font)              No change on input line 800.
-LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
-(Font)              No change on input line 802.
-LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
+(Font)              No change on input line 793.
+LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
+(Font)              No change on input line 799.
+LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
 (Font)              No change on input line 804.
+LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
+(Font)              No change on input line 809.
+LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
+(Font)              No change on input line 813.
 LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
-(Font)              No change on input line 806.
+(Font)              No change on input line 823.
 LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
-(Font)              No change on input line 808.
+(Font)              No change on input line 825.
 LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
-(Font)              No change on input line 810.
+(Font)              No change on input line 827.
 LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
-(Font)              No change on input line 812.
+(Font)              No change on input line 829.
+LaTeX Font Info:    Kanji font shape `JY2/hgt/m/it' undefined
+(Font)              No change on input line 833.
+LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
+(Font)              No change on input line 835.
+LaTeX Font Info:    Kanji font shape `JY2/hmc/m/it' undefined
+(Font)              No change on input line 837.
  [29] (./thesis.aux)
  ***********
 pLaTeX2e <2023-02-14u04>+1, based on
@@ -841,12 +647,12 @@ LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
  ) 
 Here is how much of TeX's memory you used:
- 6407 strings out of 469647
- 94072 string characters out of 5472212
+ 6409 strings out of 469647
+ 94129 string characters out of 5472212
  506289 words of memory out of 5000000
- 35110 multiletter control sequences out of 15000+600000
+ 35112 multiletter control sequences out of 15000+600000
  644558 words of font info for 124 fonts, out of 8000000 for 9000
  41 hyphenation exceptions out of 8191
  57i,12n,65p,425b,1025s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on thesis.dvi (29 pages, 101160 bytes).
+Output written on thesis.dvi (29 pages, 102328 bytes).

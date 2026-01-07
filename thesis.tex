@@ -172,7 +172,6 @@ pHashは画像を小サイズに正規化した後にDCTを適用し，低周波
   \item pHash に基づく高速な類似検索を成立させ，実装・運用上の負担を抑えること．
 \end{enumerate}
 
-
 \section{目的}
 本研究が対象とするのは，SISで分散保持された機微画像集合に対し，原画像を復元（平文化）せずに類似検索を成立させたい状況である．
 類似検索を行う以上，検索用表現（特徴量やハッシュ値など）を比較に用いること自体は避けられない．
@@ -199,7 +198,6 @@ pHash整合ダミーは検索のための一致（pHashの一致）を満たす�
 輪郭・文字・顔など内容推定に資する視覚情報は高周波成分のマスク／ノイズ化により意図的に劣化させ，
 閲覧可能性（内容の可読性）を抑制する．
 すなわち本研究のLevel 1は，「検索の成立」と「閲覧の抑止」を両立させるために導入される中間段階である．
-
 
 \section{貢献}
 本研究は，秘密画像共有（Secret Image Sharing; SIS）で分散保持された画像集合に対して，
@@ -229,26 +227,29 @@ $r\ge k_2$で初めて復元（Level 2）を許可するという二つの閾値
 本研究は，秘密画像共有（Secret Image Sharing; SIS）により分散保持された画像集合に対して，
 原画像を復元（平文化）せずに類似画像検索を成立させることを目的とする．
 第1章では背景と課題設定を述べたため，本章では提案法の位置づけに必要な既存研究を整理する．
-具体的には，(i) 類似画像検索で用いられる特徴量（深層特徴と知覚ハッシュ），
-(ii) 暗号・秘密分散・多人数安全計算（Multi-Party Computation; MPC）によるプライバシー保護検索，
-(iii) 検索可能暗号（Searchable Encryption; SE）を用いた検索，
-(iv) 知覚ハッシュ（pHash）とその安全性・運用上の論点，
+具体的には，類似画像検索で用いられる特徴量（深層特徴と知覚ハッシュ），
+暗号・秘密分散・多人数安全計算（Multi-Party Computation; MPC）によるプライバシー保護検索，
+検索可能暗号（Searchable Encryption; SE）を用いた検索，
+知覚ハッシュ（pHash）とその安全性・運用上の論点，
 の観点から関連研究を概観する．
 
 \section{類似画像検索に用いられる特徴量：深層特徴と知覚ハッシュ}
 高精度な類似画像検索では，Convolutional Neural Network（CNN）に基づく埋め込み（深層特徴）が広く用いられてきた．
 VGGやResNet等で抽出される特徴量は，画像の意味的類似をよく捉える一方で，次元数が数百から数千規模に及ぶことが多く，
 暗号化や秘密分散，MPCを併用して距離計算を行う場合，計算量・通信量が支配的になりやすいことが報告されている\cite{Xia2020}．
-このため，プライバシー保護を要する設定では，(1) 特徴量自体を低次元化する，
-(2) 距離計算を近似・簡略化する，(3) バイナリ化してビット演算中心にする，
-といった方向でコストを抑える工夫が検討されている．
+このため，プライバシー保護を要する設定では，コストを抑えるために次の工夫が検討されている．
+\begin{itemize}
+  \item 特徴量自体を低次元化する．
+  \item 距離計算を近似・簡略化する．
+  \item 特徴量をバイナリ化し，ビット演算中心で照合する．
+\end{itemize}
 
 この文脈で，知覚ハッシュ（perceptual hash）は，画像を短いビット列へ写像し，
 Hamming距離により高速比較できる点で実装・運用上の利点が大きい．
 とりわけpHashは，画像を小サイズに正規化した後にDCTを適用し，低周波成分の符号から
 64bit程度のハッシュ値（ビット列）を生成する軽量手法として広く知られている\cite{Venkatesan2000,phash_hackerfactor}．
 一方で，知覚ハッシュは「類似性を保存する」設計であるため，照合の可否や距離が外部から反復的に観測できる状況では，
-検索機能が推測の手掛かり（オラクル）となり得るという論点がある（第\ref{sec:phash_related}節）．
+検索機能が推測の手掛かり（オラクル）となり得るという論点がある（第\ref{sec:phash_related}節参照）．
 したがって，pHashの軽量性を活かしつつ，どの情報をどの段階で開示するかまで含めた設計が重要となる．
 
 \section{秘密分散・MPCを用いたプライバシー保護検索}
@@ -260,10 +261,13 @@ Hamming距離により高速比較できる点で実装・運用上の利点が�
 
 しかし，既存研究の多くは「特徴量ベクトル（平文特徴の秘匿表現）」を前提に，
 秘匿距離計算をどう成立させるかに主眼が置かれている．
-これに対して本研究は，(i) 検索対象がSISにより画像そのものとして分散保持されていること，
-(ii) 運用上「検索のみ許可／閲覧は禁止」という中間状態を明確に分離したいこと，
-(iii) そのために検索用の出力形式自体を設計し直す必要があること，
-を重視している点で焦点が異なる．
+これに対して本研究は，
+\begin{itemize}
+  \item 検索対象が SIS により「画像そのもの」として分散保持されていること
+  \item 運用上「検索のみ許可／閲覧は禁止」という中間状態を明確に分離したいこと
+  \item そのために検索用の出力形式自体を設計し直す必要があること
+\end{itemize}
+
 特に，SISでは閾値未満のシェア集合から意味情報が得られないよう設計されるため，
 復元を前提とする運用では「検索のたびに復元してから特徴抽出」という手順になりやすく，
 計算・通信コストと権限制御の両面で負担が大きい．
@@ -274,8 +278,8 @@ Hamming距離により高速比較できる点で実装・運用上の利点が�
 秘密分散には，復元に必要な閾値が単一の（$k$-out-of-$n$）型だけでなく，
 複数の閾値・アクセス構造を与えることで，異なる権限レベルに応じて復元可能な秘密を切り替える研究がある．
 たとえばmulti-secret / multi-threshold型の枠組みでは，参加者集合（あるいはシェア数）に応じて
-複数の秘密を復元できるようにアクセス構造を設計する\cite{multisecret_access}．
-また，progressive（段階的）な復元を扱う系譜では，シェアの増加に伴って復元画像の品質が徐々に向上すること自体を目的とする研究がある\cite{progressive_vc_survey}．
+複数の秘密を復元できるようにアクセス構造を設計する\cite{tassa2007hierarchical,benaloh1988generalized}．
+また，progressive（段階的）な復元を扱う系譜では，シェアの増加に伴って復元画像の品質が徐々に向上すること自体を目的とする研究がある\cite{jin2005progressive_color,liu2015visual_crypto_book}．
 
 本研究が狙うのは，画質が連続的に向上することそのものではなく，
 「検索専用の出力」と「閲覧可能な復元画像」を\emph{離散的に}分離し，
@@ -789,6 +793,32 @@ A.~Agarwal, S.~S.~Rana, and others,
 \emph{Pattern Analysis and Applications}, 2018.
 doi:10.1007/s10044-016-0571-x.
 
+\bibitem{tassa2007hierarchical}
+T.~Tassa,
+``Hierarchical threshold secret sharing,''
+\emph{Journal of Cryptology}, 2007.
+
+\bibitem{benaloh1988generalized}
+J.~Benaloh and J.~Leichter,
+``Generalized secret sharing and monotone functions,''
+in \emph{Advances in Cryptology---CRYPTO '88 (LNCS)}, 1988.
+
+\bibitem{jin2005progressive_color}
+J.~Jin, W.~Q.~Yan, and M.~S.~Kankanhalli,
+``Progressive color visual cryptography,''
+\emph{Journal of Electronic Imaging}, 2005.
+
+\bibitem{liu2015visual_crypto_book}
+F.~Liu and W.~Q.~Yan (eds.),
+\emph{Visual Cryptography for Image Processing and Security},
+Springer, 2015.
+
+\bibitem{nist_sp800_186}
+L.~Chen, D.~Moody, A.~Regenscheid, A.~Robinson, and K.~Randall,
+``Recommendations for Discrete Logarithm-based Cryptography: Elliptic Curve Domain Parameters,''
+NIST Special Publication 800-186, 2023.
+doi:10.6028/NIST.SP.800-186.
+
 \bibitem{Xia2020}
 Z. Xia, X. Wang, L. Yao, et al., ``A privacy-preserving CBIR scheme based on secret sharing,'' \textit{IEEE Access}, 2020.
 \bibitem{Zhang2024}
@@ -798,7 +828,9 @@ M. Barni, P. Failla, R. Lazzeretti, et al., ``A privacy-preserving framework for
 \bibitem{Troncoso2017}
 J. R. Troncoso-Pastoriza, S. Katzenbeisser, and M. Celik, ``Privacy-preserving approximate search for multimedia,'' \textit{IEEE Transactions on Circuits and Systems for Video Technology}, 2017.
 \bibitem{Tian2024}
-Y. Tian, X. Wang, and D. He, ``Secure image retrieval based on feature index tree searchable encryption,'' \textit{Information Sciences}, 2024.
+M.~Tian, Y.~Zhang, Y.~Zhang, X.~Xiao, and W.~Wen,
+``A privacy-preserving image retrieval scheme with access control based on searchable encryption in media cloud,''
+\emph{Cybersecurity}, vol.~7, Art.~22, 2024.
 \bibitem{Xia2021}
 Z. Xia, Y. Zhu, X. Sun, and Q. Wang, ``Searchable image encryption for privacy-preserving CBIR,'' \textit{IEEE Access}, 2021.
 \bibitem{Venkatesan2000}
@@ -806,5 +838,3 @@ R. Venkatesan, S.-M. Koon, M. Jakubowski, and P. Moulin, ``Robust image hashing,
 \end{thebibliography}
 
 \end{document}
-
-
