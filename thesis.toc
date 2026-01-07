@@ -10,14 +10,16 @@
 \contentsline {section}{\numberline {2.5}知覚ハッシュ（pHash）に関する研究}{14}{}%
 \contentsline {chapter}{\numberline {第3章}提案手法}{15}{}%
 \contentsline {section}{\numberline {3.1}動機付け}{15}{}%
-\contentsline {section}{\numberline {3.2}記号と前提}{16}{}%
-\contentsline {subsection}{\numberline {3.2.1}記号}{16}{}%
-\contentsline {subsection}{\numberline {3.2.2}前提（SISと脅威モデル）}{16}{}%
-\contentsline {subsection}{\numberline {3.2.3}三段階開示モデル（Level 0/1/2）}{16}{}%
+\contentsline {section}{\numberline {3.2}問題設定と記号}{16}{}%
+\contentsline {subsection}{\numberline {3.2.1}問題設定（システムモデル）}{16}{}%
+\contentsline {subsection}{\numberline {3.2.2}記号}{16}{}%
+\contentsline {subsection}{\numberline {3.2.3}脅威モデル}{16}{}%
+\contentsline {subsection}{\numberline {3.2.4}pHashの計算手順}{16}{}%
+\contentsline {subsection}{\numberline {3.2.5}三段階開示モデル（Level 0/1/2）}{17}{}%
 \contentsline {section}{\numberline {3.3}二段閾値SIS（検索用秘密と復元用秘密の同時分散）}{17}{}%
-\contentsline {section}{\numberline {3.4}pHash整合ダミーの生成}{17}{}%
+\contentsline {section}{\numberline {3.4}pHash整合ダミーの生成}{18}{}%
 \contentsline {section}{\numberline {3.5}安全性の扱い（Shamirの保証とダミーの評価）}{18}{}%
-\contentsline {section}{\numberline {3.6}検索パイプライン}{18}{}%
+\contentsline {section}{\numberline {3.6}検索パイプライン}{19}{}%
 \contentsline {chapter}{\numberline {第4章}条件・手順}{20}{}%
 \contentsline {section}{\numberline {4.1}実装}{20}{}%
 \contentsline {subsection}{\numberline {4.1.1}実装方針と依存関係}{20}{}%

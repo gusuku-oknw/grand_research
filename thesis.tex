@@ -287,6 +287,29 @@ Hamming距離により高速比較できる点で実装・運用上の利点が�
 したがって，既存の多層／多閾値アクセス構造の考え方に近い一方で，
 検索用表現（pHash）と整合する「検索専用出力」を構成する設計は，既存研究では十分に整理されていない．
 
+\section{段階開示・多層SISに関する研究}
+\label{sec:related_multilevel}
+
+秘密分散（Secret Sharing）は，単一の$(k,n)$閾値型に限らず，
+一般のアクセス構造を実現する枠組みや，多層（階層）構造を扱う拡張が研究されている．
+たとえばBenaloh--Leichterは，任意の単調アクセス構造を単調論理式として表現し，
+それに対応する秘密分散を構成する一般化手法を与えた~\cite{benaloh1990gss}．
+またTassaは，参加者が階層化された状況で，上位層の参加者を少数含むだけで復元可能になるような
+階層閾値アクセス構造に対して，理想的（ideal）な秘密分散を与えている~\cite{tassa2007hierarchical}．
+
+一方，画像を対象とする秘密画像共有（Secret Image Sharing; SIS）や視覚暗号（Visual Cryptography; VC）では，
+シェア数の増加に伴って復元画像の視認性が向上する「progressive（段階的）復元」を目的とする系譜がある．
+VCの代表例としてNaor--Shamirの視覚暗号が知られ~\cite{naor1994visualcrypto}，
+その拡張としてカラー画像に対するprogressive視覚暗号も提案されている~\cite{jin2005progressive_color}．
+またSIS側でも，より多くのシェアを用いるほど復元品質が向上するPSIS（Progressive SIS）を扱う研究が報告されている~\cite{xiong2021cppsis}．
+これらの体系的整理として，視覚暗号を扱う書籍も存在する~\cite{liu2015visualcrypto_book}．
+
+本研究が狙うのは，復元品質が連続的に向上すること自体ではなく，
+「検索専用の出力」と「閲覧可能な復元画像」を\emph{離散的に}分離し，
+閾値に応じて\emph{開示する情報の種類}を切り替える点にある．
+特に，知覚ハッシュ（pHash）と整合する検索専用出力（pHash整合ダミー）を構成して検索を成立させつつ，
+閲覧につながる視覚情報を抑制する設計は，少なくとも上記の多層秘密分散／progressive SIS・VCの主要文献では明示的に議論されていない．
+
 \section{検索可能暗号（SE）によるプライバシー保護検索}
 検索可能暗号（SE）を用いて，暗号化したまま検索を行う研究も存在する．
 画像検索では，特徴量を暗号化してインデックスを構築し，暗号化状態で検索を行う方式が提案されている\cite{Tian2024}．
@@ -367,7 +390,8 @@ pHashは知覚ハッシュの一種であり，画像を正規化してDCTに基
 \subsection{pHashの計算手順}
 \label{sec:phash_detail}
 pHashは標準的手順に従い，次の手順で64bitのビット列$b$を得る：
-\begin{enumerate}[label=(\roman*)]
+\begin{enumerate}
+  \renewcommand{\labelenumi}{(\roman{enumi})}
   \item 画像を$32\times32$のグレースケールに正規化する．
   \item 離散コサイン変換（Discrete Cosine Transform; DCT）を適用する．
   \item 左上の低周波ブロック（$8\times8$相当）を取り出す．
@@ -418,6 +442,7 @@ pHashは標準的手順に従い，次の手順で64bitのビット列$b$を得�
 \]
 と定義し，$s_L$は閾値$k_1$で復元可能，$s_H$は閾値$k_2$で復元可能となるように分散する．
 
+多閾値（multi-threshold）／多層（multi-level）のアクセス構造として整理できる（第\ref{sec:related_multilevel}節）．
 実装として最も直接的には，Shamir秘密分散を二回独立に行い，各参加者$i$に対して
 \[
   \mathrm{share}_i = \bigl(i,\ \mathrm{share}_i^{L},\ \mathrm{share}_i^{H}\bigr)
@@ -491,12 +516,12 @@ $r\ge k_2$では原画像$I$を復元して必要に応じて平文側の処理�
 このように，閾値到達に応じて「検索専用の入力」と「復元入力」を切り替えることで，
 検索と閲覧（復元）の権限・コストを段階的に分離する．
 
-\chapter{条件・手順}
+\chapter{実験}
 \label{chap:conditions}
 本章では，第3章で述べた三段階開示方式を，Python 実装と実験手順として具体化する．
 あわせて，評価で用いる実装上の設定（パラメータ，乱数の扱い，指標の算出方法）も本章で明確化する．
 
-\section{実装}
+\section{条件・手順}
 
 \subsection{実装方針と依存関係}
 実装は Python 3 系で構築し，数値計算に NumPy，画像の入出力・リサイズに Pillow を用いた．
