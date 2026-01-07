@@ -35,55 +35,59 @@
 \@writefile{lot}{\addvspace {10\jsc@mpt }}
 \@writefile{toc}{\contentsline {section}{\numberline {3.1}動機付け}{15}{}\protected@file@percent }
 \@writefile{toc}{\contentsline {section}{\numberline {3.2}記号と前提}{16}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.3}三段階開示モデル（Level 0/1/2）}{16}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.4}二段閾値SIS（検索用秘密と復元用秘密の同時分散）}{17}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.5}pHash整合ダミーの生成}{17}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.6}安全性の扱い（Shamirの保証とダミーの評価）}{18}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {3.7}検索パイプライン}{18}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {chapter}{\numberline {第4章}条件・手順}{19}{}\protected@file@percent }
+\newlabel{sec:notation}{{3.2}{16}{記号と前提}{section.3.2}{}}
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.1}記号}{16}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.2}前提（SISと脅威モデル）}{16}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {3.2.3}三段階開示モデル（Level 0/1/2）}{16}{}\protected@file@percent }
+\newlabel{sec:three_level_model}{{3.2.3}{16}{三段階開示モデル（Level 0/1/2）}{subsection.3.2.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {3.3}二段閾値SIS（検索用秘密と復元用秘密の同時分散）}{17}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.4}pHash整合ダミーの生成}{17}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.5}安全性の扱い（Shamirの保証とダミーの評価）}{18}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {3.6}検索パイプライン}{18}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{\numberline {第4章}条件・手順}{20}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\jsc@mpt }}
 \@writefile{lot}{\addvspace {10\jsc@mpt }}
-\newlabel{chap:conditions}{{4}{19}{検索パイプライン}{chapter.4}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.1}実装}{19}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.1}実装方針と依存関係}{19}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.2}pHash 計算と DCT/IDCT の実装}{19}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.3}pHash 整合ダミー生成の実装}{19}{}\protected@file@percent }
+\newlabel{chap:conditions}{{4}{20}{検索パイプライン}{chapter.4}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.1}実装}{20}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.1}実装方針と依存関係}{20}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.2}pHash 計算と DCT/IDCT の実装}{20}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.3}pHash 整合ダミー生成の実装}{20}{}\protected@file@percent }
 \citation{nist_sp800_186}
-\@writefile{toc}{\contentsline {subsubsection}{低周波ブロックの構成}{20}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{符号反転を避けるためのマージン補強}{20}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{高周波の無構造化とダミー画像の生成}{20}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.4}二段階 Shamir（低閾値・高閾値）の実装}{20}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{有限体と補間}{20}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsubsection}{秘密の符号化（チャンク化）}{20}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces pHash 距離の分布（原画像平文／$k_1$ ダミー／$r<k_1$ ノイズ）}}{21}{}\protected@file@percent }
-\newlabel{fig:mask-phash}{{4.1}{21}{評価に用いる指標の算出と可視化}{figure.4.1}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces PSNR の分布（ダミーと原画像）}}{21}{}\protected@file@percent }
-\newlabel{fig:mask-mse}{{4.2}{21}{評価に用いる指標の算出と可視化}{figure.4.2}{}}
-\@writefile{toc}{\contentsline {subsubsection}{パラメータ設定}{21}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.5}評価に用いる指標の算出と可視化}{21}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces ダミー生成の途中出力例（pHash 符号$\rightarrow $低周波補強$\rightarrow 32\times 32$ 空間画像）}}{22}{}\protected@file@percent }
-\newlabel{fig:dummy-top3}{{4.3}{22}{評価に用いる指標の算出と可視化}{figure.4.3}{}}
-\@writefile{toc}{\contentsline {section}{\numberline {4.2}実験条件・手順}{22}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2.1}評価指標}{22}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2.2}データと派生画像の生成}{22}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.2.3}検索・比較の手順}{22}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.3}結果}{23}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.1}pHash 距離分布の確認}{23}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.2}検索精度と時間（オリジナル評価）}{23}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.3}バリアント評価（全 20 バリアント）}{24}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {section}{\numberline {4.4}考察}{24}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.1}本実験で示せたこと}{24}{}\protected@file@percent }
-\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.2}本実験で示せていないこと（安全性評価の範囲）}{24}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces Precision（平均値，オリジナル評価；各クエリの正解は1件）}}{25}{}\protected@file@percent }
-\newlabel{fig:search-original-prec}{{4.4}{25}{本実験で示せていないこと（安全性評価の範囲）}{figure.4.4}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces Latency（平均値，オリジナル評価）}}{25}{}\protected@file@percent }
-\newlabel{fig:search-original-time}{{4.5}{25}{本実験で示せていないこと（安全性評価の範囲）}{figure.4.5}{}}
-\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces 評価した20バリアントの例（mapping.json）}}{26}{}\protected@file@percent }
-\@writefile{lof}{\contentsline {figure}{\numberline {4.6}{\ignorespaces Precision@1（バリアント別，plain vs dummy\_k1）}}{26}{}\protected@file@percent }
-\newlabel{fig:search-all-prec}{{4.6}{26}{本実験で示せていないこと（安全性評価の範囲）}{figure.4.6}{}}
-\@writefile{lof}{\contentsline {figure}{\numberline {4.7}{\ignorespaces Latency（バリアント別，plain vs dummy\_k1）}}{26}{}\protected@file@percent }
-\newlabel{fig:search-all-time}{{4.7}{26}{本実験で示せていないこと（安全性評価の範囲）}{figure.4.7}{}}
-\@writefile{toc}{\contentsline {chapter}{\numberline {第5章}おわりに}{27}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{低周波ブロックの構成}{21}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{符号反転を避けるためのマージン補強}{21}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{高周波の無構造化とダミー画像の生成}{21}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.4}二段階 Shamir（低閾値・高閾値）の実装}{21}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{有限体と補間}{21}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsubsection}{秘密の符号化（チャンク化）}{21}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.1}{\ignorespaces pHash 距離の分布（原画像平文／$k_1$ ダミー／$r<k_1$ ノイズ）}}{22}{}\protected@file@percent }
+\newlabel{fig:mask-phash}{{4.1}{22}{評価に用いる指標の算出と可視化}{figure.4.1}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.2}{\ignorespaces PSNR の分布（ダミーと原画像）}}{22}{}\protected@file@percent }
+\newlabel{fig:mask-mse}{{4.2}{22}{評価に用いる指標の算出と可視化}{figure.4.2}{}}
+\@writefile{toc}{\contentsline {subsubsection}{パラメータ設定}{22}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.1.5}評価に用いる指標の算出と可視化}{22}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.3}{\ignorespaces ダミー生成の途中出力例（pHash 符号$\rightarrow $低周波補強$\rightarrow 32\times 32$ 空間画像）}}{23}{}\protected@file@percent }
+\newlabel{fig:dummy-top3}{{4.3}{23}{評価に用いる指標の算出と可視化}{figure.4.3}{}}
+\@writefile{toc}{\contentsline {section}{\numberline {4.2}実験条件・手順}{23}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2.1}評価指標}{23}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2.2}データと派生画像の生成}{23}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.2.3}検索・比較の手順}{23}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.3}結果}{24}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.1}pHash 距離分布の確認}{24}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.2}検索精度と時間（オリジナル評価）}{24}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.3.3}バリアント評価（全 20 バリアント）}{25}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {section}{\numberline {4.4}考察}{25}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.1}本実験で示せたこと}{25}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {subsection}{\numberline {4.4.2}本実験で示せていないこと（安全性評価の範囲）}{25}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.4}{\ignorespaces Precision（平均値，オリジナル評価；各クエリの正解は1件）}}{26}{}\protected@file@percent }
+\newlabel{fig:search-original-prec}{{4.4}{26}{本実験で示せていないこと（安全性評価の範囲）}{figure.4.4}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.5}{\ignorespaces Latency（平均値，オリジナル評価）}}{26}{}\protected@file@percent }
+\newlabel{fig:search-original-time}{{4.5}{26}{本実験で示せていないこと（安全性評価の範囲）}{figure.4.5}{}}
+\@writefile{lot}{\contentsline {table}{\numberline {4.1}{\ignorespaces 評価した20バリアントの例（mapping.json）}}{27}{}\protected@file@percent }
+\@writefile{lof}{\contentsline {figure}{\numberline {4.6}{\ignorespaces Precision@1（バリアント別，plain vs dummy\_k1）}}{27}{}\protected@file@percent }
+\newlabel{fig:search-all-prec}{{4.6}{27}{本実験で示せていないこと（安全性評価の範囲）}{figure.4.6}{}}
+\@writefile{lof}{\contentsline {figure}{\numberline {4.7}{\ignorespaces Latency（バリアント別，plain vs dummy\_k1）}}{27}{}\protected@file@percent }
+\newlabel{fig:search-all-time}{{4.7}{27}{本実験で示せていないこと（安全性評価の範囲）}{figure.4.7}{}}
+\@writefile{toc}{\contentsline {chapter}{\numberline {第5章}おわりに}{28}{}\protected@file@percent }
 \@writefile{lof}{\addvspace {10\jsc@mpt }}
 \@writefile{lot}{\addvspace {10\jsc@mpt }}
 \bibcite{muller2020mir}{1}
@@ -97,7 +101,7 @@
 \bibcite{pha_robustness_2024}{9}
 \bibcite{guo2012multithreshold}{10}
 \bibcite{progressive_vc_acm}{11}
-\@writefile{toc}{\contentsline {chapter}{参考文献}{28}{}\protected@file@percent }
+\@writefile{toc}{\contentsline {chapter}{参考文献}{29}{}\protected@file@percent }
 \bibcite{progressive_vc_springer}{12}
 \bibcite{tassa2007hierarchical}{13}
 \bibcite{benaloh1988generalized}{14}
@@ -111,4 +115,4 @@
 \bibcite{Tian2024}{22}
 \bibcite{Xia2021}{23}
 \bibcite{Venkatesan2000}{24}
-\gdef \@abspage@last{29}
+\gdef \@abspage@last{30}
