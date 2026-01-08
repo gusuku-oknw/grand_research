@@ -278,8 +278,8 @@ Hamming距離により高速比較できる点で実装・運用上の利点が�
 秘密分散には，復元に必要な閾値が単一の（$k$-out-of-$n$）型だけでなく，
 複数の閾値・アクセス構造を与えることで，異なる権限レベルに応じて復元可能な秘密を切り替える研究がある．
 たとえばmulti-secret / multi-threshold型の枠組みでは，参加者集合（あるいはシェア数）に応じて
-複数の秘密を復元できるようにアクセス構造を設計する\cite{tassa2007hierarchical,benaloh1988generalized}．
-また，progressive（段階的）な復元を扱う系譜では，シェアの増加に伴って復元画像の品質が徐々に向上すること自体を目的とする研究がある\cite{jin2005progressive_color,liu2015visual_crypto_book}．
+複数の秘密を復元できるようにアクセス構造を設計する\cite{tassa2007hierarchical,benaloh1988gss}．
+また，progressive（段階的）な復元を扱う系譜では，シェアの増加に伴って復元画像の品質が徐々に向上すること自体を目的とする研究がある\cite{jin2005progressive_color,liu2015visualcrypto_book}．
 
 本研究が狙うのは，画質が連続的に向上することそのものではなく，
 「検索専用の出力」と「閲覧可能な復元画像」を\emph{離散的に}分離し，
@@ -293,7 +293,7 @@ Hamming距離により高速比較できる点で実装・運用上の利点が�
 秘密分散（Secret Sharing）は，単一の$(k,n)$閾値型に限らず，
 一般のアクセス構造を実現する枠組みや，多層（階層）構造を扱う拡張が研究されている．
 たとえばBenaloh--Leichterは，任意の単調アクセス構造を単調論理式として表現し，
-それに対応する秘密分散を構成する一般化手法を与えた~\cite{benaloh1990gss}．
+それに対応する秘密分散を構成する一般化手法を与えた~\cite{benaloh1988gss}．
 またTassaは，参加者が階層化された状況で，上位層の参加者を少数含むだけで復元可能になるような
 階層閾値アクセス構造に対して，理想的（ideal）な秘密分散を与えている~\cite{tassa2007hierarchical}．
 
@@ -612,6 +612,15 @@ pHash 距離（Hamming 距離）の分布を比較する（図\ref{fig:mask-phas
 \label{chap:conditions}
 本章では，第3章で述べた三段階開示方式を，Python 実装と実験手順として具体化する．
 あわせて，評価で用いる実装上の設定（パラメータ，乱数の扱い，指標の算出方法）も本章で明確化する．
+本章の導入として，原画像・ノイズ（$r<k_1$）・pHash 整合ダミー（$k_1\le r<k_2$）・復元画像（$r\ge k_2$）の
+代表例を図\ref{fig:exp-grid}に示す．
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=0.95\linewidth]{output/figures/phash_masked_sis/data00/grid_small.png}
+  \caption{三段階出力の可視化例（原画像／ノイズ／pHash 整合ダミー／復元）}
+  \label{fig:exp-grid}
+\end{figure}
 
 \section{条件・手順}
 
@@ -661,7 +670,7 @@ $k_1$ 到達時に得られるダミー画像の pHash による検索（dummy\_
 さらに閾値 $\tau=8$ を用い，距離が閾値以下の候補をヒットとして扱う設定とした．
 本設定により，各クエリについて上位 $K\in\{1,5,10\}$ の Precision@K/Recall@K と処理時間を集計した．
 
-\section{結果}
+\section{結果・考察}
 本節では，(i) pHash 距離分布，(ii) 検索精度（Precision@K/Recall@K），(iii) 処理時間を
 plain と dummy\_k1 で比較し，$k_1$ 到達時の検索段階で平文と同等の挙動を維持できるかを確認する．
 
@@ -686,16 +695,13 @@ Precision@5 や Precision@10 は評価設定（$|G(q)|=1$）に依存して値�
 
 \subsection{バリアント評価（全 20 バリアント）}
 次に，全 20 バリアント条件では正解集合を「同一元画像から生成された派生画像群」とし，
-\texttt{--per\_variant\_plots} によりバリアントごとの精度と時間を集計した．
+によりバリアントごとの精度と時間を集計した．
 全バリアント平均として Precision@1=100\%，Precision@5=86.6\%，Precision@10=84.82\%，
 Recall@10=42.41\% が得られ，これらの値は plain と dummy\_k1 で一致した（図\ref{fig:search-all-prec}）．
 これは，dummy\_k1 が pHash 計算に影響する低周波側の条件を一致させる設計であり，
 比較が pHash（Hamming 距離）のみで完結するため，候補生成と順位付けが一致し得ることを反映している．
 処理時間も 0.527 ms/query（plain）と 0.494 ms/query（dummy\_k1）で差が小さく（図\ref{fig:search-all-time}），
 $k_1$ 到達時の検索段階で計算負担を増やさずに適用できることを示している．
-
-\section{考察}
-本節では，本実験で示せたこと／示せていないことを整理し，安全性評価の範囲と今後の検証課題を明確化する．
 
 \subsection{本実験で示せたこと}
 本実装条件では，「検索段階（$k_1$ 到達）において，平文検索と同等のランキング結果・同等の処理時間を維持できる」ことを確認した．
@@ -850,23 +856,39 @@ doi:10.1007/s10044-016-0571-x.
 
 \bibitem{tassa2007hierarchical}
 T.~Tassa,
-``Hierarchical threshold secret sharing,''
-\emph{Journal of Cryptology}, 2007.
+``Hierarchical Threshold Secret Sharing,''
+\emph{Journal of Cryptology}, vol.~20, no.~2, pp.~237--264, 2007.
+doi:10.1007/s00145-006-0334-8.
 
-\bibitem{benaloh1988generalized}
-J.~Benaloh and J.~Leichter,
-``Generalized secret sharing and monotone functions,''
-in \emph{Advances in Cryptology---CRYPTO '88 (LNCS)}, 1988.
+\bibitem{benaloh1988gss}
+J.~C.~Benaloh and J.~Leichter,
+``Generalized Secret Sharing and Monotone Functions,''
+in \emph{Advances in Cryptology---CRYPTO '88}, LNCS 403, pp.~27--35, Springer, 1988.
+doi:10.1007/0-387-34799-2\_3.
+
+\bibitem{naor1994visualcrypto}
+M.~Naor and A.~Shamir,
+``Visual Cryptography,''
+in \emph{Advances in Cryptology---EUROCRYPT '94}, LNCS 950, pp.~1--12, Springer, 1994.
+doi:10.1007/BFb0053419.
 
 \bibitem{jin2005progressive_color}
-J.~Jin, W.~Q.~Yan, and M.~S.~Kankanhalli,
-``Progressive color visual cryptography,''
-\emph{Journal of Electronic Imaging}, 2005.
+D.~Jin, W.~Q.~Yan, and M.~S.~Kankanhalli,
+``Progressive Color Visual Cryptography,''
+\emph{Journal of Electronic Imaging}, vol.~14, no.~3, 033019, 2005.
+doi:10.1117/1.1993625.
 
-\bibitem{liu2015visual_crypto_book}
+\bibitem{xiong2021cppsis}
+L.~Xiong, Z.~Han, and M.~Yang,
+``CP-PSIS: CRT and polynomial-based progressive secret image sharing scheme,''
+\emph{Signal Processing}, vol.~185, 108064, 2021.
+doi:10.1016/j.sigpro.2021.108064.
+
+\bibitem{liu2015visualcrypto_book}
 F.~Liu and W.~Q.~Yan (eds.),
-\emph{Visual Cryptography for Image Processing and Security},
+\emph{Visual Cryptography for Image Processing and Security: Theory, Methods, and Applications, Second Edition},
 Springer, 2015.
+doi:10.1007/978-3-319-23473-1.
 
 \bibitem{nist_sp800_186}
 L.~Chen, D.~Moody, A.~Regenscheid, A.~Robinson, and K.~Randall,
