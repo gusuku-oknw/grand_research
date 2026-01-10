@@ -433,7 +433,104 @@ pHashは標準的手順に従い，次の手順で64bitのビット列$b$を得�
 視覚的内容が読み取りにくいように劣化させた画像である．
 （Level 1は「pHash一致は満たすが，閲覧に十分な視覚情報は保証しない」ことを狙う段階である．）
 
+\section{Shamir秘密分散の基礎}
+\label{sec:shamir_basics}
+
+本節では，後続の二段閾値SIS（第\ref{sec:two_level_sis}節）を記述する準備として，
+本研究で用いるShamir秘密分散の基本事項を簡潔に整理する．
+Shamir秘密分散は，有限体上の多項式補間に基づく\((k,n)\)閾値方式であり，
+「任意の\(k\)個のシェアからは秘密を復元できるが，\(k-1\)個以下からは秘密に関する情報が得られない」
+という情報理論的性質をもつ\cite{shamir1979}．
+本研究ではこの性質を「閾値未満では復元できない」というアクセス制御の基盤として用いる．
+
+\subsection{Shamir秘密分散の定義}
+\label{subsec:shamir}
+総シェア数を\(n\)，閾値を\(k\)（\(1\le k\le n\)）とする．
+素数\(p\)を法とする有限体\(\mathbb{F}_p\)を用い，
+秘密（共有したい値）を\(s\in\mathbb{F}_p\)として表す．
+Shamir秘密分散では，次数\(k-1\)以下の多項式
+\begin{equation}
+  f(x)=a_0 + a_1 x + a_2 x^2 + \cdots + a_{k-1}x^{k-1}
+  \quad (a_j\in\mathbb{F}_p)
+  \label{eq:shamir_poly}
+\end{equation}
+を構成し，定数項を秘密に一致させる：\(a_0 := s\)．
+係数\(a_1,\dots,a_{k-1}\)は\(\mathbb{F}_p\)上で一様にランダムに選ぶ．
+
+\subsection{シェア生成手順}
+\label{subsec:share_generation}
+参加者（保持者）\(i\in\{1,\dots,n\}\)に配布するシェアは，多項式の評価値として与える．
+評価点は0を避け，互いに相異なる\(x_i\in\mathbb{F}_p\setminus\{0\}\)を選ぶ
+（本研究では実装の単純性のため \(x_i:=i\) を用いる）．
+このとき各参加者\(i\)に配布するシェアは
+\begin{equation}
+  \mathrm{share}_i := (x_i, y_i), \qquad y_i := f(x_i)\in\mathbb{F}_p
+  \label{eq:share_calculation}
+\end{equation}
+である．
+すなわち，秘密は多項式の定数項として埋め込まれ，シェアはそのサンプル点として配布される．
+
+\subsection{復元手順（Lagrange補間）}
+任意の\(k\)個のシェア\(\{(x_{i_1},y_{i_1}),\dots,(x_{i_k},y_{i_k})\}\)が与えられると，
+次数\(k-1\)以下の多項式は一意に定まり，Lagrange補間により\(f(0)=s\)を直接計算できる．
+Lagrange基底多項式を
+\begin{equation}
+  \ell_j(x)=\prod_{\substack{m=1\\ m\ne j}}^{k}\frac{x-x_{i_m}}{x_{i_j}-x_{i_m}}
+  \quad (\bmod\ p)
+\end{equation}
+とすると，
+\begin{equation}
+  f(x)=\sum_{j=1}^{k} y_{i_j}\,\ell_j(x)\quad (\bmod\ p)
+\end{equation}
+であり，特に復元したい秘密は
+\begin{equation}
+  s=f(0)=\sum_{j=1}^{k} y_{i_j}\,\lambda_{i_j}\quad (\bmod\ p),
+  \qquad
+  \lambda_{i_j}:=\prod_{\substack{m=1\\ m\ne j}}^{k}\frac{-x_{i_m}}{x_{i_j}-x_{i_m}}
+\end{equation}
+として得られる．
+本研究の実装では，除算は\(\mathbb{F}_p\)上の逆元計算（拡張Euclid等）により行い，
+復元はLagrange補間を用いて実装する．
+
+\subsection{情報理論的安全性（閾値未満で情報が漏れない理由）}
+Shamir秘密分散の重要な性質は，閾値未満のシェア集合から秘密に関する情報が得られない点である．
+直観的には，\(t<k\)個の点\((x_{i_1},y_{i_1}),\dots,(x_{i_t},y_{i_t})\)が与えられても，
+それらを通る次数\(k-1\)以下の多項式は多数存在し，定数項（秘密）も任意に取り得るためである．
+
+より具体的には，任意の候補秘密\(s'\in\mathbb{F}_p\)に対して，
+「\(f(0)=s'\)かつ与えられた\(t\)点を満たす」次数\(k-1\)以下の多項式は少なくとも一つ存在し，
+さらに自由度が\(k-1-t\)だけ残るため，その個数は同程度（\(\mathbb{F}_p\)上で一様）に分布する．
+したがって，観測者が得る\(t(<k)\)個のシェアは秘密\(s\)の事後分布を変えず，
+秘密に関する相互情報量は0となる（perfect secrecy）\cite{shamir1979}．
+この性質により，本研究では「\(r<k\)では当該秘密は復元できない」という前提を
+情報理論的に保証できる．
+
+\subsection{実装上の注意（法\(p\)の選び方，整数化・チャンク化，オーバーフロー回避）}
+Shamir秘密分散をデータ列（画像やハッシュ）に適用するには，秘密を\(\mathbb{F}_p\)の元として符号化する必要がある．
+本研究では有限体として\(\mathbb{F}_p\)（\(p\)は十分大きな素数）を採用し，
+具体的には
+\begin{equation}
+  p = 2^{521}-1
+\end{equation}
+を用いる（一般化メルセンヌ形であり，楕円曲線P-521の法としても用いられる）\cite{nist_sp800_186}．
+これにより，画像をバイト列として扱い，\(p\)未満に収まるよう固定長チャンクへ分割して
+各チャンクを整数（\(\mathbb{F}_p\)の元）として分散する運用が容易になる．
+
+具体的には，画像\(I\)をバイト列\(\mathrm{bytes}(I)\)として取り出し，
+長さ\(L\)バイトのブロックに分割して，各ブロックをビッグエンディアンで整数化する：
+\begin{equation}
+  m_j := \mathrm{int}(\mathrm{bytes}_j)\in[0,256^{L}) \subset \mathbb{F}_p .
+\end{equation}
+\(256^{L}<p\)となるように\(L\)を選べばオーバーフローを避けられる．
+復元後に元のバイト列へ戻せるよう，総バイト長や最終ブロックの有効長をメタ情報として保持する．
+
+また，本研究で低閾値側の秘密として用いるpHashビット列\(b\in\{0,1\}^{64}\)については，
+64bit整数にパックして\(s\in\mathbb{F}_p\)として扱うことで，そのままShamir分散が可能である．
+以上の符号化・分割を前提として，次節では「検索用秘密」と「復元用秘密」を別々にShamir分散し，
+同一参加者に束ねて配布する二段閾値SISの構成を述べる．
+
 \section{二段閾値SIS（検索用秘密と復元用秘密の同時分散）}
+\label{sec:two_level_sis}
 三段階開示を実現するため，本研究では二種類の秘密を分散する：
 低閾値側の秘密を$s_L$，高閾値側の秘密を$s_H$とする．
 本研究では
@@ -912,6 +1009,12 @@ M.~Tian, Y.~Zhang, Y.~Zhang, X.~Xiao, and W.~Wen,
 Z. Xia, Y. Zhu, X. Sun, and Q. Wang, ``Searchable image encryption for privacy-preserving CBIR,'' \textit{IEEE Access}, 2021.
 \bibitem{Venkatesan2000}
 R. Venkatesan, S.-M. Koon, M. Jakubowski, and P. Moulin, ``Robust image hashing,'' in \textit{Proc. IEEE ICIP}, 2000.
+\bibitem{shamir1979}
+A.~Shamir,
+``How to share a secret,''
+\emph{Communications of the ACM}, vol.~22, no.~11, pp.~612--613, 1979.
+doi:10.1145/359168.359176.
+
 \end{thebibliography}
 
 \end{document}
