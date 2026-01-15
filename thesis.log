@@ -1,4 +1,4 @@
-This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.12.13)  15 JAN 2026 17:17
+This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.12.13)  15 JAN 2026 17:42
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -472,9 +472,6 @@ LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 309.
 
 
-LaTeX Warning: Citation `Tian2024' on page 14 undefined on input line 315.
-
-
 LaTeX Warning: Citation `phash_hackerfactor' on page 14 undefined on input line
  326.
 
@@ -528,9 +525,9 @@ bmp)
 [23
 
 ]
-File: output/figures/phash_masked_sis/data00_tuned/stats_phash.png Graphic file
- (type bmp)
-<output/figures/phash_masked_sis/data00_tuned/stats_phash.png>
+File: output/figures/phash_masked_sis/dist_phash_histogram.png Graphic file (ty
+pe bmp)
+<output/figures/phash_masked_sis/dist_phash_histogram.png>
 File: output/figures/phash_masked_sis/data00_tuned/stats_mse.png Graphic file (
 type bmp)
 <output/figures/phash_masked_sis/data00_tuned/stats_mse.png>
@@ -547,9 +544,9 @@ png Graphic file (type bmp)
 File: output/results/masked_phash_eval_all_figs/time_summary_all_variants.png G
 raphic file (type bmp)
 <output/results/masked_phash_eval_all_figs/time_summary_all_variants.png>
- [27] [28]
+ [27] [28] [29]
 第5章
-[29
+[30
 
 ]
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
@@ -584,7 +581,7 @@ LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 886.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 893.
-[30
+[31
 
 ]
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
@@ -613,21 +610,21 @@ LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 935.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 941.
-LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 945.
 
-Underfull \hbox (badness 1616) in paragraph at lines 939--947
+Underfull \hbox (badness 1616) in paragraph at lines 939--943
 \OT1/cmr/m/it/10 ac-tions on In-for-ma-tion Foren-sics and Se-cu-rity\OT1/cmr/m
 /n/10 , vol. 10, no. 1, pp. 152--167, 2015.
  []
 
-LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
-(Font)              No change on input line 949.
+LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
+(Font)              No change on input line 947.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 953.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 959.
-[31] (./thesis.aux)
+(Font)              No change on input line 957.
+LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
+(Font)              No change on input line 963.
+[32] [33] (./thesis.aux)
  ***********
 pLaTeX2e <2023-02-14>+1, based on
 LaTeX2e <2025-11-01>
@@ -647,11 +644,11 @@ LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
  ) 
 Here is how much of TeX's memory you used:
  6435 strings out of 469647
- 93128 string characters out of 5472187
- 506549 words of memory out of 5000000
+ 93117 string characters out of 5472187
+ 506553 words of memory out of 5000000
  35131 multiletter control sequences out of 15000+600000
  644159 words of font info for 123 fonts, out of 8000000 for 9000
  41 hyphenation exceptions out of 8191
  57i,12n,65p,362b,1025s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on thesis.dvi (31 pages, 114152 bytes).
+Output written on thesis.dvi (33 pages, 114044 bytes).
