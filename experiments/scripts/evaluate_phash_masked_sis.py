@@ -138,6 +138,7 @@ def evaluate_image(
     sis: MultiSecretImageSIS,
     cfg: PHashConfig,
     rng: np.random.Generator,
+    fast_mode: bool = False,
 ) -> Dict[str, object]:
     img = Image.open(image_path).convert("RGB")
     split_start = time.perf_counter()
@@ -148,9 +149,15 @@ def evaluate_image(
     dummy_img = sis.recover_dummy_image(shares[: sis.k1])
     recover_dummy_ms = (time.perf_counter() - recover_dummy_start) * 1000.0
 
-    recover_full_start = time.perf_counter()
-    full_img = sis.recover_full_image(shares[: sis.k2])
-    recover_full_ms = (time.perf_counter() - recover_full_start) * 1000.0
+    recover_dummy_ms = (time.perf_counter() - recover_dummy_start) * 1000.0
+
+    if not fast_mode:
+        recover_full_start = time.perf_counter()
+        full_img = sis.recover_full_image(shares[: sis.k2])
+        recover_full_ms = (time.perf_counter() - recover_full_start) * 1000.0
+    else:
+        recover_full_ms = 0.0
+        full_img = img  # Use original as placeholder to avoid errors downstream if referenced
 
     h_orig = compute_phash(img, cfg)
     h_dummy = compute_phash(dummy_img, cfg)
@@ -185,17 +192,22 @@ def evaluate_image(
     }
 
     # Baseline: single-layer Shamir (full image only)
-    s_bytes = image_path.read_bytes()
-    t0 = time.perf_counter()
-    shares_single = shamir_split_secret(s_bytes, n=sis.n, k=sis.k2)
-    t1 = time.perf_counter()
-    full_recovered = shamir_combine_secret(shares_single[: sis.k2])
-    t2 = time.perf_counter()
-    assert full_recovered == s_bytes
+    if not fast_mode:
+        s_bytes = image_path.read_bytes()
+        t0 = time.perf_counter()
+        shares_single = shamir_split_secret(s_bytes, n=sis.n, k=sis.k2)
+        t1 = time.perf_counter()
+        full_recovered = shamir_combine_secret(shares_single[: sis.k2])
+        t2 = time.perf_counter()
+        assert full_recovered == s_bytes
 
-    single_split_ms = (t1 - t0) * 1000.0
-    single_recover_ms = (t2 - t1) * 1000.0
-    single_phash_dist = _phash_distance(h_orig, compute_phash(Image.open(BytesIO(full_recovered)).convert("RGB"), cfg))
+        single_split_ms = (t1 - t0) * 1000.0
+        single_recover_ms = (t2 - t1) * 1000.0
+        single_phash_dist = _phash_distance(h_orig, compute_phash(Image.open(BytesIO(full_recovered)).convert("RGB"), cfg))
+    else:
+        single_split_ms = 0.0
+        single_recover_ms = 0.0
+        single_phash_dist = 0
 
     return {
         "image": image_path.name,
@@ -273,6 +285,7 @@ def main() -> None:
         default=None,
         help="Comma-separated variant names when using mapping_json (e.g., original,jpeg75).",
     )
+    parser.add_argument("--fast", action="store_true", help="Skip heavy reconstruction benchmarks.")
     args = parser.parse_args()
 
     cfg = PHashConfig(hash_size=args.hash_size, highfreq_factor=args.highfreq_factor)
@@ -306,7 +319,7 @@ def main() -> None:
     image_results: List[Dict[str, object]] = []
     for img_path in images:
         print(f"[eval] {img_path.name}")
-        image_results.append(evaluate_image(img_path, sis, cfg, rng))
+        image_results.append(evaluate_image(img_path, sis, cfg, rng, fast_mode=args.fast))
 
     results = {
         "config": {

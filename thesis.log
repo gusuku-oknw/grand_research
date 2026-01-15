@@ -1,8 +1,8 @@
-This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.12.13)  15 JAN 2026 17:42
+This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.12.13)  15 JAN 2026 20:04
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
-**thesis
+**thesis.tex
 (./thesis.tex
 pLaTeX2e <2023-02-14>+1, based on
 LaTeX2e <2025-11-01>
@@ -448,17 +448,17 @@ File: umsb.fd 2013/01/14 v3.01 AMS symbols B
 ] [7]
 第1章
 LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 133.
+(Font)              scaled to size 13.31541pt on input line 134.
 LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 133.
+(Font)              scaled to size 13.31541pt on input line 134.
 LaTeX Font Info:    Font shape `JT1/hmc/bx/n' in size <14.4> not available
-(Font)              Font shape `JT1/hgt/m/n' tried instead on input line 133.
+(Font)              Font shape `JT1/hgt/m/n' tried instead on input line 134.
 LaTeX Font Info:    Font shape `JT1/hgt/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 133.
+(Font)              scaled to size 13.31541pt on input line 134.
 LaTeX Font Info:    Font shape `JY1/hmc/bx/n' in size <14.4> not available
-(Font)              Font shape `JY1/hgt/m/n' tried instead on input line 133.
+(Font)              Font shape `JY1/hgt/m/n' tried instead on input line 134.
 LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
-(Font)              scaled to size 13.31541pt on input line 133.
+(Font)              scaled to size 13.31541pt on input line 134.
 [8
 
 ] [9] [10] [11]
@@ -466,72 +466,63 @@ LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
 [12
 
 ] [13]
-LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 308.
-LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 309.
-
 
 LaTeX Warning: Citation `phash_hackerfactor' on page 14 undefined on input line
- 326.
+ 327.
 
 [14]
 LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 11.09619pt on input line 346.
+(Font)              scaled to size 11.09619pt on input line 347.
 LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 11.09619pt on input line 346.
+(Font)              scaled to size 11.09619pt on input line 347.
 LaTeX Font Info:    Font shape `JT1/hmc/bx/n' in size <12> not available
-(Font)              Font shape `JT1/hgt/m/n' tried instead on input line 346.
+(Font)              Font shape `JT1/hgt/m/n' tried instead on input line 347.
 LaTeX Font Info:    Font shape `JT1/hgt/m/n' will be
-(Font)              scaled to size 11.09619pt on input line 346.
+(Font)              scaled to size 11.09619pt on input line 347.
 LaTeX Font Info:    Font shape `JY1/hmc/bx/n' in size <12> not available
-(Font)              Font shape `JY1/hgt/m/n' tried instead on input line 346.
+(Font)              Font shape `JY1/hgt/m/n' tried instead on input line 347.
 LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
-(Font)              scaled to size 11.09619pt on input line 346.
+(Font)              scaled to size 11.09619pt on input line 347.
  [15] [16]
 第3章
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 446.
+(Font)              No change on input line 447.
 [17
 
 ] [18]
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 498.
+(Font)              No change on input line 499.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 498.
+(Font)              No change on input line 499.
 
 
 LaTeX Warning: Reference `sec:shamir_basics' on page 19 undefined on input line
- 516.
+ 517.
 
 [19] [20]
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 588.
+(Font)              No change on input line 589.
 File: output/phash_masked_sis_eval/pipeline_top3.png Graphic file (type bmp)
 <output/phash_masked_sis_eval/pipeline_top3.png>
 LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 8.32214pt on input line 600.
+(Font)              scaled to size 8.32214pt on input line 601.
 LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 8.32214pt on input line 600.
+(Font)              scaled to size 8.32214pt on input line 601.
 LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 5.5481pt on input line 600.
+(Font)              scaled to size 5.5481pt on input line 601.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 618.
+(Font)              No change on input line 619.
  [21] [22]
 第4章
 File: output/figures/phash_masked_sis/combined_pipeline.png Graphic file (type 
 bmp)
 <output/figures/phash_masked_sis/combined_pipeline.png>
-[23
-
-]
-File: output/figures/phash_masked_sis/dist_phash_histogram.png Graphic file (ty
-pe bmp)
-<output/figures/phash_masked_sis/dist_phash_histogram.png>
 File: output/figures/phash_masked_sis/data00_tuned/stats_mse.png Graphic file (
 type bmp)
 <output/figures/phash_masked_sis/data00_tuned/stats_mse.png>
- [24] [25] [26]
+[23
+
+] [24] [25]
 File: output/results/masked_phash_eval_figs/precision_summary.png Graphic file 
 (type bmp)
 <output/results/masked_phash_eval_figs/precision_summary.png>
@@ -544,87 +535,87 @@ png Graphic file (type bmp)
 File: output/results/masked_phash_eval_all_figs/time_summary_all_variants.png G
 raphic file (type bmp)
 <output/results/masked_phash_eval_all_figs/time_summary_all_variants.png>
- [27] [28] [29]
+ [26] [27] [28]
 第5章
-[30
+[29
 
 ]
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 836.
+(Font)              No change on input line 817.
 
-Underfull \hbox (badness 1838) in paragraph at lines 834--839
+Underfull \hbox (badness 1838) in paragraph at lines 815--820
 []\OT1/cmr/m/n/10 H. M^^?uller, ``Med-i-cal Im-age Re-trieval: Ap-pli-ca-tions 
 and Re-sources,'' in \OT1/cmr/m/it/10 Pro-ceed-ings
  []
 
 
-Underfull \hbox (badness 1769) in paragraph at lines 834--839
+Underfull \hbox (badness 1769) in paragraph at lines 815--820
 \OT1/cmr/m/it/10 of the ACM In-ter-na-tional Con-fer-ence on Mul-ti-me-dia Re-t
 rieval (ICMR 2020)\OT1/cmr/m/n/10 , 2020.
  []
 
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
+(Font)              No change on input line 824.
+LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
+(Font)              No change on input line 831.
+LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
+(Font)              No change on input line 837.
+LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 843.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 850.
+(Font)              No change on input line 849.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 856.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 862.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 868.
+(Font)              No change on input line 867.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 875.
-LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 881.
-LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 886.
-LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 893.
-[31
+(Font)              No change on input line 874.
+[30
 
 ]
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 899.
+(Font)              No change on input line 880.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 905.
+(Font)              No change on input line 886.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 911.
+(Font)              No change on input line 892.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 917.
+(Font)              No change on input line 898.
 
-Underfull \hbox (badness 4927) in paragraph at lines 915--919
+Underfull \hbox (badness 4927) in paragraph at lines 896--900
 []\OT1/cmr/m/n/10 L. Xiong, Z. Han, and M. Yang, ``CP-PSIS: CRT and polynomial-
 based pro-
  []
 
 
-Underfull \hbox (badness 2753) in paragraph at lines 915--919
+Underfull \hbox (badness 2753) in paragraph at lines 896--900
 \OT1/cmr/m/n/10 gres-sive se-cret im-age shar-ing scheme,'' \OT1/cmr/m/it/10 Si
 g-nal Pro-cess-ing\OT1/cmr/m/n/10 , vol. 185, 108064, 2021.
  []
 
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
+(Font)              No change on input line 903.
+LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
+(Font)              No change on input line 916.
+LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
 (Font)              No change on input line 922.
-LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 935.
-LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 941.
 
-Underfull \hbox (badness 1616) in paragraph at lines 939--943
+Underfull \hbox (badness 1616) in paragraph at lines 920--924
 \OT1/cmr/m/it/10 ac-tions on In-for-ma-tion Foren-sics and Se-cu-rity\OT1/cmr/m
 /n/10 , vol. 10, no. 1, pp. 152--167, 2015.
  []
 
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 947.
+(Font)              No change on input line 928.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 953.
+(Font)              No change on input line 934.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 957.
+(Font)              No change on input line 938.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 963.
-[32] [33] (./thesis.aux)
+(Font)              No change on input line 944.
+[31] [32] (./thesis.aux)
  ***********
 pLaTeX2e <2023-02-14>+1, based on
 LaTeX2e <2025-11-01>
@@ -643,12 +634,12 @@ LaTeX Warning: Label(s) may have changed. Rerun to get cross-references right.
 
  ) 
 Here is how much of TeX's memory you used:
- 6435 strings out of 469647
- 93117 string characters out of 5472187
+ 6429 strings out of 469647
+ 92775 string characters out of 5472187
  506553 words of memory out of 5000000
- 35131 multiletter control sequences out of 15000+600000
+ 35126 multiletter control sequences out of 15000+600000
  644159 words of font info for 123 fonts, out of 8000000 for 9000
  41 hyphenation exceptions out of 8191
- 57i,12n,65p,362b,1025s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 57i,12n,65p,366b,1025s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on thesis.dvi (33 pages, 114044 bytes).
+Output written on thesis.dvi (32 pages, 110760 bytes).
