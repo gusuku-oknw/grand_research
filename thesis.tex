@@ -171,7 +171,7 @@ SISは画像を$n$個のシェアに分割し，所定数（閾値）以上の�
 
 本研究では，検索の特徴量として知覚ハッシュ（perceptual hash; pHash）を採用する．
 pHashは画像を小サイズに正規化した後に離散コサイン変換（Discrete Cosine Transform; DCT）を適用し，低周波成分から64bitのハッシュ値（ビット列）を生成することで，
-軽量なビット列比較（Hamming距離：XORとビットカウント）で高速に近似類似検索を行える\cite{phash_hackerfactor}．
+軽量なビット列比較（Hamming距離：XORとビットカウント）で高速に近似類似検索を行える\cite{farid2021phash}．
 このような低次元・ビット演算中心の比較は，大規模データベースに対しても計算資源と保存容量を抑えやすく，
 本研究が想定する「サーバを信頼しない」環境下での実装・運用上の利点が大きい．
 一方で，知覚ハッシュは，攻撃者が生成した任意のクエリとハッシュとの照合結果（距離や合否）を反復的に取得することで，逆像を推定する判定器（オラクル）として悪用され得ること，
@@ -189,7 +189,7 @@ pHashは画像を小サイズに正規化した後に離散コサイン変換（
 本研究が対象とするのは，SISで分散保持された機微画像集合に対し，原画像を復元（平文化）せずに類似検索を成立させたい状況である．
 類似検索を行う以上，検索用表現（特徴量やハッシュ値など）を比較に用いること自体は避けられない．
 しかし，サーバを信頼しない（semi-honest：プロトコルには従うが，観測できた情報から追加推測を試みる）環境では，上記オラクルが検索結果を反射的に，探索・推測し得ることが考えられる，
-検索用表現を無条件に露出させる設計は望ましくない\cite{phash_hackerfactor,jain2022usenix_phash}．
+検索用表現を無条件に露出させる設計は望ましくない\cite{farid2021phash,jain2022usenix_phash}．
 一方で，SISの素朴な運用として「検索のたびに閾値以上のシェアを収集して復元してからCBIRを実行する」手順を採ると，
 復元処理に計算・通信コストが発生するだけでなく，復元許可（閲覧権限）と所定数のシェア収集が前提となるため，
 「閲覧は許可しないが検索だけ行いたい」という要求と整合しない．
@@ -258,7 +258,7 @@ VGG（Visual Geometry Group）やResNet（Residual Network）等で抽出され�
 この文脈で，知覚ハッシュ（perceptual hash）は，画像を短いビット列へ写像し，
 Hamming距離により高速比較できる点で実装・運用上の利点が大きい．
 とりわけpHashは，画像を小サイズに正規化した後にDCTを適用し，低周波成分の符号から
-64bit程度のハッシュ値（ビット列）を生成する軽量手法として広く知られている\cite{Venkatesan2000,phash_hackerfactor}．
+64bit程度のハッシュ値（ビット列）を生成する軽量手法として広く知られている\cite{Venkatesan2000,farid2021phash}．
 一方で，知覚ハッシュは「類似性を保存する」設計であるため，照合の可否や距離が外部から反復的に観測できる状況では，
 検索機能がオラクルとして悪用される危険生がある（第\ref{sec:phash_related}節参照）．
 したがって，pHashの軽量性を活かしつつ，どの情報をどの段階で開示するかまで含めた設計が重要となる．
@@ -268,7 +268,7 @@ Hamming距離により高速比較できる点で実装・運用上の利点が�
 特徴量（多くはCNN特徴）を暗号化・分散保持し，サーバ間で安全に距離計算を行う枠組みが提案されてきた．
 例えば，クラウド上の類似検索において，特徴量を秘匿化したまま比較処理を実行する方式が検討されている\cite{Xia2020}．
 また，準同型暗号やMPCを用いて距離計算・近傍探索を実現する研究も多数存在し，
-暗号化ドメインや秘匿状態での比較処理そのものは可能になりつつある\cite{Barni2010,Troncoso2017}．
+暗号化ドメインや秘匿状態での比較処理そのものは可能になりつつある\cite{Barni2010}．
 
 しかし，既存研究の多くは「特徴量ベクトル（平文特徴の秘匿表現）」を前提に，
 秘匿距離計算をどう成立させるかに主眼が置かれている．
@@ -286,18 +286,6 @@ Hamming距離により高速比較できる点で実装・運用上の利点が�
 このため，SISの保護状態を維持したまま検索を成立させるには，距離計算の安全化だけでなく，
 「検索に必要な情報だけを制御して利用可能にする」ための表現設計が別途必要となる．
 
-\section{段階開示・多層SISに関する研究}
-秘密分散には，復元に必要な閾値が単一の（$k$-out-of-$n$）型だけでなく，
-複数の閾値・アクセス構造を与えることで，異なる権限レベルに応じて復元可能な秘密を切り替える研究がある．
-たとえばmulti-secret / multi-threshold型の枠組みでは，参加者集合（あるいはシェア数）に応じて
-複数の秘密を復元できるようにアクセス構造を設計する\cite{tassa2007hierarchical,benaloh1988gss}．
-また，progressive（段階的）な復元を扱う系譜では，シェアの増加に伴って復元画像の品質が徐々に向上すること自体を目的とする研究がある\cite{jin2005progressive_color,liu2015visualcrypto_book}．
-
-本研究が狙うのは，画質が連続的に向上することそのものではなく，
-「検索専用の出力」と「閲覧可能な復元画像」を\emph{離散的に}分離し，
-閾値に応じて\emph{開示する情報の種類}を切り替える点にある．
-したがって，既存の多層／多閾値アクセス構造の考え方に近い一方で，
-検索用表現（pHash）と整合する「検索専用出力」を構成する設計は，既存研究では十分に整理されていない．
 
 \section{段階開示・多層SISに関する研究}
 \label{sec:related_multilevel}
@@ -431,74 +419,6 @@ pHashは標準的手順に従い，次の手順で64bitのビット列$b$を得�
 \end{enumerate}
 この低周波側の符号パターンを，以下「pHashの低周波符号」と呼ぶ．
 
-\section{Shamir秘密分散の基礎}
-\label{sec:shamir_basics_moved}
-
-本節では，後続の二段閾値SIS（第3.4節）を記述する準備として，本研究で用いるShamir秘密分散の基本事項を簡潔に整理する．
-Shamir秘密分散は，有限体上の多項式補間に基づく$(k,n)$閾値方式であり，
-「任意の$k$個のシェアからは秘密を復元できるが，$k-1$個以下からは秘密に関する情報が得られない」
-という情報理論的性質をもつ\cite{shamir1979}．
-本研究ではこの性質を「閾値未満では復元できない」というアクセス制御の基盤として用いる．
-
-\subsection{Shamir秘密分散の定義}
-\label{subsec:shamir_def}
-総シェア数を$n$，閾値を$k$（$1\le k\le n$）とする．
-素数$p$を法とする有限体$\mathbb{F}_p$を用い，
-秘密（共有したい値）を$s\in\mathbb{F}_p$として表す．
-Shamir秘密分散では，次数$k-1$以下の多項式
-\begin{equation}
-  f(x)=a_0 + a_1 x + a_2 x^2 + \cdots + a_{k-1}x^{k-1}
-  \quad (a_j\in\mathbb{F}_p)
-  \label{eq:shamir_poly}
-\end{equation}
-を構成し，定数項を秘密に一致させる：$a_0 := s$．
-係数$a_1,\dots,a_{k-1}$は$\mathbb{F}_p$上で一様にランダムに選ぶ．
-
-次に，相異なる非ゼロの元$x_1,\dots,x_n \in \mathbb{F}_p \setminus \{0\}$（参加者IDに相当）を選び，
-各参加者$i$（$1\le i\le n$）に対してシェア$(x_i, y_i)$を計算して配布する：
-\begin{equation}
-  y_i = f(x_i) \quad (\bmod\ p).
-  \label{subsec:share_generation}
-\end{equation}
-ここで$(x_i, y_i)$が各参加者の保有するシェアとなる．
-画像への適用においては，画素値を$s$として扱うことが多い．
-
-\subsection{復元手順（Lagrange補間）}
-\label{subsec:lagrange_interpolation}
-任意の$k$個のシェア$\{(x_{i_1},y_{i_1}),\dots,(x_{i_k},y_{i_k})\}$が与えられると，
-次数$k-1$以下の多項式は一意に定まり，Lagrange補間により$f(0)=s$を直接計算できる．
-Lagrange基底多項式を
-\begin{equation}
-  \ell_j(x)=\prod_{\substack{m=1\\ m\ne j}}^{k}\frac{x-x_{i_m}}{x_{i_j}-x_{i_m}}
-  \quad (\bmod\ p)
-\end{equation}
-とすると，
-\begin{equation}
-  f(x)=\sum_{j=1}^{k} y_{i_j}\,\ell_j(x)\quad (\bmod\ p)
-\end{equation}
-であり，特に復元したい秘密は
-\begin{equation}
-  s=f(0)=\sum_{j=1}^{k} y_{i_j}\,\lambda_{i_j}\quad (\bmod\ p),
-  \qquad
-  \lambda_{i_j}:=\prod_{\substack{m=1\\ m\ne j}}^{k}\frac{-x_{i_m}}{x_{i_j}-x_{i_m}}
-\end{equation}
-として得られる．
-本研究の実装では，除算は$\mathbb{F}_p$上の逆元計算（拡張Euclid等）により行い，
-復元はLagrange補間を用いて実装する．
-
-\subsection{情報理論的安全性（閾値未満で情報が漏れない理由）}
-\label{subsec:perfect_secrecy}
-Shamir秘密分散の重要な性質は，閾値未満のシェア集合から秘密に関する情報が得られない点である．
-直観的には，$t<k$個の点$(x_{i_1},y_{i_1}),\dots,(x_{i_t},y_{i_t})$が与えられても，
-それらを通る次数$k-1$以下の多項式は多数存在し，定数項（秘密）も任意に取り得るためである．
-
-より具体的には，任意の候補秘密$s'\in\mathbb{F}_p$に対して，
-「$f(0)=s'$かつ与えられた$t$点を満たす」次数$k-1$以下の多項式は少なくとも一つ存在し，
-さらに自由度が$k-1-t$だけ残るため，その個数は同程度（$\mathbb{F}_p$上で一様）に分布する．
-したがって，観測者が得る$t(<k)$個のシェアは秘密$s$の事後分布を変えず，
-秘密に関する相互情報量は0となる（perfect secrecy）\cite{shamir1979}．
-この性質により，本研究では「$r<k$では当該秘密は復元できない」という前提を
-情報理論的に保証できる．
 
 \chapter{提案手法}
 \label{chap:proposal}
@@ -674,6 +594,13 @@ $r\ge k_2$で初めて$s_H$が復元できる．
   一致しない場合は低周波係数の強調量（マージン）を増やすなどして再生成する．
 \end{enumerate}
 
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{output/phash_masked_sis_eval/pipeline_top3.png}
+  \caption{ダミー生成の途中出力例（pHash 符号$\rightarrow$低周波補強$\rightarrow 32\times 32$ 空間画像）}
+  \label{fig:dummy-top3}
+\end{figure}
+
 このようにして得られる$\widetilde{I}$をpHash整合ダミー$\mathrm{dummy}(b)$として用いる．
 ここで，pHash整合ダミーは「pHash一致」を満たすための検索専用出力であり，
 視覚的内容の復元（閲覧可能性）を保証しない点が本質である．
@@ -719,7 +646,7 @@ $r\ge k_2$では原画像$I$を復元して必要に応じて平文側の処理�
 \begin{figure}[t]
   \centering
   \includegraphics[width=1.0\linewidth]{output/figures/phash_masked_sis/combined_pipeline.png}
-  \caption{三段階出力の可視化例（複数画像の比較：原画像／ノイズ／pHash 整合ダミー1, 2／復元）}
+  \caption{三段階出力の可視化例（複数画像の比較：原画像／ノイズ／pHash 整合ダミー／復元）}
   \label{fig:exp-grid}
 \end{figure}
 
@@ -761,12 +688,7 @@ pHash 距離（Hamming 距離）の分布を比較する（図\ref{fig:mask-phas
   \label{fig:mask-mse}
 \end{figure}
 
-\begin{figure}[t]
-  \centering
-  \includegraphics[width=\linewidth]{output/phash_masked_sis_eval/pipeline_top3.png}
-  \caption{ダミー生成の途中出力例（pHash 符号$\rightarrow$低周波補強$\rightarrow 32\times 32$ 空間画像）}
-  \label{fig:dummy-top3}
-\end{figure}
+
 
 \subsection{データと派生画像の生成}
 COCO val2017 \cite{mscoco} から乱数シード 2025 により 500 枚をサンプリングし，これをクエリ集合とした．
@@ -890,8 +812,7 @@ Level 1 の出力が視覚的内容推定に結びつきにくいという経験
 
 
 \chapter{おわりに}
-本研究は，秘密画像共有（SIS）により分散保持された画像集合を対象として，
-原画像の復元（平文化）を前提とせずに類似画像検索を成立させるための設計と実装・評価を示した．
+本研究は，検索可能なSISフレームワークのための知覚暗号化を設計した．
 本研究の成果は以下のように整理できる．
 
 \begin{itemize}
@@ -923,14 +844,16 @@ C.~G.~Sotomayor, M.~Mendoza, V.~Casta{\~n}eda, H.~Far{\'i}as, and others,
 doi:10.3390/diagnostics11081470.
 
 \bibitem{su2007decision_support}
-M.-J.~Su, Y.-C.~Lin, Y.-C.~Chen, and C.-M.~Huang,
-``Diagnostic Decision Support by Intelligent Medical Image Retrieval with Electronic Medical Record for Enhance Dementia Treatment,''
-\emph{Medical Imaging Technology}, vol.~25, no.~5, pp.~350--355, 2007.
+M.-J.~Su, H.-S.~Chen, C.-Y.~Yang, S.-J.~Chen, R.~Chen, W.-J.~Lee, P.-H.~Cheng, 
+P.-K.~Yip, H.-M.~Liu, F.-P.~Lai, and D.~Racoceanu,
+``Diagnostic Decision Support by Intelligent Medical Image Retrieval with Electronic Medical Record for Dementia Treatment Enhancement,''
+\emph{Medical Imaging Technology}, vol.~25, no.~5, pp.~350--359, 2007.
+doi:10.11409/mit.25.350.
 
 \bibitem{xu2017ppcbir_cloud}
-Y.~Xu, J.~Gong, L.~Xiong, Z.~Xu, J.~Wang, and X.~Liu,
+Y.~Xu, J.~Gong, L.~Xiong, Z.~Xu, J.~Wang, and Y.-Q.~Shi,
 ``A Privacy-Preserving Content-Based Image Retrieval Method in Cloud Environment,''
-\emph{Journal of Visual Communication and Image Representation}, vol.~43, pp.~35--43, 2017.
+\emph{Journal of Visual Communication and Image Representation}, vol.~43, pp.~164--172, 2017.
 doi:10.1016/j.jvcir.2017.01.006.
 
 \bibitem{ferreira_iescbir}
@@ -944,38 +867,25 @@ doi:10.1109/SRDS.2015.27.
 J.~Katz and Y.~Lindell,
 \emph{Introduction to Modern Cryptography},
 3rd ed., Chapman and Hall/CRC, 2020.
+doi:10.1201/9781351133036.
 
-\bibitem{phash_hackerfactor}
-N.~Krawetz,
-``Looks Like It (Perceptual Hashing),'' The Hacker Factor.
-\url{https://www.hackerfactor.com/blog/index.php?/archives/432-Looks-Like-It.html}
-(Accessed: 2026-01-05).
+\bibitem{farid2021phash}
+H.~Farid,
+``An Overview of Perceptual Hashing,''
+\emph{Journal of Online Trust and Safety}, vol.~1, no.~1, 2021.
+doi:10.54501/jots.v1i1.24.
 
 \bibitem{jain2022usenix_phash}
-A.~Jain and others,
-``SoK: Perceptual Hashing in the Adversarial Setting,''
-in \emph{USENIX Security Symposium}, 2022.
+S.~Jain, A.-M.~Cre{\c t}u, and Y.-A.~de Montjoye,
+``Adversarial Detection Avoidance Attacks: Evaluating the Robustness of Perceptual Hashing-Based Client-Side Scanning,''
+in \emph{31st USENIX Security Symposium (USENIX Security 22)}, Boston, MA, 2022, pp.~2317--2334.
 
 \bibitem{pha_robustness_2024}
-H.~Prokos, M.~Christodorescu, and others,
-``Robustness and Trustworthiness of Perceptual Hashing in Adversarial Settings,''
-arXiv:2406.00918, 2024.
+J.~Prokos, N.~Fendley, M.~Green, R.~Schuster, E.~Tromer, T.~Jois, and Y.~Cao,
+``Squint Hard Enough: Attacking Perceptual Hashing with Adversarial Machine Learning,''
+in \emph{32nd USENIX Security Symposium (USENIX Security 23)}, Anaheim, CA, 2023, pp.~211--228.
 
-\bibitem{guo2012multithreshold}
-R.~Guo, S.~Liu, and X.~Zheng,
-``Multi-threshold access structures for secret sharing schemes,''
-\emph{Pattern Recognition Letters}, vol.~33, pp.~1594--1600, 2012.
 
-\bibitem{progressive_vc_acm}
-W.-P.~Fang, C.-C.~Lin, and C.-C.~Tsai,
-``Friendly progressive visual secret sharing,''
-\emph{Pattern Recognition Letters}, vol.~29, no.~11, pp.~1582--1587, 2008.
-
-\bibitem{progressive_vc_springer}
-A.~Agarwal, S.~S.~Rana, and others,
-``Verifiable progressive visual cryptography,''
-\emph{Pattern Analysis and Applications}, 2018.
-doi:10.1007/s10044-016-0571-x.
 
 \bibitem{tassa2007hierarchical}
 T.~Tassa,
@@ -986,7 +896,7 @@ doi:10.1007/s00145-006-0334-8.
 \bibitem{benaloh1988gss}
 J.~C.~Benaloh and J.~Leichter,
 ``Generalized Secret Sharing and Monotone Functions,''
-in \emph{Advances in Cryptology---CRYPTO '88}, LNCS 403, pp.~27--35, Springer, 1988.
+in \emph{Advances in Cryptology---CRYPTO '88}, LNCS 403, pp.~27--35, Springer, 1990.
 doi:10.1007/0-387-34799-2\_3.
 
 \bibitem{naor1994visualcrypto}
@@ -1008,8 +918,8 @@ L.~Xiong, Z.~Han, and M.~Yang,
 doi:10.1016/j.sigpro.2021.108064.
 
 \bibitem{liu2015visualcrypto_book}
-F.~Liu and W.~Q.~Yan (eds.),
-\emph{Visual Cryptography for Image Processing and Security: Theory, Methods, and Applications, Second Edition},
+F.~Liu and W.~Q.~Yan,
+\emph{Visual Cryptography for Image Processing and Security: Theory, Methods, and Applications}, vol.~1,
 Springer, 2015.
 doi:10.1007/978-3-319-23473-1.
 
@@ -1020,19 +930,21 @@ NIST Special Publication 800-186, 2023.
 doi:10.6028/NIST.SP.800-186.
 
 \bibitem{Xia2020}
-Z. Xia, X. Wang, L. Yao, et al., ``A privacy-preserving CBIR scheme based on secret sharing,'' \textit{IEEE Access}, 2020.
-\bibitem{Zhang2024}
-C. Zhang, Y. Li, and Q. Liu, ``SS-CNN: Secret sharing based secure image retrieval,'' \textit{Journal of Visual Communication and Image Representation}, 2024.
+H.~Wang, Z.~Xia, J.~Fei, and F.~Xiao,
+``An AES-Based Secure Image Retrieval Scheme Using Random Mapping and BOW in Cloud Computing,''
+\emph{IEEE Access}, vol.~8, pp.~61138--61147, 2020.
+doi:10.1109/ACCESS.2020.2983194.
+
 \bibitem{Barni2010}
-M. Barni, P. Failla, R. Lazzeretti, et al., ``A privacy-preserving framework for JPEG-based image retrieval,'' \textit{IEEE Transactions on Information Forensics and Security}, 2010.
-\bibitem{Troncoso2017}
-J. R. Troncoso-Pastoriza, S. Katzenbeisser, and M. Celik, ``Privacy-preserving approximate search for multimedia,'' \textit{IEEE Transactions on Circuits and Systems for Video Technology}, 2017.
-\bibitem{Tian2024}
+L.~Weng, L.~Amsaleg, A.~Morton, S.~Marchand-Maillet, and M.~Barni,
+``A Privacy-Preserving Framework for Large-Scale Content-Based Information Retrieval,''
+\emph{IEEE Transactions on Information Forensics and Security}, vol.~10, no.~1, pp.~152--167, 2015.
+doi:10.1109/TIFS.2014.2365998.
 M.~Tian, Y.~Zhang, Y.~Zhang, X.~Xiao, and W.~Wen,
 ``A privacy-preserving image retrieval scheme with access control based on searchable encryption in media cloud,''
 \emph{Cybersecurity}, vol.~7, Art.~22, 2024.
-\bibitem{Xia2021}
-Z. Xia, Y. Zhu, X. Sun, and Q. Wang, ``Searchable image encryption for privacy-preserving CBIR,'' \textit{IEEE Access}, 2021.
+doi:10.1186/s42400-024-00213-z.
+
 \bibitem{Venkatesan2000}
 R. Venkatesan, S.-M. Koon, M. Jakubowski, and P. Moulin, ``Robust image hashing,'' in \textit{Proc. IEEE ICIP}, 2000.
 \bibitem{shamir1979}

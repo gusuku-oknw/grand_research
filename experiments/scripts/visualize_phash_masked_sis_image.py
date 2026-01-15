@@ -61,7 +61,7 @@ def main() -> None:
     parser.add_argument("--hash_size", type=int, default=8)
     parser.add_argument("--highfreq_factor", type=int, default=4)
     parser.add_argument("--seed", type=int, default=2025)
-    parser.add_argument("--num_dummies", type=int, default=2, help="Number of dummy variants to generate per image.")
+    parser.add_argument("--num_dummies", type=int, default=1, help="Number of dummy variants to generate per image.")
     args = parser.parse_args()
 
     cfg = PHashConfig(hash_size=args.hash_size, highfreq_factor=args.highfreq_factor)
@@ -104,7 +104,8 @@ def main() -> None:
         ]
         
         for i, d_img in enumerate(dummies):
-            row_entries.append((f"Dummy {i+1} (k1)", resize_for_viz(d_img), _phash_distance(orig_hash, compute_phash(d_img, cfg))))
+            label = f"Dummy {i+1} (k1)" if len(dummies) > 1 else "Dummy (k1)"
+            row_entries.append((label, resize_for_viz(d_img), _phash_distance(orig_hash, compute_phash(d_img, cfg))))
             
         row_entries.append(("Full (k2)", resize_for_viz(img_full), _phash_distance(orig_hash, compute_phash(img_full, cfg))))
         
@@ -140,8 +141,8 @@ def main() -> None:
                     ax.set_title(f"dist={dist}", fontsize=8)
             
             # Add row label (Filename) to the left of the first column
-            axes[r][0].text(-0.25, 0.5, row_name, transform=axes[r][0].transAxes, 
-                            rotation=90, va='center', ha='right', fontsize=9, fontweight='bold')
+            # axes[r][0].text(-0.25, 0.5, row_name, transform=axes[r][0].transAxes, 
+            #                 rotation=90, va='center', ha='right', fontsize=9, fontweight='bold')
 
         fig.tight_layout()
         args.combine_output.parent.mkdir(parents=True, exist_ok=True)
