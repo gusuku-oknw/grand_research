@@ -36,7 +36,7 @@
 \contentsline {subsection}{\numberline {4.1.4}検索・比較の手順}{23}{}%
 \contentsline {section}{\numberline {4.2}結果・考察}{24}{}%
 \contentsline {subsection}{\numberline {4.2.1}検索精度と時間（オリジナル評価）}{24}{}%
-\contentsline {subsection}{\numberline {4.2.2}バリアント評価（全 20 バリアント）}{24}{}%
+\contentsline {subsection}{\numberline {4.2.2}ロバスト性評価（全 20 派生条件）}{24}{}%
 \contentsline {subsection}{\numberline {4.2.3}検索の実用性}{25}{}%
 \contentsline {subsection}{\numberline {4.2.4}安全性評価の範囲と課題}{25}{}%
 \contentsline {chapter}{\numberline {第5章}おわりに}{28}{}%

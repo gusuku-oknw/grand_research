@@ -107,7 +107,7 @@
 このダミーは，高周波成分をノイズ化して輪郭・文字・顔などの可読性を低下させ，内容推定に資する手掛かりを弱める一方で，検索に必要な低周波符号は保持する．
 
 
-COCO派生データ（最大500クエリ）を用いた評価実験の結果，検索性能は Precision@K（検索結果上位K件に含まれる正解の割合）と Recall@K（正解集合のうち上位K件で回収できた割合）で評価した．
+COCO派生データ（最大500クエリ）を用いて評価実験を行った．検索性能は Precision@K（検索結果上位K件に含まれる正解の割合）と Recall@K（正解集合のうち上位K件で回収できた割合）で評価した．
 元画像では Precision@1=100\%となり，平文pHashと同等の検索結果を維持した．
 また，回転・切り抜き等の20種類の派生画像群を正解集合とする評価（ロバスト性評価）においてもPrecision@1=100\%，Precision@5=86.6\%，Precision@10=84.82\%であり，平文との差は小さかった．
 
@@ -141,7 +141,7 @@ pHashは画像を小サイズに正規化した後に離散コサイン変換（
 軽量なビット列比較（Hamming距離：XORとビットカウント）で高速に近似類似検索を行える\cite{farid2021phash}．
 このような低次元・ビット演算中心の比較は，大規模データベースに対しても計算資源と保存容量を抑えやすく，
 本研究が想定する「サーバを信頼しない」環境下での実装・運用上の利点が大きい．
-一方で，知覚ハッシュは，攻撃者が生成した任意のクエリとハッシュとの照合結果（距離や合否）を反復的に取得することで，逆像を推定する判定器（オラクル）として悪用され得ること，
+一方で，知覚ハッシュは，攻撃者が生成した任意のクエリとハッシュとの照合結果（距離や合否）を反復的に取得することで，逆像を推定する判定器（オラクル）として悪用され得ることや，
 また実運用で用いられるPhotoDNA/PDQ/NeuralHash等に対する脅威モデル・攻撃評価が議論されていることが報告されている\cite{jain2022usenix_phash,pha_robustness_2024}．
 したがって，検索機能を提供する場合でも，どの情報をどの段階で開示するかは慎重に設計しなければならない．
 
@@ -227,7 +227,7 @@ Hamming距離により高速比較できる点で実装・運用上の利点が�
 とりわけpHashは，画像を小サイズに正規化した後にDCTを適用し，低周波成分の符号から
 64bit程度のハッシュ値（ビット列）を生成する軽量手法として広く知られている\cite{Venkatesan2000,farid2021phash}．
 一方で，知覚ハッシュは「類似性を保存する」設計であるため，照合の可否や距離が外部から反復的に観測できる状況では，
-検索機能がオラクルとして悪用される危険生がある（第\ref{sec:phash_related}節参照）．
+一方向性を目的としておらず，「似ているものは近い値になる」よう設計されているため，照合の可否や距離が外部から反復的に観測できる状況では，検索機能がオラクルとして悪用される危険性がある（第\ref{sec:phash_related}節参照）．
 したがって，pHashの軽量性を活かしつつ，どの情報をどの段階で開示するかまで含めた設計が重要となる．
 
 \section{秘密分散・MPCを用いたプライバシー保護検索}
@@ -575,7 +575,7 @@ $r\ge k_2$で初めて$s_H$が復元できる．
   \label{fig:dummy-top3}
 \end{figure}
 
-このようにして得られ$\mathrm{dummy}(b)$は「pHash一致」を満たすための検索専用出力であり，
+このようにして得られた$\mathrm{dummy}(b)$は「pHash一致」を満たすための検索専用出力であり，
 視覚的内容の復元（閲覧可能性）を保証しない点が本質である．
 以後の章では，ダミーの視認性低下をPSNR（Peak Signal-to-Noise Ratio）やSSIM（Structural Similarity）等の指標で評価し，
 また検索段階（Level 1）での偽一致（衝突）についてはHamming距離の閾値判定とあわせて実験で確認する．
@@ -691,10 +691,10 @@ Precision@5 や Precision@10 は評価設定（$|G(q)|=1$）に依存して値�
 処理時間は 0.581 ms/query（plain）と 0.548 ms/query（dummy\_k1）であり，
 同一の比較 API（pHash 計算と Hamming 距離比較）で処理できるため差は小さい．
 
-\subsection{バリアント評価（全 20 バリアント）}
-次に，全 20 バリアント条件では正解集合を「同一元画像から生成された派生画像群」とし，
-によりバリアントごとの精度と時間を集計した．
-全バリアント平均として Precision@1=100\%，Precision@5=86.6\%，Precision@10=84.82\%，
+\subsection{ロバスト性評価（全 20 派生条件）}
+次に，全 20 派生条件について，正解集合を「同一元画像から生成された派生画像群」とするロバスト性評価を行い，
+条件ごとの精度と時間を集計した．
+全条件平均として Precision@1=100\%，Precision@5=86.6\%，Precision@10=84.82\%，
 Recall@10=42.41\% が得られ，これらの値は plain と dummy\_k1 で一致した（図\ref{fig:search-all-prec}）．
 これは，dummy\_k1 が pHash 計算に影響する低周波側の条件を一致させる設計であり，
 比較が pHash（Hamming 距離）のみで完結するため，候補生成と順位付けが一致し得ることを反映している．
@@ -710,7 +710,7 @@ $k_1$ 到達時の検索段階で計算負担を増やさずに適用できる�
 一方で，本章の比較は pHash 検索（距離分布とランキング一致）に限定されており，
 Level 1 で開示される情報（pHash 符号や照合結果）が，オラクルとしてどの程度推測に利用され得るかを直接評価するものではない．
 本研究の保証範囲は，Shamir の閾値性（$r<k_2$ で原画像が復元不能）に基づく部分と，
-Level 1 の出力が視覚的内容推定に結びつきにくいという経験的評価に分かれる．
+Level 1 の出力が視覚的内容推定に結びつきにくいという経験的評価に依存する部分に分かれる．
 したがって今後は，攻撃者モデルを明示したうえで，
 問い合わせ回数制限・監査ログ・探索戦略の評価などを含む追加検証が必要である．
 
@@ -731,7 +731,7 @@ Level 1 の出力が視覚的内容推定に結びつきにくいという経験
 
 \begin{table}[t]
   \centering
-  \caption{評価した20バリアントの例（mapping.json）}
+  \caption{評価した20種類の変換例（mapping.json）}
   \small
   \begin{tabular}{>{\raggedright\arraybackslash}p{3.9cm} >{\raggedright\arraybackslash}p{3.9cm}}
     \hline
@@ -752,20 +752,20 @@ Level 1 の出力が視覚的内容推定に結びつきにくいという経験
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.9\linewidth]{output/results/masked_phash_eval_all_figs/precision_summary_all_variants.png}
-  \caption{Precision@1（バリアント別，plain vs dummy\_k1）}
+  \caption{Precision@1（条件別，plain vs dummy\_k1）}
   \label{fig:search-all-prec}
 \end{figure}
 
 \begin{figure}[t]
   \centering
   \includegraphics[width=0.9\linewidth]{output/results/masked_phash_eval_all_figs/time_summary_all_variants.png}
-  \caption{Latency（バリアント別，plain vs dummy\_k1）}
+  \caption{Latency（条件別，plain vs dummy\_k1）}
   \label{fig:search-all-time}
 \end{figure}
 
 
 \chapter{おわりに}
-本研究は，pHashにより検索可能なSISフレームワークのための知覚暗号化を設計した．
+本研究では，pHashにより検索可能なSISフレームワークのための知覚暗号化を設計した．
 本研究の成果は以下のように整理できる．
 
 \begin{itemize}
