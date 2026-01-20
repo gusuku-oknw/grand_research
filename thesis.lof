@@ -2,12 +2,12 @@
 \addvspace {10\jsc@mpt }
 \addvspace {10\jsc@mpt }
 \contentsline {figure}{\numberline {3.1}{\ignorespaces 三段階 SIS の概念図（$k_1$:検索のみ，$k_2$:完全復元）}}{18}{}%
-\contentsline {figure}{\numberline {3.2}{\ignorespaces ダミー生成の途中出力例（pHash 符号$\rightarrow $低周波補強$\rightarrow 32\times 32$ 空間画像）}}{21}{}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces ダミー生成の途中出力例（pHash 符号$\rightarrow $低周波補強$\rightarrow 32\times 32$ 空間画像）}}{20}{}%
 \addvspace {10\jsc@mpt }
 \contentsline {figure}{\numberline {4.1}{\ignorespaces 三段階出力の可視化例（複数画像の比較：原画像／ノイズ／pHash 整合ダミー／復元）}}{23}{}%
 \contentsline {figure}{\numberline {4.2}{\ignorespaces PSNR の分布（ダミーと原画像）}}{23}{}%
 \contentsline {figure}{\numberline {4.3}{\ignorespaces Precision（平均値，オリジナル評価；各クエリの正解は1件）}}{25}{}%
-\contentsline {figure}{\numberline {4.4}{\ignorespaces Latency（平均値，オリジナル評価）}}{26}{}%
+\contentsline {figure}{\numberline {4.4}{\ignorespaces Latency（平均値，オリジナル評価）}}{25}{}%
 \contentsline {figure}{\numberline {4.5}{\ignorespaces Precision@1（条件別，plain vs dummy\_k1）}}{26}{}%
-\contentsline {figure}{\numberline {4.6}{\ignorespaces Latency（条件別，plain vs dummy\_k1）}}{27}{}%
+\contentsline {figure}{\numberline {4.6}{\ignorespaces Latency（条件別，plain vs dummy\_k1）}}{26}{}%
 \addvspace {10\jsc@mpt }

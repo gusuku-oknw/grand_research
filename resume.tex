@@ -45,15 +45,15 @@
 \linespread{0.92}\selectfont
 
 \section*{概要}
-秘密画像共有（SIS）で分散保存した画像について，平文化せずに知覚ハッシュ pHash による類似画像検索を行う方式を提案する．
+秘密画像共有（Secret Image Sharing; SIS）で分散保存した画像について，平文化せずに知覚ハッシュ pHash による類似画像検索を行う方式を提案する．
 シェア収集数 $r$ に応じて「ノイズ」「pHash 整合ダミー」「原画像」の三段階で情報を開示し，
 \textbf{「検索はできるが中身は見えない」}という中間状態を実現する．
-COCO 派生データによる評価では，pHash 検索精度・処理時間ともに平文と同等であることを確認した．
+MS COCO (Microsoft Common Objects in Context)~\cite{mscoco} 派生データによる評価では，pHash 検索精度・処理時間ともに平文と同等であることを確認した．
 
 \section{はじめに}
 
-\subsection{背景：利活用と保護のジレンマ}
-医療画像や個人写真などの機微データは，\textbf{「過去の類似症例を検索して診断支援に役立てたい」}という利活用の需要が高い．
+\subsection{背景}
+医療画像や個人写真などの機微データは，\textbf{「過去の類似症例を検索して診断支援に役立てたい」}という利活用の需要が高い（CBIR: Content-Based Image Retrieval）．
 一方で，これらは患者のプライバシーに直結するため，極めて高度な安全管理も同時に求められる．
 しかし，既存のデータ管理手法ではこの両立が困難である．
 \begin{itemize}
@@ -63,7 +63,7 @@ COCO 派生データによる評価では，pHash 検索精度・処理時間と
 そこで，特定の管理主体に依存せず，可用性と機密性を同時に担保するアプローチとして，
 画像データを分散して無意味化する\textbf{秘密画像共有（SIS）}が注目されている．
 
-\subsection{課題：分散データの検索不可能性}
+\subsection{課題}
 SIS はセキュリティに優れる反面，シェア自体はランダムなデータ列であり視覚情報を持たない．
 「類似検索」を行いたくても，\textbf{シェアの状態のままでは画像の類似性を判定することが原理的に不可能}である．
 従来，「検索」を行うには一度シェアを集めて原画像を復元する必要があったが，これは以下の問題を生む．
@@ -72,7 +72,7 @@ SIS はセキュリティに優れる反面，シェア自体はランダムな�
   \item \textbf{コスト増大}: 毎回復元処理を行う計算・通信コストが高い．
 \end{enumerate}
 
-\subsection{目的：三段階開示の必要性}
+\subsection{目的}
 本研究の目的は，SIS の安全性を維持しつつ検索を実現することである．
 しかし，単に検索用データを無条件に公開すると，それを手がかりに原画像の内容が推測されるリスクがある（オラクル攻撃）．
 したがって，\textbf{「検索はさせたいが，中身は見せたくない」}という矛盾する要求を満たすためには，
@@ -112,7 +112,7 @@ SIS はセキュリティに優れる反面，シェア自体はランダムな�
 \subsection{pHash 整合ダミーの生成}
 Level 1 で出力される「pHash 整合ダミー」は，本研究の核となる技術である．
 \begin{itemize}
-  \item \textbf{知覚ハッシュ (pHash)}: 画像の低周波成分（DCT 係数）から生成される 64bit のハッシュ値．類似画像間でハッシュ間距離（Hamming 距離）が近くなる性質を持つ．
+  \item \textbf{知覚ハッシュ (pHash)}: 画像の低周波成分（DCT: Discrete Cosine Transform 係数）から生成される 64bit のハッシュ値．類似画像間でハッシュ間距離（Hamming 距離）が近くなる性質を持つ．
   \item \textbf{生成アルゴリズム}:
     \begin{enumerate}
       \item 低周波成分: pHash のビット列と整合するように DCT 係数を操作・強調する．
@@ -132,13 +132,9 @@ Level 1 で出力される「pHash 整合ダミー」は，本研究の核とな
 
 \subsection{実験設定}
 \begin{itemize}
-  \item \textbf{データセット}: COCO val2017 から 500 枚を抽出．
+  \item \textbf{データセット}: COCO val2017~\cite{mscoco} から 500 枚を抽出．
   \item \textbf{派生条件}: 各画像に JPEG 圧縮，回転，クロップ，ノイズ付加など 20 種類の変換を適用（ロバスト性評価）．
-  \item \textbf{比較条件}:
-    \begin{itemize}
-      \item \textbf{plain}: 原画像から生成した pHash を用いた通常の検索（ベースライン）．
-      \item \textbf{dummy\_k1}: 提案手法（Level 1）で生成したダミー画像を用いた検索．
-    \end{itemize}
+
 \end{itemize}
 
 \subsection{結果：検索精度}
@@ -154,12 +150,16 @@ SIS における「検索」と「閲覧」のジレンマを解消するため�
 提案手法は，高い検索精度（平文と同等）を維持しつつ，検索段階での視覚的なプライバシー保護（閲覧抑止）を実現した．
 これにより，医療画像等の機微データに対して，\textbf{内容を秘匿したまま類似症例検索を行う}セキュアな運用が可能となる．
 
-今後の課題として，ダミー画像からの推測耐性に対するより厳密な安全性評価や，pHash 以外の特徴量への拡張が挙げられる．
+今後の課題として，ダミー画像からの推測耐性に対するより厳密な安全性評価や，pHash 以外の特徴量（CNN: Convolutional Neural Network 等）への拡張が挙げられる．
 
 \begin{thebibliography}{9}
 \bibitem{xia}
 Z. Xia et al., ``A privacy-preserving CBIR scheme based on secret sharing,''
 \textit{IEEE Access}, 2020.
+\bibitem{mscoco}
+T.-Y.~Lin et al.,
+``Microsoft COCO: Common Objects in Context,''
+in \emph{ECCV 2014}, Springer, 2014.
 \end{thebibliography}
 
 \end{document}
