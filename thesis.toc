@@ -21,5 +21,5 @@
 \contentsline {chapter}{\numberline {第4章}実験}{22}{}%
 \contentsline {section}{\numberline {4.1}条件・手順}{22}{}%
 \contentsline {section}{\numberline {4.2}結果・考察}{24}{}%
-\contentsline {chapter}{\numberline {第5章}おわりに}{27}{}%
-\contentsline {chapter}{参考文献}{28}{}%
+\contentsline {chapter}{\numberline {第5章}おわりに}{28}{}%
+\contentsline {chapter}{参考文献}{29}{}%

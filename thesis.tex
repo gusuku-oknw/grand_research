@@ -107,7 +107,7 @@
 このダミーは，高周波成分をノイズ化して輪郭・文字・顔などの可読性を低下させ，内容推定に資する手掛かりを弱める一方で，検索に必要な低周波符号は保持する．
 
 
-COCO派生データ（最大500クエリ）を用いて評価実験を行った．検索性能は Precision@K（検索結果上位K件に含まれる正解の割合）と Recall@K（正解集合のうち上位K件で回収できた割合）で評価した．
+COCO派生データ（最大500クエリ）を用いて評価実験を行った．検索性能は Precision@$K$（検索結果上位 $K$ 件に含まれる正解の割合）と Recall@$K$（正解集合のうち上位 $K$ 件で回収できた割合）で評価した．
 元画像では Precision@1=100\%となり，平文pHashと同等の検索結果を維持した．
 また，回転・切り抜き等の20種類の派生画像群を正解集合とする評価（ロバスト性評価）においてもPrecision@1=100\%，Precision@5=86.6\%，Precision@10=84.82\%であり，平文との差は小さかった．
 
@@ -458,7 +458,7 @@ semi-honestなサーバ（結託を含む）が観測可能な情報の範囲と
 
 \begin{figure}[t]
 \centering
-\includegraphics[width=0.85\linewidth]{output/fig_scene_cropped.png}
+\includegraphics[width=0.85\linewidth]{output/fig_scene_extra_large.png}
 \caption{三段階 SIS の概念図（$k_1$:検索のみ，$k_2$:完全復元）}
 \label{fig:three-stage}
 \end{figure}
@@ -555,7 +555,7 @@ $r\ge k_2$で初めて$s_H$が復元できる．
 
 このようにして得られた$\mathrm{dummy}(b)$は「pHash一致」を満たすための検索専用出力であり，
 視覚的内容の復元（閲覧可能性）を保証しない点が本質である．
-以後の章では，ダミーの視認性低下をPSNR（Peak Signal-to-Noise Ratio）やSSIM（Structural Similarity）等の指標で評価し，
+以後の章では，ダミーの視認性低下をピーク信号対雑音比（Peak Signal-to-Noise Ratio; PSNR）やSSIM（Structural Similarity）等の指標で評価し，
 また検索段階（Level 1）での偽一致（衝突）についてはHamming距離の閾値判定とあわせて実験で確認する．
 
 \section{安全性の扱い（Shamirの保証とダミーの評価）}
@@ -597,13 +597,26 @@ $r\ge k_2$では原画像$I$を復元して必要に応じて平文側の処理�
 \begin{figure}[t]
   \centering
   \includegraphics[width=1.0\linewidth]{output/figures/phash_masked_sis/combined_pipeline.png}
-  \caption{三段階出力の可視化例（複数画像の比較：原画像／ノイズ／pHash 整合ダミー／復元）}
+  \caption{三段階開示モデルの可視化例（原画像，Level 0，Level 1，Level 2）}
   \label{fig:exp-grid}
 \end{figure}
 
 \section{条件・手順}
 
-本節では検索性能の評価指標として Precision@K と Recall@K を用いる．
+本実験では，提案手法の実効性を多角的に検証するため，以下の4つの観点について評価を行う：
+
+\begin{itemize}
+  \item 検索精度と時間：
+  オリジナル画像（劣化なし）を用いた場合の基本的な検索性能（Precision/Recall）と処理時間．
+  \item ロバスト性：
+  圧縮・変形・ノイズなどの画像変換が加わった条件下でも，ダミー画像を用いて正しく検索できるか（検索性能の頑健性）．
+  \item 検索の実用性：
+  上記の結果を踏まえ，「復元せずに検索する」という本手法の運用が，平文検索と比較して実用的な範囲に収まっているか．
+  \item 安全性の課題：
+  検索の利便性と引き換えに開示した情報（pHash等）が，セキュリティおよびプライバシーに与える影響と対処．
+\end{itemize}
+
+上記の観点のうち，\textbf{検索精度}および\textbf{ロバスト性}を定量的に評価するための指標として，本実験では Precision@$K$ と Recall@$K$ を用いる．
 ここで K は評価する上位件数である．
 クエリ画像 $q$ に対して検索結果上位 $K$ 件を $\mathrm{Top}K(q)$，正解集合を $G(q)$ とすると，
 \begin{align}
@@ -614,8 +627,9 @@ $r\ge k_2$では原画像$I$を復元して必要に応じて平文側の処理�
 原画像のみを対象とする評価（以降「オリジナル評価」）では各クエリの正解は同一原画像 1 件とし（$|G(q)|=1$），
 派生画像群を正解集合とする評価（ロバスト性評価）では同一元画像から生成された派生画像群を $G(q)$ とする．
 
+\subsection*{挙動確認と可視化指標}
 前節の検索性能に加え，提案方式の基本挙動（安全性と品質のトレードオフ）を確認するための指標として以下を用いる．
-まず，ダミーと原画像の視覚的乖離の程度を定量化するため PSNR（Peak Signal-to-Noise Ratio）を算出する（図\ref{fig:mask-mse}）．
+まず，ダミーと原画像の視覚的乖離の程度を定量化するためピーク信号対雑音比（Peak Signal-to-Noise Ratio; PSNR）を算出する（図\ref{fig:mask-mse}）．
 さらに，ダミー生成の内部状態（低周波構成と補強の効果）を確認するため，
 処理途中の $32\times 32$ 画像を出力する（図\ref{fig:dummy-top3}）．
 
@@ -628,6 +642,7 @@ $r\ge k_2$では原画像$I$を復元して必要に応じて平文側の処理�
 
 
 
+\subsection*{データと派生画像の生成}
 COCO val2017 \cite{mscoco} から乱数シード 2025 により 500 枚をサンプリングし，これをクエリ集合とした．
 また，各原画像から固定パラメータの画像変換を適用し，派生セットを作成した．
 派生の種類は original を含めて 20 種とした．
@@ -636,6 +651,7 @@ COCO val2017 \cite{mscoco} から乱数シード 2025 により 500 枚をサン
 明るさ -25，コントラスト +30，ガウシアンノイズ $\sigma=10/15$，ソルト\&ペッパー 5\%，
 モーションブラー，透かしロゴ，矩形遮蔽を用いた．
 
+\subsection*{検索・比較の手順}
 各画像について次の処理を行った．
 \begin{enumerate}
   \item 32$\times$32 グレースケール化と pHash 計算（64bit）．
@@ -649,13 +665,13 @@ $k_1$ 到達時に得られるダミー画像の pHash による検索（dummy\_
 探索では 64bit を 8 分割（bands=8）したバケット化により候補集合を絞り込み，
 候補に対して Hamming 距離を計算して順位付けを行った．
 さらに閾値 $\tau=8$ を用い，距離が閾値以下の候補をヒットとして扱う設定とした．
-本設定により，各クエリについて上位 $K\in\{1,5,10\}$ の Precision@K/Recall@K と処理時間を集計した．
+本設定により，各クエリについて上位 $K\in\{1,5,10\}$ の Precision@$K$/Recall@$K$ と処理時間を集計した．
 
 \section{結果・考察}
-本節では，(i) 検索精度（Precision@K/Recall@K），(ii) 処理時間を
+本節では，(i) 検索精度（Precision@$K$/Recall@$K$），(ii) 処理時間を
 plain と dummy\_k1 で比較し，$k_1$ 到達時の検索段階で平文と同等の挙動を維持できるかを確認する．
 
-\noindent\textbf{検索精度と時間}
+\subsection*{検索精度と時間}
 図\ref{fig:search-original-prec} と図\ref{fig:search-original-time} に，
 オリジナル評価（各クエリの正解が 1 件）に対する結果を示す．
 本条件では，正解が上位 1 件に入れば Precision@1=100\% となり，
@@ -665,7 +681,7 @@ Precision@5 や Precision@10 は評価設定（$|G(q)|=1$）に依存して値�
 処理時間は 0.581 ms/query（plain）と 0.548 ms/query（dummy\_k1）であり，
 同一の比較 API（pHash 計算と Hamming 距離比較）で処理できるため差は小さい．
 
-\noindent\textbf{ロバスト性評価}
+\subsection*{ロバスト性評価}
 次に，全 20 派生条件について，正解集合を「同一元画像から生成された派生画像群」とするロバスト性評価を行い，
 条件ごとの精度と時間を集計した．
 全条件平均として Precision@1=100\%，Precision@5=86.6\%，Precision@10=84.82\%，
@@ -675,12 +691,12 @@ Recall@10=42.41\% が得られ，これらの値は plain と dummy\_k1 で一�
 処理時間も 0.527 ms/query（plain）と 0.494 ms/query（dummy\_k1）で差が小さく（図\ref{fig:search-all-time}），
 $k_1$ 到達時の検索段階で計算負担を増やさずに適用できることを示している．
 
-\noindent\textbf{検索の実用性}
+\subsection*{検索の実用性}
 本実装条件では，「検索段階（$k_1$ 到達）において，平文検索と同等のランキング結果・同等の処理時間を維持できる」ことを確認した．
 これは，「復元（閲覧）を許可せずに検索のみ行う」運用要求に対して，
 復元ベースの検索手順を回避しつつ検索の実用性（精度と時間）を確保できる可能性を示す．
 
-\noindent\textbf{安全性評価の範囲と課題}
+\subsection*{安全性評価の範囲と課題}
 一方で，本章の比較は pHash 検索（距離分布とランキング一致）に限定されており，
 Level 1 で開示される情報（pHash 符号や照合結果）が，オラクルとしてどの程度推測に利用され得るかを直接評価するものではない．
 本研究の保証範囲は，Shamir の閾値性（$r<k_2$ で原画像が復元不能）に基づく部分と，

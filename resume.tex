@@ -11,7 +11,7 @@
 \usepackage{url}
 \graphicspath{{./output/}{./output/phash_masked_sis_eval/}{./output/phash_masked_sis_eval/figures/}{./output/results/}{./output/results/masked_phash_eval_figs/}{./output/figures/phash_masked_sis/}}
 
-\title{秘密画像共有における pHash 検索を可能にする\\知覚暗号化の設計}
+\title{秘密画像共有における pHash 検索を可能にする知覚暗号化の設計}
 \author{横田・\CID{08521}水研究室　玉城 洵弥}
 \date{2025年度 卒業論文審査会}
 
@@ -45,25 +45,20 @@
 \linespread{0.92}\selectfont
 
 \section*{概要}
-秘密画像共有（Secret Image Sharing; SIS）で分散保存した画像について，平文化せずに知覚ハッシュ pHash による類似画像検索を行う方式を提案する．
+秘密画像共有（Secret Image Sharing; SIS）で分散保存した画像について，平文化せずに知覚ハッシュ（perceptual Hash; pHash）による類似画像検索を行う方式を提案する．
 シェア収集数 $r$ に応じて「ノイズ」「pHash 整合ダミー」「原画像」の三段階で情報を開示し，
 \textbf{「検索はできるが中身は見えない」}という中間状態を実現する．
 MS COCO (Microsoft Common Objects in Context)~\cite{mscoco} 派生データによる評価では，pHash 検索精度・処理時間ともに平文と同等であることを確認した．
 
 \section{はじめに}
 
-\subsection{背景}
 医療画像や個人写真などの機微データは，\textbf{「過去の類似症例を検索して診断支援に役立てたい」}という利活用の需要が高い（CBIR: Content-Based Image Retrieval）．
 一方で，これらは患者のプライバシーに直結するため，極めて高度な安全管理も同時に求められる．
 しかし，既存のデータ管理手法ではこの両立が困難である．
-\begin{itemize}
-  \item \textbf{オンプレミス管理}: 情報は守れるが，データ消失リスクや管理コストの問題がある．
-  \item \textbf{クラウド管理}: 可用性は高いが，特定事業者に原本を預けることによる情報漏洩の懸念がある．
-\end{itemize}
-そこで，特定の管理主体に依存せず，可用性と機密性を同時に担保するアプローチとして，
-画像データを分散して無意味化する\textbf{秘密画像共有（SIS）}が注目されている．
 
-\subsection{課題}
+そこで，特定の管理主体に依存せず，可用性と機密性を同時に担保するアプローチとして，
+画像データを分散して無意味化するSISフレームワークが注目されている．
+
 SIS はセキュリティに優れる反面，シェア自体はランダムなデータ列であり視覚情報を持たない．
 「類似検索」を行いたくても，\textbf{シェアの状態のままでは画像の類似性を判定することが原理的に不可能}である．
 従来，「検索」を行うには一度シェアを集めて原画像を復元する必要があったが，これは以下の問題を生む．
@@ -72,21 +67,19 @@ SIS はセキュリティに優れる反面，シェア自体はランダムな�
   \item \textbf{コスト増大}: 毎回復元処理を行う計算・通信コストが高い．
 \end{enumerate}
 
-\subsection{目的}
-本研究の目的は，SIS の安全性を維持しつつ検索を実現することである．
-しかし，単に検索用データを無条件に公開すると，それを手がかりに原画像の内容が推測されるリスクがある（オラクル攻撃）．
-したがって，\textbf{「検索はさせたいが，中身は見せたくない」}という矛盾する要求を満たすためには，
-以下の 3 つの状態を明確に区別し，制御する仕組みが不可欠となる．
+そこで本研究ではSIS の安全性を維持しつつ検索を実現することを目的とする．
+検索用データを無条件に公開すると，それを手がかりに原画像の内容が推測されるリスクがあるため．
+\textbf{「検索はさせたいが，中身は見せたくない」}という矛盾する要求を満たすためには，
+以下の 3 つの状態を明確に区別し，制御する仕組みが不可欠となる：
 \begin{enumerate}
-  \item \textbf{何もできない状態}（保管時）：データが漏洩しても安全．
-  \item \textbf{検索だけできる状態}（中間段階）：中身は見えないが，類似判定のみ可能．
-  \item \textbf{全てが見える状態}（復元時）：診断などで実際に画像を見る．
+  \item \textbf{何もできない状態}（無権限）：データが漏洩しても安全．
+  \item \textbf{検索だけできる状態}（検索権限）：中身は見えないが，類似判定のみ可能．
+  \item \textbf{全てが見える状態}（閲覧権限）：診断などで実際に画像を見る．
 \end{enumerate}
-この「検索権限」と「閲覧権限」を技術的に分離・制御するために，本研究では新たな\textbf{三段階開示モデル}を提案する．
+この「検索権限」と「閲覧権限」を技術的に分離・制御するために，本研究では新たな\textbf{三段階開示モデル}を提案する（図\ref{fig:three-stage}）．
 
-\section{提案手法}
+\section{提案法：三段階開示モデル}
 
-\subsection{三段階開示モデル}
 シェア収集数 $r$ に対して 2 つの閾値 $k_1, k_2$（$k_1 < k_2$）を設定し，出力情報の質を段階的に制御する．
 \[
 \text{output}(r)=
@@ -96,58 +89,77 @@ SIS はセキュリティに優れる反面，シェア自体はランダムな�
 \text{原画像} & (r \ge k_2)
 \end{cases}
 \]
+
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=0.85\linewidth]{fig_scene_extra_large.png}
+  \caption{三段階 SIS の概念図（$k_1$:検索のみ，$k_2$:完全復元）}
+  \label{fig:three-stage}
+\end{figure}
+
 \begin{itemize}
   \item \textbf{Level 0} ($r < k_1$): 検索・閲覧不可．情報理論的安全性により，原画像に関する情報は一切漏洩しない．
   \item \textbf{Level 1} ($k_1 \le r < k_2$): 検索のみ許可．視覚的には内容が判別できない「pHash 整合ダミー画像」を出力する．
   \item \textbf{Level 2} ($r \ge k_2$): 閲覧・復元許可．原画像を完全復元する．
 \end{itemize}
+各段階での出力画像の可視化例を図\ref{fig:exp-grid}に示す．
 
-\begin{figure}[t]
-\centering
-\includegraphics[width=0.85\linewidth]{fig_scene_cropped.png}
-\caption{三段階 SIS の概念図（$k_1$:検索のみ，$k_2$:完全復元）}
-\label{fig:three-stage}
+\begin{figure}[tb]
+  \centering
+  \includegraphics[width=1.0\linewidth]{output/figures/phash_masked_sis/combined_pipeline.png}
+  \caption{三段階開示モデルの可視化例（原画像，Level 0，Level 1，Level 2）}
+  \label{fig:exp-grid}
 \end{figure}
 
-\subsection{pHash 整合ダミーの生成}
-Level 1 で出力される「pHash 整合ダミー」は，本研究の核となる技術である．
-\begin{itemize}
-  \item \textbf{知覚ハッシュ (pHash)}: 画像の低周波成分（DCT: Discrete Cosine Transform 係数）から生成される 64bit のハッシュ値．類似画像間でハッシュ間距離（Hamming 距離）が近くなる性質を持つ．
-  \item \textbf{生成アルゴリズム}:
-    \begin{enumerate}
-      \item 低周波成分: pHash のビット列と整合するように DCT 係数を操作・強調する．
-      \item 高周波成分: ランダムなノイズで埋めることで，輪郭・顔・文字などの視覚情報を意図的に破壊する．
-    \end{enumerate}
-  \item \textbf{効果}: このダミー画像は，pHash による検索エンジンに対しては「原画像と同じもの」として認識されるが，人間の目にはノイズ画像にしか見えない．
-\end{itemize}
-
-\begin{figure}[t]
+\begin{figure}[tb]
 \centering
 \includegraphics[width=0.9\linewidth]{pipeline_top3.png}
 \caption{pHash 整合ダミー生成の流れ（符号抽出→低周波補強→32$\times$32 空間像）}
 \label{fig:dummy-pipeline}
 \end{figure}
 
+Level 1 で出力される「pHash 整合ダミー」は，本研究の核となる技術である．
+まず，画像の低周波成分（DCT: Discrete Cosine Transform 係数）から 64bit のハッシュ値である pHash を生成する．pHash は類似画像間でハッシュ間距離（Hamming 距離）が近くなる性質を持つ．
+次に，低周波成分については pHash のビット列と整合するように DCT 係数を操作・強調し，高周波成分についてはランダムなノイズで埋めることで，輪郭・顔・文字などの視覚情報を意図的に破壊する．
+
+このダミー画像は，pHash による検索エンジンに対しては「原画像と同じもの」として認識されるが，人間の目にはノイズ画像にしか見えない（図\ref{fig:dummy-pipeline}）．
+
+
+
 \section{実験}
 
-\subsection{実験設定}
-\begin{itemize}
-  \item \textbf{データセット}: COCO val2017~\cite{mscoco} から 500 枚を抽出．
-  \item \textbf{派生条件}: 各画像に JPEG 圧縮，回転，クロップ，ノイズ付加など 20 種類の変換を適用（ロバスト性評価）．
+実験には COCO val2017~\cite{mscoco} から抽出した 500 枚の画像を使用した．
+ロバスト性評価のため，各画像に対して JPEG 圧縮，回転，クロップ，ノイズ付加など 20 種類の変換を適用し，派生画像を生成した．
 
-\end{itemize}
 
-\subsection{結果：検索精度}
-Precision@K（検索結果上位 K 件に含まれる正解の割合）により評価を行った．
-\begin{itemize}
-  \item \textbf{オリジナル評価}: 原画像そのものを探すタスクにおいて，\textbf{Precision@1 = 100\%} を達成した．
-  \item \textbf{ロバスト性評価}: 20 種類の変換画像を探すタスクにおいても，\textbf{Precision@1 = 100\%, Precision@5 = 86.6\%} となり，平文（plain）での検索結果と同等の性能を示した．
-\end{itemize}
-これは，提案手法が pHash の頑健性を損なわずに暗号化できていることを示す．
 
-\section{結論}
-SIS における「検索」と「閲覧」のジレンマを解消するため，pHash を用いた知覚暗号化と多段階 SIS を組み合わせた方式を設計・実装した．
-提案手法は，高い検索精度（平文と同等）を維持しつつ，検索段階での視覚的なプライバシー保護（閲覧抑止）を実現した．
+Precision@$K$（検索結果上位 $K$ 件に含まれる正解の割合）により評価を行った．
+原画像そのものを探すオリジナル評価では Precision@1 = 100\% を達成した．
+また，20 種類の変換画像を探すロバスト性評価においても，平文（plain）での検索結果と同等の性能を示した．
+詳細な精度を表\ref{tab:precision}に示す．
+
+\begin{table}[H]
+  \centering
+  \caption{ロバスト性評価における検索精度（20条件平均）}
+  \label{tab:precision}
+  \small
+  \begin{tabular}{lccc}
+    \hline
+    Method & P@1 & P@5 & P@10 \\
+    \hline
+    Plain & 100\% & 86.6\% & 84.8\% \\
+    Proposal & 100\% & 86.6\% & 84.8\% \\
+    \hline
+  \end{tabular}
+\end{table}
+
+以上の結果は，提案手法が pHash 本来の頑健性を損なうことなく，視覚的な暗号化に成功していることを示唆している（図\ref{fig:dummy-pipeline}）．
+
+
+
+\section{おわりに}
+本研究では，SISフレームワークにおける「検索」と「閲覧」のジレンマを解消するため，pHash を用いた知覚暗号化と多段階 SIS を組み合わせた方式を設計・実装した．
+提案法は，高い検索精度（平文と同等）を維持しつつ，検索段階での視覚的なプライバシー保護（閲覧抑止）を実現した．
 これにより，医療画像等の機微データに対して，\textbf{内容を秘匿したまま類似症例検索を行う}セキュアな運用が可能となる．
 
 今後の課題として，ダミー画像からの推測耐性に対するより厳密な安全性評価や，pHash 以外の特徴量（CNN: Convolutional Neural Network 等）への拡張が挙げられる．
