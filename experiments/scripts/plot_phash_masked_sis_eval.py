@@ -24,10 +24,10 @@ def _set_style() -> None:
             "figure.dpi": 150,
             "axes.grid": True,
             "grid.alpha": 0.25,
-            "font.size": 10,
-            "axes.titlesize": 12,
-            "axes.labelsize": 11,
-            "legend.fontsize": 9,
+            "font.size": 14,
+            "axes.titlesize": 16,
+            "axes.labelsize": 14,
+            "legend.fontsize": 12,
         }
     )
 
@@ -60,6 +60,9 @@ def plot_phash_distances(images: List[Dict], out_path: Path) -> None:
 
 
 def plot_psnr(images: List[Dict], out_path: Path) -> None:
+    # Filter to top 2 images only as requested for clarity
+    images = images[:2]
+    
     names = [img["image"] for img in images]
     psnr_dummy = [img["psnr_dummy_vs_original"] for img in images]
     psnr_full = [img["psnr_full_vs_original"] for img in images]
@@ -68,19 +71,26 @@ def plot_psnr(images: List[Dict], out_path: Path) -> None:
 
     x = np.arange(len(names))
     w = 0.18
-    fig, ax = plt.subplots(figsize=(10, 4.5))
+    fig, ax = plt.subplots(figsize=(8, 5))
+    
+    # Plot bars
     ax.bar(x - 1.5 * w, psnr_dummy, width=w, label="Dummy (k1)", color="#F58518")
-    # Full is theoretically lossless (PSNR=inf). Represent as a marker/text instead of a bar.
-    ax.scatter(x - 0.5 * w, [min(v, 60.0) for v in psnr_full], marker="*", color="#54A24B", label="Full (k2) ~ inf")
+    
+    # Full is theoretically lossless (PSNR=inf). Plot as a high bar (capped) to be visible.
+    full_capped = [60.0 if math.isinf(v) else v for v in psnr_full]
+    ax.bar(x - 0.5 * w, full_capped, width=w, label="Full (k2)", color="#54A24B")
+    
     ax.bar(x + 0.5 * w, psnr_blur, width=w, label="Blur baseline", color="#4C78A8")
     ax.bar(x + 1.5 * w, psnr_noise, width=w, label="Noise baseline", color="#B279A2")
+    
     ax.axhline(30, color="#666666", linestyle="--", linewidth=1, label="30 dB reference")
+    
     ax.set_ylabel("PSNR (dB)")
-    ax.set_ylim(0, 60)  # cap to show finite values; Full is shown as ~inf via marker
+    ax.set_ylim(0, 70)  # Increased margin (data capped at 60)
     ax.set_xticks(x)
-    ax.set_xticklabels(names, rotation=20, ha="right")
+    ax.set_xticklabels(names, rotation=0, ha="center")
     ax.set_title("Reconstruction quality (proposed vs baselines)")
-    ax.legend()
+    ax.legend(loc='upper right')
     fig.tight_layout()
     fig.savefig(out_path, bbox_inches="tight")
     plt.close(fig)
