@@ -1,4 +1,4 @@
-This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.12.13)  21 JAN 2026 18:34
+This is e-upTeX, Version 3.141592653-p4.1.2-u2.00-250202-2.6 (utf8.sjis) (TeX Live 2025) (preloaded format=platex 2025.12.13)  21 JAN 2026 21:15
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -389,9 +389,9 @@ LaTeX Font Info:    Font shape `JY1/hmc/bx/n' in size <10> not available
 LaTeX Font Info:    Font shape `JY1/hgt/m/n' will be
 (Font)              scaled to size 9.6222pt on input line 50.
 LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 6.73553pt on input line 85.
+(Font)              scaled to size 6.73553pt on input line 94.
 LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 4.8111pt on input line 85.
+(Font)              scaled to size 4.8111pt on input line 94.
 File: ./output/fig_scene_extra_large.png Graphic file (type bmp)
 <./output/fig_scene_extra_large.png>
 File: output/figures/phash_masked_sis/combined_pipeline.png Graphic file (type 
@@ -404,15 +404,15 @@ File: ./output/phash_masked_sis_eval/pipeline_top3.png Graphic file (type bmp)
 
 ]
 LaTeX Font Info:    Font shape `JT1/hmc/m/n' will be
-(Font)              scaled to size 8.65997pt on input line 145.
+(Font)              scaled to size 8.65997pt on input line 154.
 LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 8.65997pt on input line 145.
+(Font)              scaled to size 8.65997pt on input line 154.
 LaTeX Font Info:    Font shape `JY1/hmc/m/n' will be
-(Font)              scaled to size 5.77332pt on input line 146.
+(Font)              scaled to size 5.77332pt on input line 156.
 LaTeX Font Info:    Kanji font shape `JY1/hmc/m/it' undefined
-(Font)              No change on input line 170.
+(Font)              No change on input line 179.
 LaTeX Font Info:    Kanji font shape `JY1/hgt/m/it' undefined
-(Font)              No change on input line 174.
+(Font)              No change on input line 183.
  [2] (./resume.aux)
  ***********
 pLaTeX2e <2023-02-14>+1, based on
@@ -421,12 +421,12 @@ L3 programming layer <2025-11-14>
  ***********
  ) 
 Here is how much of TeX's memory you used:
- 5987 strings out of 469647
- 84985 string characters out of 5472187
- 512076 words of memory out of 5000000
- 34720 multiletter control sequences out of 15000+600000
+ 5989 strings out of 469647
+ 85050 string characters out of 5472187
+ 513076 words of memory out of 5000000
+ 34722 multiletter control sequences out of 15000+600000
  641510 words of font info for 105 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
  57i,10n,65p,325b,1025s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
-Output written on resume.dvi (2 pages, 12368 bytes).
+Output written on resume.dvi (2 pages, 13416 bytes).

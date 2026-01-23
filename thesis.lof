@@ -2,7 +2,8 @@
 \addvspace {10\jsc@mpt }
 \addvspace {10\jsc@mpt }
 \contentsline {figure}{\numberline {3.1}{\ignorespaces 三段階 SIS の概念図（$k_1$:検索のみ，$k_2$:完全復元）}}{18}{}%
-\contentsline {figure}{\numberline {3.2}{\ignorespaces ダミー生成の途中出力例（pHash 符号$\rightarrow $低周波補強$\rightarrow 32\times 32$ 空間画像）}}{20}{}%
+\contentsline {figure}{\numberline {3.2}{\ignorespaces pHash整合ダミー生成の処理フロー（低周波成分の構成から検証ループまで）}}{20}{}%
+\contentsline {figure}{\numberline {3.3}{\ignorespaces ダミー生成の途中出力例（pHash 符号$\rightarrow $低周波補強$\rightarrow 32\times 32$ 空間画像）}}{21}{}%
 \addvspace {10\jsc@mpt }
 \contentsline {figure}{\numberline {4.1}{\ignorespaces 三段階開示モデルの可視化例（原画像，Level 0，Level 1，Level 2）}}{23}{}%
 \contentsline {figure}{\numberline {4.2}{\ignorespaces PSNR の分布（ダミーと原画像）}}{23}{}%

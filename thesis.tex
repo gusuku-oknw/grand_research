@@ -74,7 +74,7 @@
 
 \chapter*{概要}
 医療画像に代表される機微情報は，患者のプライバシーに直結するため，極めて高度な安全管理が求められる．
-現状，国内の多くの医療機関では院内サーバ（オンプレミス）での管理が一般的であるが，これは災害時のデータ消失リスクや管理コストの増大といった単一障害点の課題を抱えている．
+現状，国内の多くの医療機関では院内サーバ（オンプレミス）での管理が一般的であるが，これは管理コストの増大や，単一障害点に起因するデータ消失リスクといった課題を抱えている．
 一方で，可用性向上を目的としたクラウド移行においては，特定の事業者にデータ原本を委ねることによる情報漏えいやプライバシー侵害の懸念が障壁となっている．
 したがって，特定の管理主体に依存せず，複数のサーバへ地理的・管理的に分散して保存することで，可用性と機密性を同時に担保するアプローチが望ましい．
 
@@ -122,7 +122,7 @@ COCO派生データ（最大500クエリ）を用いて評価実験を行った�
 従来のCBIRは，検索精度と運用容易性を優先し，画像特徴量（埋め込みやハッシュ等）をクラウド上のサーバで保持・照合する構成が一般的である．
 しかし本研究では，サーバ管理者による目的外の閲覧や，外部攻撃者によるデータ窃取のリスクを考慮し，サーバを完全には信頼しない脅威モデルを採用する．具体的には，サーバ（またはサーバへの侵入者）は計算手順（プロトコル）には従う一方で，保持データや処理結果から画像内容の推測を試みる脅威（semi-honest ／ honest-but-curious）を想定する．
 
-また，データ管理の観点でも課題がある．国内の多くの医療機関では院内サーバ（オンプレミス）での管理が一般的であるが，これは災害時のデータ消失リスクや管理コストの増大といった単一障害点の課題を抱えている．
+また，データ管理の観点でも課題がある．国内の多くの医療機関では院内サーバ（オンプレミス）での管理が一般的であるが，これは管理コストの増大や，単一障害点に起因するデータ消失リスクといった課題を抱えている．
 一方で，可用性向上を目的としたクラウド移行においては，特定の事業者にデータ原本を委ねることによる情報漏えいやプライバシー侵害の懸念が障壁となっている．
 
 したがって，特定の管理主体に依存せず，複数のサーバへ地理的・管理的に分散して保存することで，可用性と機密性を同時に担保するアプローチが望ましい．
@@ -133,7 +133,6 @@ COCO派生データ（最大500クエリ）を用いて評価実験を行った�
 しかし，SISによって生成されるシェアはランダムなデータ列であり視覚情報を持たないため，分散ストレージ上に保存された状態では，そのまま画像の類似性を判断して検索（CBIR）を行うことが原理的に不可能である．
 医師や管理者が特定の症例画像を探そうとした場合，現状では対象となるシェアを一度すべて収集し，原画像を復元してから中身を確認する必要がある．
 だが，「検索」のたびに機密性の高い原画像を復元する運用は，計算コストの増大に加え，本来閲覧権限を持たない管理者に対して不要な情報開示を強いることになり，秘密分散によるセキュリティ上の利点を損なう．
-
 この問題を解決するためには，分散保管されたシェアの状態（あるいは部分的な復元状態）を保ったまま，原画像を完全復元することなく類似画像検索を可能にする新たな枠組みが必要である．
 
 本研究では，検索の特徴量として知覚ハッシュ（perceptual hash; pHash）を採用する．
@@ -153,7 +152,7 @@ pHashは画像を小サイズに正規化した後に離散コサイン変換（
 \end{enumerate}
 
 \section{目的}
-本研究が対象とするのは，SISで分散保持された機微画像集合に対し，原画像を復元（平文化）せずに類似検索を成立させたい状況である．
+本研究の目的は，SISで分散保持された機微画像集合に対し，原画像を復元（平文化）せずに類似検索を成立させることである．
 類似検索を行う以上，検索用表現（特徴量やハッシュ値など）を比較に用いること自体は避けられない．
 しかし，サーバを信頼しない（semi-honest：プロトコルには従うが，観測できた情報から追加推測を試みる）環境では，上記オラクルが検索結果を反射的に，探索・推測し得るため，
 検索用表現を無条件に露出させる設計は望ましくない\cite{farid2021phash,jain2022usenix_phash}．
@@ -442,7 +441,7 @@ semi-honestなサーバ（結託を含む）が観測可能な情報の範囲と
 \end{itemize}
 
 この三段階は，「画像を三回別々に分割する」という意味ではない．
-同じ参加者に対して配布するシェアの中に，\emph{検索段階に必要な秘密}と\emph{復元段階に必要な秘密}を同居させ，
+同じ参加者に対して配布するシェアの中に，検索段階に必要な秘密と復元段階に必要な秘密を同居させ，
 集まったシェア数に応じて復元できる対象を切り替える，という設計である．
 開示規則は次式で表せる：
 \[
@@ -530,7 +529,7 @@ $r\ge k_2$で初めて$s_H$が復元できる．
 
 直観的には，pHashが参照する低周波側の条件だけを満たすように周波数領域を構成し，
 それ以外（特に高周波成分）はランダム化することで，pHash一致と視認性低下を両立させる．
-具体的な手順は次の通りである：
+具体的な手順は次の通りである（図\ref{fig:dummy-flow}参照）：
 
 \begin{enumerate}
   \item Level 1で復元したビット列$b$を入力として，$32\times32$画像に対するDCT係数行列のうち，
@@ -545,6 +544,13 @@ $r\ge k_2$で初めて$s_H$が復元できる．
   \item $\mathrm{dummy}(b)$からpHashを再計算し，$b$と一致することを確認する．
   一致しない場合は低周波係数の強調量（マージン）を増やすなどして再生成する．
 \end{enumerate}
+
+\begin{figure}[t]
+  \centering
+  \includegraphics[width=\linewidth]{output/pHash_dummy_flow.png}
+  \caption{pHash整合ダミー生成の処理フロー（低周波成分の構成から検証ループまで）}
+  \label{fig:dummy-flow}
+\end{figure}
 
 \begin{figure}[t]
   \centering
@@ -571,7 +577,7 @@ $r<k_1$で$s_L$（pHash）も$s_H$（原画像）も復元できないこと，
 (ii) Level 1の出力は検索に必要な条件（pHash一致）を満たしつつ，
 閲覧に資する視覚情報を劣化させるよう構成される，という設計上の性質である．
 そのうえで，「どの程度閲覧に耐えないか」「どの程度偽一致が起きないか」は，
-PSNR/SSIMやpHash距離分布，Precision@kなどの実験指標により評価する（詳細は第4章）．
+PSNR/SSIMやpHash距離分布，Precision@$K$などの実験指標により評価する（詳細は第4章）．
 
 \section{検索パイプライン}
 本研究の検索パイプラインは，検索処理を必要最小限に保つため，
@@ -634,7 +640,10 @@ $r\ge k_2$では原画像$I$を復元して必要に応じて平文側の処理�
 派生画像群を正解集合とする評価（ロバスト性評価）では同一元画像から生成された派生画像群を $G(q)$ とする．
 
 前節の検索性能に加え，提案方式の基本挙動（安全性と品質のトレードオフ）を確認するための指標として以下を用いる．
-まず，ダミーと原画像の視覚的乖離の程度を定量化するためピーク信号対雑音比（Peak Signal-to-Noise Ratio; PSNR）を算出する（図\ref{fig:mask-mse}）．図\ref{fig:mask-mse}の結果から，ダミー画像のPSNRは非常に低く（約10dB程度），ノイズ画像と同等の低い値を示しており，視覚的に原画像の内容を推測することは困難であると言える．
+まず，ダミーと原画像の視覚的乖離の程度を定量化するため，画像品質評価の一般的指標であるピーク信号対雑音比（Peak Signal-to-Noise Ratio; PSNR）を算出する．
+一般にPSNRが30dB以上であれば視覚的な劣化は許容範囲（圧縮アーティファクト程度）とされるが，
+図\ref{fig:mask-mse}の結果から，ダミー画像のPSNRは非常に低く（約10dB），この基準（点線）を大きく下回っている．
+これはノイズ画像と同等の水準であり，視覚的に原画像の内容を推測することは困難であると言える．
 さらに，ダミー生成の内部状態（低周波構成と補強の効果）を確認するため，
 処理途中の $32\times 32$ 画像を出力する（図\ref{fig:dummy-top3}）．
 
@@ -697,14 +706,14 @@ Level 1 の出力が視覚的内容推定に結びつきにくいという経験
 % 以降，図表はそのまま用いる
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\linewidth]{output/results/masked_phash_eval_figs/precision_summary.png}
+  \includegraphics[width=\linewidth,keepaspectratio]{output/results/masked_phash_eval_figs/precision_summary.png}
   \caption{Precision（平均値，オリジナル評価；各クエリの正解は1件）}
   \label{fig:search-original-prec}
 \end{figure}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\linewidth]{output/results/masked_phash_eval_figs/time_summary.png}
+  \includegraphics[width=\linewidth,keepaspectratio]{output/results/masked_phash_eval_figs/time_summary.png}
   \caption{Latency（平均値，オリジナル評価）}
   \label{fig:search-original-time}
 \end{figure}
@@ -731,14 +740,14 @@ Level 1 の出力が視覚的内容推定に結びつきにくいという経験
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\linewidth]{output/results/masked_phash_eval_all_figs/precision_summary_all_variants.png}
+  \includegraphics[width=\linewidth,keepaspectratio]{output/results/masked_phash_eval_all_figs/precision_summary_all_variants.png}
   \caption{Precision@1（条件別，plain vs dummy\_k1）}
   \label{fig:search-all-prec}
 \end{figure}
 
 \begin{figure}[t]
   \centering
-  \includegraphics[width=0.9\linewidth]{output/results/masked_phash_eval_all_figs/time_summary_all_variants.png}
+  \includegraphics[width=\linewidth,keepaspectratio]{output/results/masked_phash_eval_all_figs/time_summary_all_variants.png}
   \caption{Latency（条件別，plain vs dummy\_k1）}
   \label{fig:search-all-time}
 \end{figure}

@@ -323,25 +323,48 @@ def main() -> None:
             recall_ax.set_xticklabels(modes, rotation=20)
             recall_ax.set_ylim(0, 1.05)
             recall_ax.set_ylabel("Recall")
-            recall_ax.set_title("Recall (mean)")
+            # recall_ax.set_title("Recall (mean)")
             recall_ax.legend()
             recall_fig.tight_layout()
             recall_out = plot_dir / "recall_summary.png"
-            recall_fig.savefig(recall_out, bbox_inches="tight", dpi=150)
+            recall_fig.savefig(recall_out, bbox_inches="tight", pad_inches=0.1, dpi=150)
             plt.close(recall_fig)
 
             time_fig, time_ax = plt.subplots(figsize=(6, 4))
             ms_vals = [summary[m]["total_ms"] for m in modes]
             time_ax.bar(modes, ms_vals, color="#4c72b0")
             time_ax.set_ylabel("Time per query (ms)")
-            time_ax.set_title("Latency (mean)")
+            # time_ax.set_title("Latency (mean)")
             time_ax.set_ylim(0, max(ms_vals) * 1.2 if ms_vals else 1)
             time_fig.tight_layout()
             time_out = plot_dir / "time_summary.png"
-            time_fig.savefig(time_out, bbox_inches="tight", dpi=150)
+            time_fig.savefig(time_out, bbox_inches="tight", pad_inches=0.1, dpi=150)
             plt.close(time_fig)
 
-            print(f"saved plots: {recall_out}, {time_out}")
+            # Precision/Recall Summary (P@1, P@5, P@10, R@10, mAP)
+            prec_fig, prec_ax = plt.subplots(figsize=(6, 4))
+            metrics = ["precision_at_1", "precision_at_5", "precision_at_10", "recall_at_10", "map"]
+            labels = ["P@1", "P@5", "P@10", "R@10", "mAP"]
+            x = np.arange(len(metrics))
+            width = 0.8 / max(len(modes), 1)
+            
+            for i, mode in enumerate(modes):
+                vals = [summary[mode][m] for m in metrics]
+                offset = (i - (len(modes) - 1) / 2) * width
+                prec_ax.bar(x + offset, vals, width, label=mode)
+            
+            prec_ax.set_xticks(x)
+            prec_ax.set_xticklabels(labels)
+            prec_ax.set_ylabel("Score")
+            prec_ax.set_ylim(0, 1.05)
+            # prec_ax.set_title("Precision / Recall Summary")
+            prec_ax.legend()
+            prec_fig.tight_layout()
+            prec_out = plot_dir / "precision_summary.png"
+            prec_fig.savefig(prec_out, bbox_inches="tight", pad_inches=0.1, dpi=150)
+            plt.close(prec_fig)
+
+            print(f"saved plots: {recall_out}, {time_out}, {prec_out}")
 
     mapping = load_derivative_mapping(args.mapping_json)
 
@@ -402,40 +425,68 @@ def main() -> None:
                 except ImportError:
                     raise SystemExit("matplotlib is required for plotting. Install with `pip install matplotlib`.") from None
                 plot_base.mkdir(parents=True, exist_ok=True)
-                # Recall@10 per variant
+                
+                # Precision@1 per variant
                 variants = sorted({r["variant"] for r in summary_rows})
                 modes = sorted({r["mode"] for r in summary_rows})
                 x = np.arange(len(variants))
                 width = 0.8 / max(len(modes), 1)
-                fig, ax = plt.subplots(figsize=(max(6, len(variants) * 0.6), 4))
+                
+                # Use fixed size to prevent huge width (cutoff issues)
+                fig, ax = plt.subplots(figsize=(7, 4))
+                for i, mode in enumerate(modes):
+                    vals = []
+                    for v in variants:
+                        matched = [r for r in summary_rows if r["variant"] == v and r["mode"] == mode]
+                        vals.append(matched[0]["precision_at_1"] if matched else 0.0)
+                    offset = (i - (len(modes) - 1) / 2) * width
+                    ax.bar(x + offset, vals, width, label=mode)
+                ax.set_xticks(x)
+                ax.set_xticklabels(variants, rotation=90, ha="center", fontsize=8)
+                ax.set_ylabel("Precision@1")
+                ax.set_ylim(0, 1.05)
+                # ax.set_title("Precision@1 per variant")
+                ax.legend()
+                fig.tight_layout()
+                fig.savefig(plot_base / "precision_summary_all_variants.png", bbox_inches="tight", dpi=150)
+                plt.close(fig)
+
+                # Recall@10 per variant
+                # variants = sorted({r["variant"] for r in summary_rows})
+                modes = sorted({r["mode"] for r in summary_rows})
+                x = np.arange(len(variants))
+                width = 0.8 / max(len(modes), 1)
+                fig, ax = plt.subplots(figsize=(7, 4))
                 for i, mode in enumerate(modes):
                     vals = []
                     for v in variants:
                         matched = [r for r in summary_rows if r["variant"] == v and r["mode"] == mode]
                         vals.append(matched[0]["recall_at_10"] if matched else 0.0)
-                    ax.bar(x + i * width, vals, width, label=mode)
-                ax.set_xticks(x + width * (len(modes) - 1) / 2)
-                ax.set_xticklabels(variants, rotation=45, ha="right")
+                    offset = (i - (len(modes) - 1) / 2) * width
+                    ax.bar(x + offset, vals, width, label=mode)
+                ax.set_xticks(x)
+                ax.set_xticklabels(variants, rotation=90, ha="center", fontsize=8)
                 ax.set_ylabel("Recall@10")
                 ax.set_ylim(0, 1.05)
-                ax.set_title("Recall@10 per variant")
+                # ax.set_title("Recall@10 per variant")
                 ax.legend()
                 fig.tight_layout()
                 fig.savefig(plot_base / "recall_summary_all_variants.png", bbox_inches="tight", dpi=150)
                 plt.close(fig)
 
                 # Time per variant
-                fig, ax = plt.subplots(figsize=(max(6, len(variants) * 0.6), 4))
+                fig, ax = plt.subplots(figsize=(7, 4))
                 for i, mode in enumerate(modes):
                     vals = []
                     for v in variants:
                         matched = [r for r in summary_rows if r["variant"] == v and r["mode"] == mode]
                         vals.append(matched[0]["total_ms"] if matched else 0.0)
-                    ax.bar(x + i * width, vals, width, label=mode)
-                ax.set_xticks(x + width * (len(modes) - 1) / 2)
-                ax.set_xticklabels(variants, rotation=45, ha="right")
+                    offset = (i - (len(modes) - 1) / 2) * width
+                    ax.bar(x + offset, vals, width, label=mode)
+                ax.set_xticks(x)
+                ax.set_xticklabels(variants, rotation=90, ha="center", fontsize=8)
                 ax.set_ylabel("Time per query (ms)")
-                ax.set_title("Latency per variant")
+                # ax.set_title("Latency per variant")
                 ax.legend()
                 fig.tight_layout()
                 fig.savefig(plot_base / "time_summary_all_variants.png", bbox_inches="tight", dpi=150)

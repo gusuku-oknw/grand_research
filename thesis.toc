@@ -16,7 +16,7 @@
 \contentsline {section}{\numberline {3.4}Shamir法の画像への適用（データ表現）}{18}{}%
 \contentsline {section}{\numberline {3.5}二段閾値SIS（検索用秘密と復元用秘密の同時分散）}{19}{}%
 \contentsline {section}{\numberline {3.6}pHash整合ダミーの生成}{19}{}%
-\contentsline {section}{\numberline {3.7}安全性の扱い（Shamirの保証とダミーの評価）}{20}{}%
+\contentsline {section}{\numberline {3.7}安全性の扱い（Shamirの保証とダミーの評価）}{21}{}%
 \contentsline {section}{\numberline {3.8}検索パイプライン}{21}{}%
 \contentsline {chapter}{\numberline {第4章}実験}{22}{}%
 \contentsline {section}{\numberline {4.1}条件・手順}{22}{}%

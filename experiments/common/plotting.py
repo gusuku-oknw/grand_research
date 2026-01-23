@@ -23,6 +23,7 @@ NUMERIC_FIELDS = {
     "recall_at_5",
     "recall_at_10",
     "map",
+    "mrr",
     "phash_ms",
     "stage1_ms",
     "stage2_ms",
@@ -58,6 +59,7 @@ class MetricRecord:
     recall_at_5: float
     recall_at_10: float
     map: float
+    mrr: float
     phash_ms: float
     stage1_ms: float
     stage2_ms: float
@@ -224,12 +226,13 @@ def plot_precision_bars(groups: Mapping[str, Sequence[MetricRecord]], output_pat
     fig, ax = plt.subplots(figsize=(8, 5))
     for idx, mode in enumerate(modes):
         values = [table[mode][metric] for metric in metrics]
-        ax.bar(x + idx * width, values, width, label=mode)
-    ax.set_xticks(x + width * (len(modes) - 1) / 2)
+        offset = (idx - (len(modes) - 1) / 2) * width
+        ax.bar(x + offset, values, width, label=mode)
+    ax.set_xticks(x)
     ax.set_xticklabels(metrics)
     ax.set_ylabel("Score")
     ax.set_ylim(0, 1.05)
-    ax.set_title("Precision / Recall Summary")
+    # ax.set_title("Precision / Recall Summary")
     ax.legend()
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -291,7 +294,7 @@ def plot_time_breakdown(groups: Mapping[str, Sequence[MetricRecord]], output_pat
         ax.bar(modes, stacks_arr[:, idx], bottom=bottoms, label=labels[idx])
         bottoms += stacks_arr[:, idx]
     ax.set_ylabel("Time (ms)")
-    ax.set_title("Stage Timing Breakdown")
+    # ax.set_title("Stage Timing Breakdown")
     ax.legend()
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -344,7 +347,7 @@ def plot_latency_scatter(groups: Mapping[str, Sequence[MetricRecord]], output_pa
         ax.scatter(latencies, precisions, label=mode, alpha=0.7)
     ax.set_xlabel("Total Time (ms)")
     ax.set_ylabel("Precision@10")
-    ax.set_title("Precision vs Latency")
+    # ax.set_title("Precision vs Latency")
     ax.grid(True, linestyle="--", alpha=0.4)
     ax.legend()
     fig.tight_layout()
@@ -371,7 +374,7 @@ def plot_variant_recall(groups: Mapping[str, Sequence[MetricRecord]], output_pat
     ax.set_xticklabels(variant_names, rotation=45, ha="right")
     ax.set_ylabel("Recall@10")
     ax.set_ylim(0.0, 1.05)
-    ax.set_title("Recall@10 by Transform Variant")
+    # ax.set_title("Recall@10 by Transform Variant")
     ax.legend()
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)
@@ -414,7 +417,7 @@ def plot_reconstruction_ratio(groups: Mapping[str, Sequence[MetricRecord]], outp
     ax.axhline(1.0, color="gray", linestyle="--", linewidth=1, label="Full Reconstruction")
     ax.set_ylabel("Reconstructed / Total")
     ax.set_ylim(0.0, max(1.05, max(values) * 1.05))
-    ax.set_title("Selective Reconstruction Ratio")
+    # ax.set_title("Selective Reconstruction Ratio")
     ax.legend()
     fig.tight_layout()
     output_path.parent.mkdir(parents=True, exist_ok=True)

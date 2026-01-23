@@ -52,7 +52,7 @@ MS COCO (Microsoft Common Objects in Context)~\cite{mscoco} 派生データに�
 
 \section{はじめに}
 
-医療画像や個人写真などの機微データは，\textbf{「過去の類似症例を検索して診断支援に役立てたい」}という利活用の需要が高い（CBIR: Content-Based Image Retrieval）．
+医療画像や個人写真などの機微データは，\textbf{「過去の類似症例を検索して診断支援に役立てたい」}という利活用の需要が高い．
 一方で，これらは患者のプライバシーに直結するため，極めて高度な安全管理も同時に求められる．
 しかし，既存のデータ管理手法ではこの両立が困難である．
 
@@ -76,6 +76,16 @@ SIS はセキュリティに優れる反面，シェア自体はランダムな�
   \item \textbf{全てが見える状態}（閲覧権限）：診断などで実際に画像を見る．
 \end{enumerate}
 この「検索権限」と「閲覧権限」を技術的に分離・制御するために，本研究では新たな\textbf{三段階開示モデル}を提案する（図\ref{fig:three-stage}）．
+
+\section{関連技術}
+本研究の基礎となる Shamir の秘密分散法 \cite{shamir1979} について述べる．
+$(k, n)$ 閾値法は，秘密情報 $S$ を $n$ 個のシェア $s_1, \dots, s_n$ に分割する方式である．
+任意の $k$ 個以上のシェアを集めれば $S$ を完全に復元できるが，
+$k$ 個未満では $S$ に関する情報は一切得られない（情報理学的安全性）．
+一般的な SIS はこの性質を利用して画像の機密性を担保するが，
+前述の通り検索機能は持たない．
+提案法ではこの閾値性を拡張し，シェア収集数に応じて復元できる情報の「質」を変化させることで，
+多段階のアクセス制御を実現している．
 
 \section{提案法：三段階開示モデル}
 
@@ -103,12 +113,12 @@ SIS はセキュリティに優れる反面，シェア自体はランダムな�
 \end{itemize}
 各段階での出力画像の可視化例を図\ref{fig:exp-grid}に示す．
 
-\begin{figure}[tb]
+\begin{figure*}[t!]
   \centering
-  \includegraphics[width=1.0\linewidth]{output/figures/phash_masked_sis/combined_pipeline.png}
+  \includegraphics[width=0.85\linewidth]{output/figures/phash_masked_sis/combined_pipeline.png}
   \caption{三段階開示モデルの可視化例（原画像，Level 0，Level 1，Level 2）}
   \label{fig:exp-grid}
-\end{figure}
+\end{figure*}
 
 \begin{figure}[tb]
 \centering
@@ -142,6 +152,7 @@ Precision@$K$（検索結果上位 $K$ 件に含まれる正解の割合）に�
   \caption{ロバスト性評価における検索精度（20条件平均）}
   \label{tab:precision}
   \small
+  \renewcommand{\arraystretch}{1.2}
   \begin{tabular}{lccc}
     \hline
     Method & P@1 & P@5 & P@10 \\
@@ -164,9 +175,8 @@ Precision@$K$（検索結果上位 $K$ 件に含まれる正解の割合）に�
 今後の課題として，ダミー画像からの推測耐性に対するより厳密な安全性評価や，pHash 以外の特徴量（CNN: Convolutional Neural Network 等）への拡張が挙げられる．
 
 \begin{thebibliography}{9}
-\bibitem{xia}
-Z. Xia et al., ``A privacy-preserving CBIR scheme based on secret sharing,''
-\textit{IEEE Access}, 2020.
+\bibitem{shamir1979}
+A.~Shamir, ``How to share a secret,'' \textit{Commun. ACM}, vol. 22, no. 11, pp. 612--613, 1979.
 \bibitem{mscoco}
 T.-Y.~Lin et al.,
 ``Microsoft COCO: Common Objects in Context,''
